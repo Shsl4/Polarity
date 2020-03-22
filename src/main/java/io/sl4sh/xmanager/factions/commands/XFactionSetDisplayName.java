@@ -3,6 +3,7 @@ package io.sl4sh.xmanager.factions.commands;
 import io.sl4sh.xmanager.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.factions.XFaction;
+import io.sl4sh.xmanager.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -11,6 +12,8 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+
+import java.util.Optional;
 
 public class XFactionSetDisplayName implements CommandExecutor {
     @Override
@@ -40,21 +43,25 @@ public class XFactionSetDisplayName implements CommandExecutor {
 
     private void setFactionDisplayName(String displayName, Player ply){
 
-        XFaction xFac = XFactionCommandManager.getPlayerFaction(ply);
+        Optional<XFaction> optXFac = XFactionCommandManager.getPlayerFaction(ply);
 
-        if(xFac != null){
+        if(optXFac.isPresent()){
 
-            if(XFactionCommandManager.getPlayerFactionPermissions(ply).getConfigure()){
+            Optional<XFactionPermissionData> optPermData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+
+            if(!optPermData.isPresent()) { ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+
+            if(optPermData.get().getConfigure()){
 
                 if(displayName.equals("")){
 
-                    xFac.setFactionDisplayName(xFac.getFactionName());
+                    optXFac.get().setFactionDisplayName(optXFac.get().getFactionName());
                     ply.sendMessage(Text.of("\u00a7aSuccessfully removed your faction's display name."));
 
                 }
                 else{
 
-                    xFac.setFactionDisplayName(displayName);
+                    optXFac.get().setFactionDisplayName(displayName);
                     ply.sendMessage(Text.of("\u00a7aSuccessfully updated your faction's display name."));
 
                 }

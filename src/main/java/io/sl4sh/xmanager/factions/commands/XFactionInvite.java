@@ -20,7 +20,17 @@ public class XFactionInvite implements CommandExecutor {
         if (src instanceof Player) {
 
             Player ply = (Player) src;
-            invitePlayer(ply, args.getOne("playerName").get().toString());
+
+            if(args.getOne("playerName").isPresent()){
+
+                invitePlayer(ply, (Player)args.getOne("playerName").get());
+
+            }
+            else{
+
+                ply.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc()));
+
+            }
 
         }
         else{
@@ -33,39 +43,28 @@ public class XFactionInvite implements CommandExecutor {
 
     }
 
-    private void invitePlayer(Player caller, String userName){
+    private void invitePlayer(Player caller, Player target){
 
-        if(XFactionCommandManager.getPlayerFaction(caller) != null){
+        if(XFactionCommandManager.getPlayerFaction(caller).isPresent()){
 
-            XFaction callerFac = XFactionCommandManager.getPlayerFaction(caller);
+            XFaction callerFac = XFactionCommandManager.getPlayerFaction(caller).get();
 
-            if(XFactionCommandManager.getPlayerFactionPermissions(caller).getConfigure()){
+            if(XFactionCommandManager.getPlayerFactionPermissions(caller).get().getConfigure()){
 
-                if(Sponge.getServer().getPlayer(userName).isPresent()){
+                if(!XFactionCommandManager.getPlayerFaction(target).isPresent()){
 
-                    Player ply = Sponge.getServer().getPlayer(userName).get();
+                    String modDPName = callerFac.getFactionDisplayName();
+                    modDPName = modDPName.replace("&", "\u00a7");
 
-                    if(XFactionCommandManager.getPlayerFaction(ply) == null){
-
-                        String modDPName = callerFac.getFactionDisplayName();
-                        modDPName = modDPName.replace("&", "\u00a7");
-
-                        callerFac.getFactionInvites().add(userName);
-                        caller.sendMessage(Text.of("\u00a7aSuccessfully invited player '" + userName + "' to your faction."));
-                        ply.sendMessage(Text.of("\u00a7aYou've been invited to join the faction '" + modDPName + "\u00a7a' by " + caller.getName() + ". Type /xm factions join " + callerFac.getFactionName() + " to join the faction."));
-                        XManager.getXManager().writeFactions();
-
-                    }
-                    else{
-
-                        caller.sendMessage(Text.of(XError.XERROR_XFEMEMBER.getDesc()));
-
-                    }
+                    callerFac.getFactionInvites().add(target.getName());
+                    caller.sendMessage(Text.of("\u00a7aSuccessfully invited player '" + target.getName() + "' to your faction."));
+                    target.sendMessage(Text.of("\u00a7aYou've been invited to join the faction '" + modDPName + "\u00a7a' by " + caller.getName() + ". Type /factions join " + callerFac.getFactionName() + " to join the faction."));
+                    XManager.getXManager().writeFactions();
 
                 }
                 else{
 
-                    caller.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc()));
+                    caller.sendMessage(Text.of(XError.XERROR_XFEMEMBER.getDesc()));
 
                 }
 

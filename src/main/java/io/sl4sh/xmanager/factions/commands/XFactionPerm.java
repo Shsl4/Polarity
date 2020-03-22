@@ -2,10 +2,7 @@ package io.sl4sh.xmanager.factions.commands;
 
 import io.sl4sh.xmanager.XError;
 import io.sl4sh.xmanager.factions.XFaction;
-import io.sl4sh.xmanager.factions.XFactionMemberData;
-import io.sl4sh.xmanager.factions.XFactionMemberRank;
 import io.sl4sh.xmanager.factions.XFactionPermissionData;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -13,6 +10,9 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+
+import javax.swing.text.html.Option;
+import java.util.Optional;
 
 public class  XFactionPerm implements CommandExecutor {
     @Override
@@ -22,12 +22,20 @@ public class  XFactionPerm implements CommandExecutor {
 
             Player ply = (Player)src;
 
-            String targetPlayer = args.getOne("targetPlayer").get().toString();
-            String permName = args.getOne("permName").get().toString();
-            Boolean val = (Boolean)args.getOne("value").get();
+            if(args.getOne("targetPlayer").isPresent()){
 
-            factionSetPerm(targetPlayer, permName, val, ply);
+                Player targetPlayer = (Player)args.getOne("targetPlayer").get();
+                String permName = args.getOne("permName").get().toString();
+                Boolean val = (Boolean)args.getOne("value").get();
 
+                factionSetPerm(targetPlayer, permName, val, ply);
+
+            }
+            else{
+
+                ply.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc()));
+
+            }
 
         }
 
@@ -36,68 +44,69 @@ public class  XFactionPerm implements CommandExecutor {
     }
 
 
-    private void factionSetPerm(String targetPlayer, String permName, Boolean value, Player caller){
+    private void factionSetPerm(Player targetPlayer, String permName, Boolean value, Player caller){
 
-        XFaction fac = XFactionCommandManager.getPlayerFaction(caller);
+        Optional<XFaction> optCallerFaction = XFactionCommandManager.getPlayerFaction(caller);
 
-        if(fac != null){
+        if(optCallerFaction.isPresent()){
 
-            if(XFactionCommandManager.getPlayerFactionPermissions(caller).getConfigure()){
+            XFaction callerFaction = optCallerFaction.get();
 
-                if(Sponge.getServer().getPlayer(targetPlayer).isPresent()){
+            Optional<XFactionPermissionData> optCallerPermData = XFactionCommandManager.getPlayerFactionPermissions(caller);
 
-                    Player nPlayer = Sponge.getServer().getPlayer(targetPlayer).get();
-                    XFactionPermissionData permData = XFactionCommandManager.getPlayerFactionPermissions(nPlayer);
+            if(!optCallerPermData.isPresent()) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
-                    if(XFactionCommandManager.getPlayerFaction(nPlayer) == fac){
+            XFactionPermissionData callerPermData = optCallerPermData.get();
 
-                        if(permData.getRank() != XFactionMemberRank.Owner){
+            if(callerPermData.getConfigure()){
 
-                            switch (permName){
+                Optional<XFactionPermissionData> optTargetPermData = XFactionCommandManager.getPlayerFactionPermissions(targetPlayer);
 
-                                case "interact":
+                if(!optTargetPermData.isPresent()) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return;}
 
-                                    permData.setInteract(value);
-                                    break;
+                XFactionPermissionData targetPermData = optTargetPermData.get();
 
-                                case "claim":
+                if(XFactionCommandManager.getPlayerFaction(targetPlayer).isPresent() && XFactionCommandManager.getPlayerFaction(targetPlayer).get() == callerFaction){
 
-                                    permData.setClaim(value);
-                                    break;
+                    if(!callerFaction.isOwner(targetPlayer.getName())){
 
-                                case "configure":
+                        switch (permName){
 
-                                    permData.setConfigure(value);
+                            case "interact":
 
-                                    break;
+                                targetPermData.setInteract(value);
+                                break;
 
-                                default:
+                            case "claim":
 
-                                    caller.sendMessage(Text.of(XError.XERROR_INVALIDPERM.getDesc()));
-                                    return;
+                                targetPermData.setClaim(value);
+                                break;
 
-                            }
+                            case "configure":
 
-                            caller.sendMessage(Text.of("\u00a7aSuccessfully set " + permName + " permission to " + value + " for player " + targetPlayer));
+                                targetPermData.setConfigure(value);
+                                break;
+
+                            default:
+
+                                caller.sendMessage(Text.of(XError.XERROR_INVALIDPERM.getDesc()));
+                                return;
 
                         }
-                        else{
 
-                            caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc()));
-
-                        }
+                        caller.sendMessage(Text.of("\u00a7aSuccessfully set " + permName + " permission to " + value + " for player " + targetPlayer.getName()));
 
                     }
                     else{
 
-                        caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc()));
+                        caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc()));
 
                     }
 
                 }
                 else{
 
-                    caller.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc()));
+                    caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc()));
 
                 }
 

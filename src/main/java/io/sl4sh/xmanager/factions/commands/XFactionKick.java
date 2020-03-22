@@ -4,9 +4,7 @@ import io.sl4sh.xmanager.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.factions.XFaction;
 import io.sl4sh.xmanager.factions.XFactionMemberData;
-import io.sl4sh.xmanager.factions.XFactionMemberRank;
 import io.sl4sh.xmanager.factions.XFactionPermissionData;
-import io.sl4sh.xmanager.player.XPlayer;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -26,7 +24,17 @@ public class XFactionKick implements CommandExecutor {
         if (src instanceof Player) {
 
             Player ply = (Player) src;
-            kickPlayer(ply, args.getOne("playerName").get().toString());
+
+            if(args.getOne("playerName").isPresent()){
+
+                kickPlayer(ply, (Player)args.getOne("playerName").get());
+
+            }
+            else{
+
+                ply.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc()));
+
+            }
 
         }
         else{
@@ -39,44 +47,48 @@ public class XFactionKick implements CommandExecutor {
 
     }
 
-    private void kickPlayer(Player Caller, String TargetName){
+    private void kickPlayer(Player Caller, Player TargetPlayer){
 
-        XFaction CallerFaction = XFactionCommandManager.getPlayerFaction(Caller);
+        Optional<XFaction> optCallerFaction = XFactionCommandManager.getPlayerFaction(Caller);
 
-        if(CallerFaction == null) { Caller.sendMessage(Text.of(XError.XERROR_NOXF.getDesc())); return; }
+        if(!optCallerFaction.isPresent()) { Caller.sendMessage(Text.of(XError.XERROR_NOXF.getDesc())); return; }
 
-        if(!XFactionCommandManager.getPlayerFactionPermissions(Caller).getConfigure()) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        XFaction callerFaction = optCallerFaction.get();
 
-        Optional<Player> OptTarget = XFactionCommandManager.getPlayerByName(TargetName);
+        if(!XFactionCommandManager.getPlayerFactionPermissions(Caller).isPresent() || !XFactionCommandManager.getPlayerFactionPermissions(Caller).get().getConfigure()) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
-        if(!OptTarget.isPresent()) { Caller.sendMessage(Text.of(XError.XERROR_NULLPLAYER.getDesc())); return; }
+        Optional<XFaction> optTargetPlayerFaction = XFactionCommandManager.getPlayerFaction(TargetPlayer);
 
-        Player TargetPlayer = OptTarget.get();
+        if(!optTargetPlayerFaction.isPresent()) { Caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc())); return; }
 
-        if(XFactionCommandManager.getPlayerFaction(TargetPlayer) != CallerFaction) { Caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc())); return; }
+        XFaction targetPlayerFaction = optTargetPlayerFaction.get();
 
-        XFactionPermissionData TargetPerms = XFactionCommandManager.getPlayerFactionPermissions(TargetPlayer);
+        if(targetPlayerFaction != callerFaction) { Caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc())); return; }
 
-        if(TargetPerms.getRank() == XFactionMemberRank.Owner) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        Optional<XFactionPermissionData> optTargetPerms = XFactionCommandManager.getPlayerFactionPermissions(TargetPlayer);
 
-        CallerFaction.getFactionMembers().remove(XFactionCommandManager.getMemberDataForPlayer(TargetPlayer));
+        if(callerFaction.getFactionOwner().equals(Caller.getName())) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+
+        callerFaction.getFactionMembers().remove(XFactionCommandManager.getMemberDataForPlayer(TargetPlayer).get());
         XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(TargetPlayer).setPlayerFaction(null);
 
         XManager.getXManager().writeFactions();
         XManager.getXManager().writePlayerInfo();
         XTabListManager.refreshTabLists();
 
-        String modDPName = CallerFaction.getFactionDisplayName();
+        String modDPName = callerFaction.getFactionDisplayName();
         modDPName = modDPName.replace("&", "\u00a7");
 
-        for(XFactionMemberData mbData : CallerFaction.getFactionMembers()){
+        for(XFactionMemberData mbData : callerFaction.getFactionMembers()){
 
             Optional<Player> optPly = XFactionCommandManager.getPlayerByName(mbData.playerName);
-            optPly.ifPresent(player -> player.sendMessage(Text.of("\u00a7c " + TargetName + "has been kicked from the faction by " + Caller.getName())));
+            optPly.ifPresent(player -> player.sendMessage(Text.of("\u00a7c" + TargetPlayer.getName() + " has been kicked from the faction by " + Caller.getName())));
 
         }
 
         TargetPlayer.sendMessage(Text.of("\u00a7cYou've been kicked from your faction by " + Caller.getName()));
+        XManager.getXManager().writeFactions();
+        XManager.getXManager().writePlayerInfo();
 
     }
 

@@ -17,6 +17,7 @@ import org.spongepowered.api.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class XFactionForceDisband implements CommandExecutor {
 
@@ -55,16 +56,18 @@ public class XFactionForceDisband implements CommandExecutor {
 
         List<XFaction> factions = XManager.getXManager().getFactionContainer().getFactionList();
 
-        if(XFactionCommandManager.getFaction(factionName) != null){
+        Optional<XFaction> optPendingDeleteFaction = XFactionCommandManager.getFactionByName(factionName);
 
-            XFaction pendingDeleteFaction = XFactionCommandManager.getFaction(factionName);
-            List<Player> plys = new ArrayList<>();
+        if(optPendingDeleteFaction.isPresent()){
+
+            XFaction pendingDeleteFaction = optPendingDeleteFaction.get();
+            List<Player> players = new ArrayList<>();
 
             for(XFactionMemberData memberData : pendingDeleteFaction.getFactionMembers()){
 
                 if(Sponge.getServer().getPlayer(memberData.getPlayerName()).isPresent()){
 
-                    plys.add(Sponge.getServer().getPlayer(memberData.getPlayerName()).get());
+                    players.add(Sponge.getServer().getPlayer(memberData.getPlayerName()).get());
 
                 }
 
@@ -73,7 +76,7 @@ public class XFactionForceDisband implements CommandExecutor {
             factions.remove(pendingDeleteFaction);
             XManager.getXManager().writeFactions();
 
-            for(Player ply : plys){
+            for(Player ply : players){
 
                 XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(ply).setPlayerFaction("");
 

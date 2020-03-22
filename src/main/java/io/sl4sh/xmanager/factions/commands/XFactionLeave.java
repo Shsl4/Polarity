@@ -13,6 +13,8 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
+import java.util.Optional;
+
 public class XFactionLeave implements CommandExecutor {
 
     @Override
@@ -36,9 +38,11 @@ public class XFactionLeave implements CommandExecutor {
 
     private Boolean leaveFaction(Player ply){
 
-        XFaction targetFaction = XFactionCommandManager.getPlayerFaction(ply);
+        Optional<XFaction> optTargetFaction = XFactionCommandManager.getPlayerFaction(ply);
 
-        if(targetFaction != null){
+        if(optTargetFaction.isPresent()){
+
+            XFaction targetFaction = optTargetFaction.get();
 
             if(targetFaction.getFactionOwner().equals(ply.getName())){
 

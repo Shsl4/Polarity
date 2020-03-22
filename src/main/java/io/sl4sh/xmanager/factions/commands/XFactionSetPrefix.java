@@ -3,6 +3,7 @@ package io.sl4sh.xmanager.factions.commands;
 import io.sl4sh.xmanager.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.factions.XFaction;
+import io.sl4sh.xmanager.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -11,6 +12,8 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+
+import java.util.Optional;
 
 public class XFactionSetPrefix implements CommandExecutor {
     @Override
@@ -45,11 +48,17 @@ public class XFactionSetPrefix implements CommandExecutor {
 
     private void setFactionPrefix(String factionPrefix, Player ply){
 
-        XFaction xFac = XFactionCommandManager.getPlayerFaction(ply);
+        Optional<XFaction> optXFac = XFactionCommandManager.getPlayerFaction(ply);
 
-        if(xFac != null){
+        if(optXFac.isPresent()){
 
-            if(XFactionCommandManager.getPlayerFactionPermissions(ply).getConfigure()){
+            XFaction xFac = optXFac.get();
+
+            Optional<XFactionPermissionData> optPermData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+
+            if(!optPermData.isPresent()) { ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+
+            if(optPermData.get().getConfigure()){
 
                 if(factionPrefix.equals("")){
 

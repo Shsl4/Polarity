@@ -24,8 +24,10 @@ import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -35,6 +37,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.*;
+import java.util.Optional;
 
 @Plugin(
 
@@ -175,7 +178,7 @@ public class XManager {
 
         CommandSpec facKickMemberCmdSpec = CommandSpec.builder()
                 .description(Text.of("Kicks a member of your faction."))
-                .arguments(GenericArguments.string(Text.of("playerName")))
+                .arguments(GenericArguments.player(Text.of("playerName")))
                 .permission("xmanager.factions.kick")
                 .executor(new XFactionKick())
                 .build();
@@ -223,14 +226,14 @@ public class XManager {
 
         CommandSpec facPermCmdSpec = CommandSpec.builder()
                 .description(Text.of("Sets a permission for a member of your faction."))
-                .arguments(GenericArguments.string(Text.of("targetPlayer")), GenericArguments.string(Text.of("permName")), GenericArguments.bool(Text.of("value")))
+                .arguments(GenericArguments.player(Text.of("targetPlayer")), GenericArguments.string(Text.of("permName")), GenericArguments.bool(Text.of("value")))
                 .permission("xmanager.factions.perm")
                 .executor(new XFactionPerm())
                 .build();
 
         CommandSpec facInviteCmdSpec = CommandSpec.builder()
                 .description(Text.of("Invites a player to your faction."))
-                .arguments(GenericArguments.string(Text.of("playerName")))
+                .arguments(GenericArguments.player(Text.of("playerName")))
                 .permission("xmanager.factions.invite")
                 .executor(new XFactionInvite())
                 .build();
@@ -241,6 +244,65 @@ public class XManager {
                 .permission("xmanager.factions.join")
                 .executor(new XFactionJoin())
                 .build();
+
+        CommandSpec facSetHomeCmdSpec = CommandSpec.builder()
+                .description(Text.of("Sets your faction's home."))
+                .permission("xmanager.factions.sethome")
+                .executor(new XFactionSetHome())
+                .build();
+
+        CommandSpec facHomeCmdSpec = CommandSpec.builder()
+                .description(Text.of("Teleport to your faction's home."))
+                .permission("xmanager.factions.home")
+                .executor(new XFactionHome())
+                .build();
+
+        CommandSpec facAllyRqCmdSpec = CommandSpec.builder()
+                .description(Text.of("Request an alliance to another faction."))
+                .arguments(GenericArguments.string(Text.of("factionName")))
+                .permission("xmanager.factions.ally.request")
+                .executor(new XFactionAllyRequest())
+                .build();
+
+        CommandSpec facAllyAcceptCmdSpec = CommandSpec.builder()
+                .description(Text.of("Accept an alliance from another faction."))
+                .arguments(GenericArguments.string(Text.of("factionName")))
+                .permission("xmanager.factions.ally.accept")
+                .executor(new XFactionAllyAccept())
+                .build();
+
+
+        CommandSpec facAllyDeclineCmdSpec = CommandSpec.builder()
+                .description(Text.of("Decline an alliance from another faction."))
+                .arguments(GenericArguments.string(Text.of("factionName")))
+                .permission("xmanager.factions.ally.decline")
+                .executor(new XFactionAllyDecline())
+                .build();
+
+
+        CommandSpec setOwnerCmdSpec = CommandSpec.builder()
+                .description(Text.of("Sets your faction's owner."))
+                .permission("xmanager.factions.setowner")
+                .arguments(GenericArguments.player(Text.of("playerName")))
+                .executor(new XFactionSetOwner())
+                .build();
+
+        CommandSpec factionsAllyCmdSpec = CommandSpec.builder()
+                .description(Text.of("XFactions alliance command. Prints help if no argument is provided."))
+                .permission("xmanager.factions.ally")
+                .child(facAllyRqCmdSpec, "request")
+                .child(facAllyAcceptCmdSpec, "accept")
+                .child(facAllyDeclineCmdSpec, "decline")
+                .executor(new XFactionAlly())
+                .build();
+
+        CommandSpec facDeAllyCmdSpec = CommandSpec.builder()
+                .description(Text.of("Destroy an alliance with another faction."))
+                .arguments(GenericArguments.string(Text.of("factionName")))
+                .permission("xmanager.factions.deally")
+                .executor(new XFactionDeAlly())
+                .build();
+
 
         CommandSpec factionsCmdSpec = CommandSpec.builder()
                 .description(Text.of("XFactions command. Prints help if no argument is provided."))
@@ -260,13 +322,17 @@ public class XManager {
                 .child(facJoinCmdSpec, "join")
                 .child(facKickMemberCmdSpec, "kick")
                 .child(facShowClaimsCmdSpec, "showclaims")
+                .child(facHomeCmdSpec, "home")
+                .child(facSetHomeCmdSpec, "sethome")
+                .child(setOwnerCmdSpec, "setowner")
+                .child(factionsAllyCmdSpec, "ally")
+                .child(facDeAllyCmdSpec, "deally")
                 .executor(new XFactionCommandManager())
                 .build();
 
         CommandSpec mainCmdSpec = CommandSpec.builder()
                 .description(Text.of("Main XManager command."))
                 .permission("xmanager")
-                .child(factionsCmdSpec, "factions")
                 .child(writeCmdSpec, "write")
                 .child(setHomeCmdSpec, "sethome")
                 .child(homeCmdSpec, "home")
@@ -276,6 +342,7 @@ public class XManager {
                 .build();
 
         Sponge.getCommandManager().register(plugin, mainCmdSpec, "xm");
+        Sponge.getCommandManager().register(plugin, factionsCmdSpec, "factions");
 
     }
 
@@ -286,6 +353,14 @@ public class XManager {
         xPlayerContainer = startupGetPlayerInfo();
         xTabListManager = new XTabListManager();
         xLogSuccess("XManager successfully initialized!");
+
+    }
+
+    @Listener
+    public void onServerStopping(GameStoppingServerEvent event){
+
+        XManager.getXManager().writeFactions();
+        XManager.getXManager().writePlayerInfo();
 
     }
 
@@ -304,15 +379,28 @@ public class XManager {
 
                     XFaction owningFaction = XFactionClaim.getClaimedChunkFaction(chunkPos);
 
-                    if(owningFaction == XFactionCommandManager.getPlayerFaction(ply)) {
+                    if(owningFaction == null) { return; }
 
-                        XFactionPermissionData permData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+                    Optional<XFaction> optTargetFaction = XFactionCommandManager.getPlayerFaction(ply);
 
-                        if(permData.getInteract()){
+                    if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
 
-                            return;
+                        Optional<XFactionPermissionData> optPermData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+
+                        if(optPermData.isPresent()) {
+
+                            if(optPermData.get().getInteract()){
+
+                                return;
+
+                            }
 
                         }
+
+                    }
+                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+
+                        return;
 
                     }
 
@@ -344,15 +432,28 @@ public class XManager {
 
                     XFaction owningFaction = XFactionClaim.getClaimedChunkFaction(chunkPos);
 
-                    if(owningFaction == XFactionCommandManager.getPlayerFaction(ply)) {
+                    if(owningFaction == null) { return; }
 
-                        XFactionPermissionData permData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+                    Optional<XFaction> optTargetFaction = XFactionCommandManager.getPlayerFaction(ply);
 
-                        if(permData.getInteract()){
+                    if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
 
-                            return;
+                        Optional<XFactionPermissionData> optPermData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+
+                        if(optPermData.isPresent()) {
+
+                            if(optPermData.get().getInteract()){
+
+                                return;
+
+                            }
 
                         }
+
+                    }
+                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+
+                        return;
 
                     }
 
@@ -384,15 +485,28 @@ public class XManager {
 
                     XFaction owningFaction = XFactionClaim.getClaimedChunkFaction(chunkPos);
 
-                    if(owningFaction == XFactionCommandManager.getPlayerFaction(ply)) {
+                    if(owningFaction == null) { return; }
 
-                        XFactionPermissionData permData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+                    Optional<XFaction> optTargetFaction = XFactionCommandManager.getPlayerFaction(ply);
 
-                        if(permData.getInteract()){
+                    if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
 
-                            return;
+                        Optional<XFactionPermissionData> optPermData = XFactionCommandManager.getPlayerFactionPermissions(ply);
+
+                        if(optPermData.isPresent()) {
+
+                            if(optPermData.get().getInteract()){
+
+                                return;
+
+                            }
 
                         }
+
+                    }
+                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+
+                        return;
 
                     }
 
@@ -438,19 +552,19 @@ public class XManager {
         if(event.getSource() instanceof Player){
 
             Player ply = (Player)event.getSource();
-            XFaction xFac = XFactionCommandManager.getPlayerFaction(ply);
+            Optional<XFaction> optXFac = XFactionCommandManager.getPlayerFaction(ply);
 
             String message = event.getRawMessage().toPlain().replace("&", "\u00a7");
 
-            if(xFac != null && !xFac.getFactionPrefix().equals("")){
+            if(optXFac.isPresent() && !optXFac.get().getFactionPrefix().equals("")){
 
-                String nicePrefix = xFac.getFactionPrefix().replace("&", "\u00a7");
-                event.setMessage(Text.of(nicePrefix + "\u00a7r (" + ply.getName() + ") " + message));
+                String nicePrefix = optXFac.get().getFactionPrefix().replace("&", "\u00a7");
+                event.setMessage(Text.of(nicePrefix + "\u00a7r <" + ply.getName() + "> " + message));
 
             }
             else{
 
-                event.setMessage(Text.of("(" + ply.getName() + ") " + message));
+                event.setMessage(Text.of("<" + ply.getName() + "> " + message));
 
             }
 

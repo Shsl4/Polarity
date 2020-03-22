@@ -26,9 +26,9 @@ public class XFactionListMembers implements CommandExecutor {
 
             if(factionArg.equals("")){
 
-                if(XFactionCommandManager.getPlayerFaction(ply) != null){
+                if(XFactionCommandManager.getPlayerFaction(ply).isPresent()){
 
-                    XFactionCommandManager.getPlayerFaction(ply).listMembers(ply);
+                    XFactionCommandManager.getPlayerFaction(ply).get().listMembers(ply);
 
                 }
                 else{
@@ -40,9 +40,9 @@ public class XFactionListMembers implements CommandExecutor {
             }
             else{
 
-                if(XFactionCommandManager.doesFactionExist(factionArg)){
+                if(XFactionCommandManager.getFactionByName(factionArg).isPresent()){
 
-                    XFactionCommandManager.getFaction(factionArg).listMembers(ply);
+                    XFactionCommandManager.getFactionByName(factionArg).get().listMembers(ply);
 
                 }
                 else{

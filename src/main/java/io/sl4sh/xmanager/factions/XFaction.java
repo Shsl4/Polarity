@@ -2,10 +2,13 @@ package io.sl4sh.xmanager.factions;
 
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,20 +27,22 @@ public class XFaction {
     private List<XFactionMemberData> factionMembers;
 
     //Contains factions's claimed chunks locations
-    @NonNull
     private List<String> factionClaims = new ArrayList<String>();
 
     //Contains faction's homes data
-    private List<XFactionHomeData> factionHomes;
+    private Location<World> factionHome;
 
     //Contains allied factions names
-    private List<XFactionAllyData> factionAllies;
+    private List<String> factionAllies;
 
     //Contains enemy factions names
     private List<String> factionEnemies;
 
     //Contains invited player names
     private List<String> factionInvites;
+
+    //Contains invited player names
+    private List<String> factionAllyInvites;
 
     public XFaction(){
 
@@ -68,13 +73,13 @@ public class XFaction {
 
     }
 
-    public void setFactionHomes(List<XFactionHomeData> factionHomes){
+    public void setFactionHome(Location<World> factionHome){
 
-        this.factionHomes = factionHomes;
+        this.factionHome = factionHome;
 
     }
 
-    public void setFactionAllies(List<XFactionAllyData> factionAllies){
+    public void setFactionAllies(List<String> factionAllies){
 
         this.factionAllies = factionAllies;
 
@@ -116,13 +121,13 @@ public class XFaction {
 
     }
 
-    public List<XFactionHomeData> getFactionHomes(){
+    public Location<World> getFactionHome(){
 
-        return this.factionHomes;
+        return this.factionHome;
 
     }
 
-    public List<XFactionAllyData> getFactionAllies(){
+    public List<String> getFactionAllies(){
 
         return this.factionAllies;
 
@@ -147,7 +152,7 @@ public class XFaction {
     }
 
     public XFaction(String factionName, String factionPrefix, String factionDisplayName, String factionOwner, List<XFactionMemberData> factionMembers, List<String> factionClaims,
-                    List<XFactionHomeData> factionHomes, List<XFactionAllyData> factionAllies, List<String> factionEnemies, List<String> factionInvites){
+                    Location<World> factionHome, List<String> factionAllies, List<String> factionEnemies, List<String> factionInvites, List<String> factionAllyInvites){
 
         this.factionName = factionName;
         this.factionPrefix = factionPrefix;
@@ -155,12 +160,25 @@ public class XFaction {
         this.factionOwner = factionOwner;
         this.factionMembers = factionMembers;
         this.factionClaims = factionClaims;
-        this.factionHomes = factionHomes;
+        this.factionHome = factionHome;
         this.factionAllies = factionAllies;
         this.factionEnemies = factionEnemies;
         this.factionInvites = factionInvites;
+        this.factionAllyInvites = factionAllyInvites;
 
         XTabListManager.refreshTabLists();
+
+    }
+
+    public boolean isOwner(String playerName){
+
+        return getFactionOwner().equals(playerName);
+
+    }
+
+    public boolean isFactionAllied(@Nonnull XFaction targetFaction){
+
+        return factionAllies.contains(targetFaction.getFactionName());
 
     }
 
@@ -176,27 +194,14 @@ public class XFaction {
 
         for(XFactionMemberData mbData : glData){
 
-            switch (mbData.getPermissions().getRank()){
+            if (mbData.getPlayerName().equals(getFactionOwner())){
 
-                case Owner:
+                src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a76(Owner)"));
 
-                    src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a76(" + mbData.getPermissions().getRank() + ")"));
-                    break;
+            }
+            else{
 
-                case Adventurer:
-
-                    src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a7b(" + mbData.getPermissions().getRank() + ")"));
-                    break;
-
-                case Superior:
-
-                    src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a75(" + mbData.getPermissions().getRank() + ")"));
-                    break;
-
-                case Member:
-
-                    src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a7f(" + mbData.getPermissions().getRank() + ")"));
-                    break;
+                src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a7f(Member)"));
 
             }
 
@@ -206,6 +211,22 @@ public class XFaction {
 
     }
 
+    public boolean setPermissionDataForPlayer(Player targetPlayer, XFactionPermissionData permData){
+
+        for(XFactionMemberData mbData : getFactionMembers()){
+
+            if(mbData.getPlayerName().equals(targetPlayer.getName())){
+
+                mbData.permissions = permData;
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
 
     public String getFactionPrefix() {
         return factionPrefix;
@@ -224,5 +245,13 @@ public class XFaction {
     public void setFactionDisplayName(String factionDisplayName) {
 
         this.factionDisplayName = factionDisplayName;
+    }
+
+    public List<String> getFactionAllyInvites() {
+        return factionAllyInvites;
+    }
+
+    public void setFactionAllyInvites(List<String> factionAllyInvites) {
+        this.factionAllyInvites = factionAllyInvites;
     }
 }

@@ -11,9 +11,12 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class XFactionCreate implements CommandExecutor {
 
@@ -23,12 +26,6 @@ public class XFactionCreate implements CommandExecutor {
         if (src instanceof Player) {
 
             Player ply = (Player) src;
-
-            if(XFactionCommandManager.doesFactionExist(args.getOne("factionName").get().toString().toLowerCase())){
-
-                src.sendMessage(Text.of("\u00a7cThe faction named " + args.getOne("factionName").get().toString().toLowerCase() + " already exists!"));
-
-            }
 
             if(createFaction(ply, args.getOne("factionName").get().toString().toLowerCase())){
 
@@ -48,23 +45,16 @@ public class XFactionCreate implements CommandExecutor {
 
     }
 
-
-
     private Boolean createFaction(Player creator, String factionName) {
 
-        if(XFactionCommandManager.getPlayerFaction(creator) == null){
+        if(!XFactionCommandManager.getPlayerFaction(creator).isPresent()){
 
             if(!XFactionCommandManager.doesFactionExist(factionName)){
 
                 List<XFactionMemberData> factionMembers = new ArrayList<>();
-                XFactionMemberData mbData = new XFactionMemberData(creator.getName(), new XFactionPermissionData(true, true, true, XFactionMemberRank.Owner));
+                XFactionMemberData mbData = new XFactionMemberData(creator.getName(), new XFactionPermissionData(true, true, true));
                 factionMembers.add(mbData);
-                List<String> factionClaims = new ArrayList<>();
-                List<XFactionHomeData> factionHomes = new ArrayList<>();
-                List<XFactionAllyData> factionAllies = new ArrayList<>();
-                List<String> factionEnemies = new ArrayList<>();
-                List<String> factionInvites = new ArrayList<>();
-                XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, factionClaims, factionHomes, factionAllies, factionEnemies, factionInvites);
+                XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, new ArrayList<>(), null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
                 XFactionContainer factions = XManager.getXManager().getFactionContainer();
 

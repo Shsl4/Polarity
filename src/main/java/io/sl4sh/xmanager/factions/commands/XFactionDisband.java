@@ -14,8 +14,7 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 public class XFactionDisband implements CommandExecutor {
 
@@ -50,9 +49,11 @@ public class XFactionDisband implements CommandExecutor {
 
     private Boolean disbandFaction(Player rq){
 
-        if(XFactionCommandManager.getPlayerFaction(rq) != null){
+        Optional<XFaction> optPendingDeleteFaction = XFactionCommandManager.getPlayerFaction(rq);
 
-            XFaction pendingDeleteFaction = XFactionCommandManager.getPlayerFaction(rq);
+        if(optPendingDeleteFaction.isPresent()){
+
+            XFaction pendingDeleteFaction = optPendingDeleteFaction.get();
 
             if(pendingDeleteFaction.getFactionOwner().equals(rq.getName())){
 
@@ -68,7 +69,7 @@ public class XFactionDisband implements CommandExecutor {
 
                 }
 
-                XManager.getXManager().getFactionContainer().getFactionList().remove(XFactionCommandManager.getPlayerFaction(rq));
+                XManager.getXManager().getFactionContainer().getFactionList().remove(pendingDeleteFaction);
                 XManager.getXManager().writeFactions();
                 XManager.getXManager().writePlayerInfo();
                 return true;

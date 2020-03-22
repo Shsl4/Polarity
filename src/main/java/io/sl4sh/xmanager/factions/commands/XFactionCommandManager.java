@@ -47,7 +47,7 @@ public class XFactionCommandManager implements CommandExecutor {
 
     }
 
-    static public XFaction getFaction(String factionName){
+    static public Optional<XFaction> getFactionByName(String factionName){
 
         XFactionContainer factionsContainer = XManager.getXManager().getFactionContainer();
 
@@ -57,7 +57,7 @@ public class XFactionCommandManager implements CommandExecutor {
 
                 if(faction.getFactionName().equals(factionName)){
 
-                    return faction;
+                    return Optional.of(faction);
 
                 }
 
@@ -65,20 +65,20 @@ public class XFactionCommandManager implements CommandExecutor {
 
         }
 
-        return null;
+        return Optional.empty();
 
     }
 
 
-    static public XFactionPermissionData getPlayerFactionPermissions(Player ply) {
+    static public Optional<XFactionPermissionData> getPlayerFactionPermissions(Player ply) {
 
-        if (getPlayerFaction(ply) != null) {
+        if (getPlayerFaction(ply).isPresent()) {
 
-            for (XFactionMemberData mbData : getPlayerFaction(ply).getFactionMembers()) {
+            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getFactionMembers()) {
 
                 if (mbData.getPlayerName().equals(ply.getName())) {
 
-                    return mbData.getPermissions();
+                    return Optional.ofNullable(mbData.getPermissions());
 
                 }
 
@@ -86,19 +86,19 @@ public class XFactionCommandManager implements CommandExecutor {
 
         }
 
-        return null;
+        return Optional.empty();
 
     }
 
-    static public XFactionMemberData getMemberDataForPlayer(Player ply) {
+    static public Optional<XFactionMemberData> getMemberDataForPlayer(Player ply) {
 
-        if (getPlayerFaction(ply) != null) {
+        if (getPlayerFaction(ply).isPresent()) {
 
-            for (XFactionMemberData mbData : getPlayerFaction(ply).getFactionMembers()) {
+            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getFactionMembers()) {
 
                 if (mbData.getPlayerName().equals(ply.getName())) {
 
-                    return mbData;
+                    return Optional.of(mbData);
 
                 }
 
@@ -106,12 +106,12 @@ public class XFactionCommandManager implements CommandExecutor {
 
         }
 
-        return null;
+        return Optional.empty();
 
     }
 
 
-    static public XFaction getPlayerFaction(Player player){
+    static public Optional<XFaction> getPlayerFaction(Player player){
 
         XFactionContainer fContainer = XManager.getXManager().getFactionContainer();
 
@@ -123,7 +123,7 @@ public class XFactionCommandManager implements CommandExecutor {
 
                     if(memberData.getPlayerName().equals(player.getName())){
 
-                        return faction;
+                        return Optional.of(faction);
 
                     }
 
@@ -133,7 +133,7 @@ public class XFactionCommandManager implements CommandExecutor {
 
         }
 
-        return null;
+        return Optional.empty();
 
     }
 

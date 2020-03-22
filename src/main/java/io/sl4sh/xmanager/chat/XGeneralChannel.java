@@ -25,9 +25,11 @@ public class XGeneralChannel implements MessageChannel {
 
             Text text = original;
 
-            XFaction fac = XFactionCommandManager.getPlayerFaction(ply);
+            Optional<XFaction> optFac = XFactionCommandManager.getPlayerFaction(ply);
 
-            if(fac != null){
+            if(optFac.isPresent()){
+
+                XFaction fac = optFac.get();
 
                 if(!fac.getFactionPrefix().equals("")){
 
