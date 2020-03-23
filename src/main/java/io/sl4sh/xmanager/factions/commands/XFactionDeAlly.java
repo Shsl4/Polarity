@@ -1,6 +1,7 @@
 package io.sl4sh.xmanager.factions.commands;
 
 import io.sl4sh.xmanager.XError;
+import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.factions.XFaction;
 import io.sl4sh.xmanager.factions.XFactionMemberData;
 import org.spongepowered.api.command.CommandException;
@@ -44,7 +45,7 @@ public class XFactionDeAlly implements CommandExecutor {
 
         Optional<XFaction> optCallerFaction = XFactionCommandManager.getPlayerFaction(caller);
 
-        // Return if the provided faction doesn't exist
+        // Return if the caller doesn't have any faction
         if(!optCallerFaction.isPresent()) {  caller.sendMessage(Text.of(XError.XERROR_NOXF.getDesc())); return; }
 
         // Get the safe references to our factions
@@ -68,15 +69,8 @@ public class XFactionDeAlly implements CommandExecutor {
             Optional<Player> optTargetFactionConfigPlayer = XFactionCommandManager.getPlayerByName(targetFactionMbData.playerName);
 
             // Check if the player exists / is online
-            if(optTargetFactionConfigPlayer.isPresent()){
-
-                // If the caller faction's display name has been set, pick it, else use the faction's raw name
-                String niceCallerFactionName = callerFaction.getFactionDisplayName().equals("") ? callerFaction.getFactionName() : callerFaction.getFactionDisplayName();
-
-                // Notify the player of the alliance destruction
-                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7c[Factions] " + niceCallerFactionName + "\u00a7c are no longer your allies!"));
-
-            }
+            // Notify the player of the alliance destruction
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of("\u00a7c[Factions] | " + callerFaction.getFactionDisplayName() + "\u00a7c are no longer your allies!")));
 
         }
 
@@ -86,15 +80,8 @@ public class XFactionDeAlly implements CommandExecutor {
             Optional<Player> optTargetFactionConfigPlayer = XFactionCommandManager.getPlayerByName(callerFactionMbData.playerName);
 
             // Check if the player exists / is online
-            if(optTargetFactionConfigPlayer.isPresent()){
-
-                // If the target faction's display name has been set, pick it, else use the faction's raw name
-                String niceTargetFactionName = targetFaction.getFactionDisplayName().equals("") ? targetFaction.getFactionName() : targetFaction.getFactionDisplayName();
-
-                // Notify the player of the alliance destruction
-                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7c[Factions] " + niceTargetFactionName + "\u00a7c are no longer your allies!"));
-
-            }
+            // Notify the player of the alliance destruction
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of("\u00a7c[Factions] | " + targetFaction.getFactionDisplayName() + "\u00a7c are no longer your allies!")));
 
         }
 

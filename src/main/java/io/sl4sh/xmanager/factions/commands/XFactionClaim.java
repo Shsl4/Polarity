@@ -66,7 +66,7 @@ public class XFactionClaim implements CommandExecutor {
 
                             if (XManager.getXManager().writeFactions()) {
 
-                                ply.sendMessage(Text.of("\u00a7aChunk successfully claimed! " + chunkToClaim.toString()));
+                                ply.sendMessage(Text.of("\u00a7a[Factions] | Chunk successfully claimed! " + chunkToClaim.toString()));
 
                             }
 

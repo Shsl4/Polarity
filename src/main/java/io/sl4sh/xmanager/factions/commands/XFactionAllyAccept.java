@@ -76,7 +76,7 @@ public class XFactionAllyAccept implements CommandExecutor {
                 String niceCallerFactionName = callerFaction.getFactionDisplayName().equals("") ? callerFaction.getFactionName() : callerFaction.getFactionDisplayName();
 
                 // Notify the player of the alliance creation
-                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7d[Factions] " + niceCallerFactionName + "\u00a7d are now your allies!"));
+                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7d[Factions] | " + niceCallerFactionName + "\u00a7d are now your allies!"));
 
             }
 
@@ -94,7 +94,7 @@ public class XFactionAllyAccept implements CommandExecutor {
                 String niceTargetFactionName = targetFaction.getFactionDisplayName().equals("") ? targetFaction.getFactionName() : targetFaction.getFactionDisplayName();
 
                 // Notify the player of the alliance creation
-                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7d[Factions] " + niceTargetFactionName + "\u00a7d are now your allies!"));
+                optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7d[Factions] | " + niceTargetFactionName + "\u00a7d are now your allies!"));
 
             }
 

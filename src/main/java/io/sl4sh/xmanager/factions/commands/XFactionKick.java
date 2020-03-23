@@ -67,7 +67,7 @@ public class XFactionKick implements CommandExecutor {
 
         Optional<XFactionPermissionData> optTargetPerms = XFactionCommandManager.getPlayerFactionPermissions(TargetPlayer);
 
-        if(callerFaction.getFactionOwner().equals(Caller.getName())) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(callerFaction.getFactionOwner().equals(TargetPlayer.getName())) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
         callerFaction.getFactionMembers().remove(XFactionCommandManager.getMemberDataForPlayer(TargetPlayer).get());
         XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(TargetPlayer).setPlayerFaction(null);
@@ -76,17 +76,14 @@ public class XFactionKick implements CommandExecutor {
         XManager.getXManager().writePlayerInfo();
         XTabListManager.refreshTabLists();
 
-        String modDPName = callerFaction.getFactionDisplayName();
-        modDPName = modDPName.replace("&", "\u00a7");
-
         for(XFactionMemberData mbData : callerFaction.getFactionMembers()){
 
             Optional<Player> optPly = XFactionCommandManager.getPlayerByName(mbData.playerName);
-            optPly.ifPresent(player -> player.sendMessage(Text.of("\u00a7c" + TargetPlayer.getName() + " has been kicked from the faction by " + Caller.getName())));
+            optPly.ifPresent(player -> player.sendMessage(Text.of("\u00a7c[Factions] | " + TargetPlayer.getName() + " has been kicked from the faction by " + Caller.getName())));
 
         }
 
-        TargetPlayer.sendMessage(Text.of("\u00a7cYou've been kicked from your faction by " + Caller.getName()));
+        TargetPlayer.sendMessage(Text.of("\u00a7c[Factions] | You've been kicked from your faction by " + Caller.getName()));
         XManager.getXManager().writeFactions();
         XManager.getXManager().writePlayerInfo();
 

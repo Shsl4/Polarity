@@ -59,7 +59,7 @@ public class XFactionJoin implements CommandExecutor {
                 String modDPName = targetFaction.getFactionDisplayName();
                 modDPName = modDPName.replace("&", "\u00a7");
 
-                ply.sendMessage(Text.of("\u00a7aSuccessfully joined the faction " + modDPName + "\u00a7a!"));
+                ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully joined the faction " + modDPName + "\u00a7a!"));
 
                 for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
 
@@ -67,7 +67,7 @@ public class XFactionJoin implements CommandExecutor {
 
                     Optional<Player> optPlayer = XFactionCommandManager.getPlayerByName(mbData.getPlayerName());
 
-                    optPlayer.ifPresent(player -> player.sendMessage(Text.of("\u00a7d" + ply.getName() + "\u00a7e just joined your faction!")));
+                    optPlayer.ifPresent(player -> player.sendMessage(Text.of("\u00a7e[Factions] | \u00a7d" + ply.getName() + "\u00a7e just joined your faction!")));
 
                 }
 

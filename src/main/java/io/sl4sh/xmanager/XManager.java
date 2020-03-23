@@ -24,6 +24,8 @@ import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.data.ChangeDataHolderEvent;
+import org.spongepowered.api.event.entity.ConstructEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
@@ -37,6 +39,8 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Plugin(
@@ -56,7 +60,14 @@ public class XManager {
     private XTabListManager xTabListManager;
     private XFactionContainer xFactionContainer;
     private XPlayerContainer xPlayerContainer;
+    private XConfigData configData;
     private XGeneralChannel xChannel = new XGeneralChannel();
+
+    public XConfigData getConfigData(){
+
+        return this.configData;
+
+    }
 
     public XFactionContainer getFactionContainer(){
 
@@ -148,17 +159,32 @@ public class XManager {
                 .executor(new XFactionUnClaim())
                 .build();
 
-        CommandSpec listMembersCmdSpec = CommandSpec.builder()
+        CommandSpec facListAlliesCmdSpec = CommandSpec.builder()
+                .description(Text.of("Lists the allies of a faction."))
+                .arguments(GenericArguments.optional(GenericArguments.string(Text.of("factionName"))))
+                .permission("xmanager.factions.list.allies")
+                .executor(new XFactionListAllies())
+                .build();
+
+        CommandSpec facListMembersCmdSpec = CommandSpec.builder()
                 .description(Text.of("Lists the members of a faction."))
                 .arguments(GenericArguments.optional(GenericArguments.string(Text.of("factionName"))))
                 .permission("xmanager.factions.list.members")
                 .executor(new XFactionListMembers())
                 .build();
 
-        CommandSpec factionsListCmdSpec = CommandSpec.builder()
+        CommandSpec facListHelpCmdSpec = CommandSpec.builder()
                 .description(Text.of("List information about factions."))
+                .permission("xmanager.factions.list.help")
+                .executor(new XFactionListHelp())
+                .build();
+
+        CommandSpec facListCmdSpec = CommandSpec.builder()
+                .description(Text.of("Lists the existing factions."))
                 .permission("xmanager.factions.list")
-                .child(listMembersCmdSpec, "members")
+                .child(facListAlliesCmdSpec, "allies")
+                .child(facListMembersCmdSpec, "members")
+                .child(facListHelpCmdSpec, "help")
                 .executor(new XFactionList())
                 .build();
 
@@ -187,14 +213,6 @@ public class XManager {
                 .description(Text.of("Shows your faction's claims."))
                 .permission("xmanager.factions.showclaims")
                 .executor(new XFactionShowClaims())
-                .build();
-
-
-        CommandSpec writeCmdSpec = CommandSpec.builder()
-                .description(Text.of("Writes to config to yml files."))
-                .permission("xmanager.write")
-                .child(listMembersCmdSpec, "write")
-                .executor(new XManagerWrite())
                 .build();
 
         CommandSpec setHomeCmdSpec = CommandSpec.builder()
@@ -280,7 +298,7 @@ public class XManager {
                 .build();
 
 
-        CommandSpec setOwnerCmdSpec = CommandSpec.builder()
+        CommandSpec facSetOwnerCmdSpec = CommandSpec.builder()
                 .description(Text.of("Sets your faction's owner."))
                 .permission("xmanager.factions.setowner")
                 .arguments(GenericArguments.player(Text.of("playerName")))
@@ -314,7 +332,7 @@ public class XManager {
                 .child(disbandCmdSpec, "disband")
                 .child(leaveCmdSpec, "leave")
                 .child(unClaimCmdSpec, "unclaim")
-                .child(factionsListCmdSpec, "list")
+                .child(facListCmdSpec, "list")
                 .child(factionsSetDPNameCmdSpec, "setdisplayname")
                 .child(factionsSetPrefixCmdSpec, "setprefix")
                 .child(facPermCmdSpec, "perm")
@@ -324,16 +342,39 @@ public class XManager {
                 .child(facShowClaimsCmdSpec, "showclaims")
                 .child(facHomeCmdSpec, "home")
                 .child(facSetHomeCmdSpec, "sethome")
-                .child(setOwnerCmdSpec, "setowner")
+                .child(facSetOwnerCmdSpec, "setowner")
                 .child(factionsAllyCmdSpec, "ally")
                 .child(facDeAllyCmdSpec, "deally")
                 .executor(new XFactionCommandManager())
                 .build();
 
+        CommandSpec protectChunkCmdSpec = CommandSpec.builder()
+                .description(Text.of("Add protected chunk."))
+                .permission("xmanager.protectchunk")
+                .executor(new XManagerProtectChunk())
+                .build();
+
+        CommandSpec unProtectChunkCmdSpec = CommandSpec.builder()
+                .description(Text.of("Removes protected chunk."))
+                .permission("xmanager.unprotectchunk")
+                .executor(new XManagerUnProtectChunk())
+                .build();
+
+        CommandSpec setHubCmdSpec = CommandSpec.builder()
+                .description(Text.of("Sets the hub location."))
+                .permission("xmanager.sethub")
+                .executor(new XManagerSetHub())
+                .build();
+
+        CommandSpec hubCmdSpec = CommandSpec.builder()
+                .description(Text.of("Teleports to the hub."))
+                .permission("xmanager.hub")
+                .executor(new XManagerHub())
+                .build();
+
         CommandSpec mainCmdSpec = CommandSpec.builder()
                 .description(Text.of("Main XManager command."))
                 .permission("xmanager")
-                .child(writeCmdSpec, "write")
                 .child(setHomeCmdSpec, "sethome")
                 .child(homeCmdSpec, "home")
                 .child(listHomesCmdSpec, "listhomes")
@@ -343,6 +384,10 @@ public class XManager {
 
         Sponge.getCommandManager().register(plugin, mainCmdSpec, "xm");
         Sponge.getCommandManager().register(plugin, factionsCmdSpec, "factions");
+        Sponge.getCommandManager().register(plugin, protectChunkCmdSpec, "protectChunk");
+        Sponge.getCommandManager().register(plugin, unProtectChunkCmdSpec, "unprotectChunk");
+        Sponge.getCommandManager().register(plugin, setHubCmdSpec, "setHub");
+        Sponge.getCommandManager().register(plugin, hubCmdSpec, "hub");
 
     }
 
@@ -351,6 +396,7 @@ public class XManager {
 
         xFactionContainer = startupGetFactions();
         xPlayerContainer = startupGetPlayerInfo();
+        configData = startupGetDataConfigFile();
         xTabListManager = new XTabListManager();
         xLogSuccess("XManager successfully initialized!");
 
@@ -359,17 +405,32 @@ public class XManager {
     @Listener
     public void onServerStopping(GameStoppingServerEvent event){
 
-        XManager.getXManager().writeFactions();
-        XManager.getXManager().writePlayerInfo();
+        writeFactions();
+        writePlayerInfo();
+        writeDataConfigFile();
 
     }
 
     @Listener
     public void onBlockPlaced(ChangeBlockEvent.Place event){
 
+
         for (Transaction<BlockSnapshot> snap : event.getTransactions()) {
 
             Vector3i chunkPos = snap.getFinal().getLocation().get().getChunkPosition();
+
+            List<String> protectedChunks = configData.getServerProtectedChunks();
+
+            for(String protectedChunk : protectedChunks){
+
+                if(getStringAsVector3i(protectedChunk).equals(chunkPos)){
+
+                    event.setCancelled(true);
+                    return;
+
+                }
+
+            }
 
             if(XFactionClaim.isChunkClaimed(chunkPos)){
 
@@ -423,6 +484,19 @@ public class XManager {
         for (Transaction<BlockSnapshot> snap : event.getTransactions()) {
 
             Vector3i chunkPos = snap.getFinal().getLocation().get().getChunkPosition();
+
+            List<String> protectedChunks = configData.getServerProtectedChunks();
+
+            for(String protectedChunk : protectedChunks){
+
+                if(getStringAsVector3i(protectedChunk).equals(chunkPos)){
+
+                    event.setCancelled(true);
+                    return;
+
+                }
+
+            }
 
             if(XFactionClaim.isChunkClaimed(chunkPos)){
 
@@ -543,6 +617,42 @@ public class XManager {
         }
 
         xLogSuccess("Called player respawn.");
+
+    }
+
+    @Listener
+    public void onMobSpawn(ConstructEntityEvent.Pre event){
+
+        List<String> protectedChunks = configData.getServerProtectedChunks();
+
+        for(String protectedChunk : protectedChunks){
+
+            if(event.getTransform().getLocation().getChunkPosition().equals(getStringAsVector3i(protectedChunk))){
+
+                event.setCancelled(true);
+                return;
+
+            }
+
+        }
+
+    }
+
+    @Listener
+    public void onDamageDealt(DamageEntityEvent event){
+
+        List<String> protectedChunks = configData.getServerProtectedChunks();
+
+        for(String protectedChunk : protectedChunks){
+
+            if(event.getTargetEntity().getLocation().getChunkPosition().equals(getStringAsVector3i(protectedChunk))){
+
+                event.setCancelled(true);
+                return;
+
+            }
+
+        }
 
     }
 
@@ -723,6 +833,76 @@ public class XManager {
 
     }
 
+    private XConfigData createDataConfigFile(){
+
+        File configDir = new File("config/XManager");
+        Yaml ymlConfig = new Yaml(new Constructor(XPlayer.class));
+        FileWriter writer = null;
+
+        if(!configDir.exists()){
+
+            if(!configDir.mkdir()){
+
+                xLogError(XError.XERROR_DIRWRITEFAIL.getDesc());
+                return null;
+
+            }
+
+        }
+
+        try {
+
+            writer = new FileWriter("config/XManager/data.yml");
+            XConfigData plContainer = new XConfigData();
+            ymlConfig.dump(plContainer, writer);
+            xLogSuccess("Successfully created dataContainer");
+            return plContainer;
+
+        } catch (IOException e) {
+
+            xLogError(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
+            return null;
+
+        }
+
+    }
+
+    public Boolean writeDataConfigFile(){
+
+        xLogWarning("Writing data config file...");
+
+        try {
+
+            Yaml ymlConfig = new Yaml(new Constructor(XConfigData.class));
+            FileWriter writer = new FileWriter("config/XManager/data.yml");
+            ymlConfig.dump(configData, writer);
+            xLogSuccess("Successfully wrote data config file!");
+            return true;
+
+        } catch (IOException e) {
+
+            xLogError(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
+            return false;
+
+        }
+    }
+
+    private XConfigData startupGetDataConfigFile(){
+
+        try {
+
+            Yaml ymlConfig = new Yaml(new Constructor(XConfigData.class));
+            InputStream inputStream = new FileInputStream("config/XManager/data.yml");
+            return ymlConfig.loadAs(inputStream, XConfigData.class);
+
+        } catch (FileNotFoundException e) {
+
+            return createDataConfigFile();
+
+        }
+
+    }
+
     public Boolean writePlayerInfo(){
 
         xLogWarning("Writing player config file...");
@@ -776,9 +956,9 @@ public class XManager {
         String zStr = yStr.substring(commaSep + 2, yStr.length());
         yStr = yStr.substring(0, commaSep);
 
-        int xVal = Integer.parseInt(xStr);
-        int yVal = Integer.parseInt(yStr);
-        int zVal = Integer.parseInt(zStr);
+        double xVal = Double.parseDouble(xStr);
+        double yVal = Double.parseDouble(yStr);
+        double zVal = Double.parseDouble(zStr);
 
         return new Vector3d(xVal, yVal, zVal);
 
@@ -800,6 +980,12 @@ public class XManager {
         }
 
         return strBld.toString();
+
+    }
+
+    public static String getStringReplacingModifierChar(String str){
+
+        return str.replace("&", "\u00a7");
 
     }
 

@@ -80,7 +80,7 @@ public class XFactionForceDisband implements CommandExecutor {
 
                 XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(ply).setPlayerFaction("");
 
-                ply.sendMessage(Text.of("\u00a7c\u00a7lYour faction has been disbanded by an administrator."));
+                ply.sendMessage(Text.of("\u00a7c\u00a7l[Factions] | Your faction has been disbanded by an administrator."));
 
             }
 

@@ -56,13 +56,13 @@ public class XFactionSetDisplayName implements CommandExecutor {
                 if(displayName.equals("")){
 
                     optXFac.get().setFactionDisplayName(optXFac.get().getFactionName());
-                    ply.sendMessage(Text.of("\u00a7aSuccessfully removed your faction's display name."));
+                    ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully removed your faction's display name."));
 
                 }
                 else{
 
                     optXFac.get().setFactionDisplayName(displayName);
-                    ply.sendMessage(Text.of("\u00a7aSuccessfully updated your faction's display name."));
+                    ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully updated your faction's display name."));
 
                 }
 

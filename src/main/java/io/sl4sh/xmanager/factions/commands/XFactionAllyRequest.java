@@ -54,6 +54,8 @@ public class XFactionAllyRequest implements CommandExecutor {
         XFaction targetFaction = optTargetFaction.get();
         XFaction callerFaction = optCallerFaction.get();
 
+        if(callerFaction == targetFaction) { caller.sendMessage(Text.of("\u00a7b[Factions] | You cannot ally your own faction!")); return;}
+
         // Return if the faction is already allied
         if(targetFaction.isFactionAllied(callerFaction)) { caller.sendMessage(Text.of(XError.XERROR_ALREADYALLIED.getDesc())); return;}
 
@@ -63,11 +65,11 @@ public class XFactionAllyRequest implements CommandExecutor {
         if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getConfigure()) {  caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
         // Return if an ally request was already submitted to the provided faction
-        if(callerFaction.getFactionAllyInvites().contains(targetFactionName)) {  caller.sendMessage(Text.of("\u00a7b[Factions] You already submitted an ally request to this faction. Ask their owner to accept it.")); return;}
+        if(callerFaction.getFactionAllyInvites().contains(targetFactionName)) {  caller.sendMessage(Text.of("\u00a7b[Factions] | You already submitted an ally request to this faction. Ask their owner to accept it.")); return;}
 
         // Add the provided faction to the caller's faction alliance invitation list and notify the caller
         callerFaction.getFactionAllyInvites().add(targetFactionName);
-        caller.sendMessage(Text.of("\u00a7a[Factions] Successfully submitted your ally request to " + (targetFaction.getFactionDisplayName().equals("") ? targetFactionName : targetFaction.getFactionDisplayName())));
+        caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully submitted your ally request to " + (targetFaction.getFactionDisplayName().equals("") ? targetFactionName : targetFaction.getFactionDisplayName())));
 
         // For each TARGET faction's member
         for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
@@ -84,7 +86,7 @@ public class XFactionAllyRequest implements CommandExecutor {
                     String niceCallerFactionName = callerFaction.getFactionDisplayName().equals("") ? callerFaction.getFactionName() : callerFaction.getFactionDisplayName();
 
                     // Notify the player that they received an alliance request
-                    optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7a[Factions] " + niceCallerFactionName + "\u00a7a just sent you an alliance request! Type /factions ally accept " + callerFaction.getFactionName() +  " to accept the alliance or /factions ally decline " + callerFaction.getFactionName() + " to decline it."));
+                    optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7a[Factions] | " + niceCallerFactionName + "\u00a7a just sent you an alliance request! Type /factions ally accept " + callerFaction.getFactionName() +  " to accept the alliance or /factions ally decline " + callerFaction.getFactionName() + " to decline it."));
 
                 }
 

@@ -45,7 +45,7 @@ public class XFactionSetOwner implements CommandExecutor {
 
     private void setFactionOwner(Player caller, Player newOwner){
 
-        if(caller == newOwner) { caller.sendMessage(Text.of("\u00a7bYou are already the owner of this faction.")); return; }
+        if(caller == newOwner) { caller.sendMessage(Text.of("\u00a7b[Factions] | You are already the owner of this faction.")); return; }
 
         Optional<XFaction> optCallerFaction = XFactionCommandManager.getPlayerFaction(caller);
 
@@ -66,8 +66,8 @@ public class XFactionSetOwner implements CommandExecutor {
                 callerFaction.setFactionOwner(newOwner.getName());
                 XManager.getXManager().writeFactions();
 
-                caller.sendMessage(Text.of("\u00a7aSuccessfully set " + newOwner.getName() + " as the new faction owner!"));
-                newOwner.sendMessage(Text.of("\u00a7d" + caller.getName() + "\u00a7b just set you as the new owner of the faction!"));
+                caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully set " + newOwner.getName() + " as the new faction owner!"));
+                newOwner.sendMessage(Text.of("\u00a7b[Factions] | \u00a7d" + caller.getName() + "\u00a7b just set you as the new owner of the faction!"));
 
             }
             else{

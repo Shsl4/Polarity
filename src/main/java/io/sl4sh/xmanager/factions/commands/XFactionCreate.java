@@ -45,7 +45,9 @@ public class XFactionCreate implements CommandExecutor {
 
     }
 
-    private Boolean createFaction(Player creator, String factionName) {
+    private Boolean createFaction(Player creator, String newFactionName) {
+
+        String factionName = XManager.getStringWithoutModifiers(newFactionName);
 
         if(!XFactionCommandManager.getPlayerFaction(creator).isPresent()){
 
@@ -64,7 +66,7 @@ public class XFactionCreate implements CommandExecutor {
                     XManager.getXManager().writeFactions();
                     XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(creator).setPlayerFaction(faction.getFactionName());
                     XManager.getXManager().writePlayerInfo();
-                    creator.sendMessage(Text.of("\u00a7aSuccessfully created your faction named " + factionName + "\u00a7a!"));
+                    creator.sendMessage(Text.of("\u00a7a[Factions] | Successfully created your faction named " + factionName + "\u00a7a!"));
                     XTabListManager.refreshTabLists();
                     return true;
 
@@ -79,7 +81,7 @@ public class XFactionCreate implements CommandExecutor {
             }
             else{
 
-                creator.sendMessage(Text.of("\u00a7cA faction named " + factionName + " already exists!"));
+                creator.sendMessage(Text.of("\u00a7c[Factions] | A faction named " + factionName + " already exists!"));
 
             }
 

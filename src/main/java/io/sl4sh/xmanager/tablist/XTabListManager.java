@@ -27,7 +27,7 @@ public class XTabListManager {
             if(optTargetPlayerFaction.isPresent()){
 
                 String niceDisplayName = optTargetPlayerFaction.get().getFactionDisplayName().replace("&", "\u00a7");
-                tPlayerTabList.setFooter(Text.of("\u00a7b Your current faction is " + niceDisplayName + " "));
+                tPlayerTabList.setFooter(Text.of("\u00a7b Your current faction is " + niceDisplayName + "\u00a7b "));
 
             }
             else{

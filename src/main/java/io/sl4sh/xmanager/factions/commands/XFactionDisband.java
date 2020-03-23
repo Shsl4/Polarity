@@ -63,7 +63,7 @@ public class XFactionDisband implements CommandExecutor {
 
                         Player FacPlayer = Sponge.getServer().getPlayer(memberData.getPlayerName()).get();
                         XManager.getXManager().getPlayerContainer().getXPlayerByPlayer(FacPlayer).setPlayerFaction("");
-                        FacPlayer.sendMessage(Text.of("\u00a7c\u00a7lYour faction has been disbanded by the owner. (" + rq.getName() + ")"));
+                        FacPlayer.sendMessage(Text.of("\u00a7c\u00a7l[Factions] | Your faction has been disbanded by the owner. (" + rq.getName() + ")"));
 
                     }
 
@@ -77,7 +77,7 @@ public class XFactionDisband implements CommandExecutor {
             }
             else{
 
-                rq.sendMessage(Text.of("\u00a7cThe faction can only be disbanded by the owner."));
+                rq.sendMessage(Text.of("\u00a7c[Factions] | The faction can only be disbanded by the owner."));
                 return false;
 
             }

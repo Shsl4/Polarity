@@ -63,7 +63,7 @@ public class XFactionSetPrefix implements CommandExecutor {
                 if(factionPrefix.equals("")){
 
                     xFac.setFactionPrefix("");
-                    ply.sendMessage(Text.of("\u00a7aSuccessfully removed your faction's prefix."));
+                    ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully removed your faction's prefix."));
 
                 }
                 else{
@@ -76,7 +76,7 @@ public class XFactionSetPrefix implements CommandExecutor {
                     }
 
                     xFac.setFactionPrefix(factionPrefix);
-                    ply.sendMessage(Text.of("\u00a7aSuccessfully updated your faction's prefix."));
+                    ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully updated your faction's prefix."));
 
                 }
 

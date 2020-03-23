@@ -1,7 +1,8 @@
 package io.sl4sh.xmanager.factions;
 
+import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.factions.commands.XFactionCommandManager;
 import io.sl4sh.xmanager.tablist.XTabListManager;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -11,6 +12,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class XFaction {
 
@@ -184,8 +186,7 @@ public class XFaction {
 
     public void listMembers(CommandSource src){
 
-        String modDPName = getFactionDisplayName();
-        modDPName = modDPName.replace("&", "\u00a7");
+        String modDPName = XManager.getStringReplacingModifierChar(getFactionDisplayName());
 
         src.sendMessage(Text.of("\u00a72============ " + modDPName + "\u00a7r \u00a72Members ============"));
 
@@ -204,6 +205,35 @@ public class XFaction {
                 src.sendMessage(Text.of("\u00a7a#" + (it+1) + ". \u00a7f" + mbData.playerName + " \u00a7a| \u00a7f(Member)"));
 
             }
+
+            it++;
+
+        }
+
+    }
+
+    public void listAllies(@Nonnull CommandSource src){
+
+        String modDPName = XManager.getStringReplacingModifierChar(getFactionDisplayName());
+
+        src.sendMessage(Text.of("\u00a72============ " + modDPName + "\u00a7r \u00a72Allies ============"));
+
+        if(getFactionAllies().size() <= 0){
+
+            src.sendMessage(Text.of("\u00a7aNothing to see here... Yet!"));
+            return;
+
+        }
+
+        int it = 1;
+
+        for(String alliedFactionName : getFactionAllies()){
+
+            Optional<XFaction> optAlliedFaction = XFactionCommandManager.getFactionByName(alliedFactionName);
+
+            if(!optAlliedFaction.isPresent()) { continue; }
+
+            src.sendMessage(Text.of("\u00a7a#" + it + ". \u00a7f" + optAlliedFaction.get().getFactionDisplayName() + "\u00a7a | Raw Name: \u00a7f" + optAlliedFaction.get().getFactionName()));
 
             it++;
 
@@ -239,7 +269,7 @@ public class XFaction {
     }
 
     public String getFactionDisplayName() {
-        return factionDisplayName.equals("") ? getFactionName() : factionDisplayName;
+        return factionDisplayName.equals("") ? XManager.getStringReplacingModifierChar(getFactionName()) : XManager.getStringReplacingModifierChar(factionDisplayName);
     }
 
     public void setFactionDisplayName(String factionDisplayName) {

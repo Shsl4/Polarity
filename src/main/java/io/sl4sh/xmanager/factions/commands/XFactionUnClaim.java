@@ -57,7 +57,7 @@ public class XFactionUnClaim implements CommandExecutor {
 
                     plyFac.getFactionClaims().remove(targetChunk);
 
-                    ply.sendMessage(Text.of("\u00a7aSuccessfully unclaimed chunk! " + targetChunk));
+                    ply.sendMessage(Text.of("\u00a7a[Factions] | Successfully unclaimed chunk! " + targetChunk));
 
                 }
                 else{

@@ -62,7 +62,7 @@ public class XFactionAllyDecline implements CommandExecutor {
         // Remove the alliance request from the caller's faction
         targetFaction.getFactionAllyInvites().remove(callerFaction.getFactionName());
 
-        caller.sendMessage(Text.of("\u00a7b[Factions] You declined " + targetFactionName + "'s alliance request."));
+        caller.sendMessage(Text.of("\u00a7b[Factions] | You declined " + targetFactionName + "'s alliance request."));
 
         // For each TARGET faction's member
         for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
@@ -79,7 +79,7 @@ public class XFactionAllyDecline implements CommandExecutor {
                     String niceCallerFactionName = callerFaction.getFactionDisplayName().equals("") ? callerFaction.getFactionName() : callerFaction.getFactionDisplayName();
 
                     // Notify the player that their alliance request has been declined
-                    optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7c[Factions] " + niceCallerFactionName + "\u00a7c declined your alliance request."));
+                    optTargetFactionConfigPlayer.get().sendMessage(Text.of("\u00a7c[Factions] | " + niceCallerFactionName + "\u00a7c declined your alliance request."));
 
                 }
 

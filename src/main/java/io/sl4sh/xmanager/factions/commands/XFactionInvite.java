@@ -57,8 +57,8 @@ public class XFactionInvite implements CommandExecutor {
                     modDPName = modDPName.replace("&", "\u00a7");
 
                     callerFac.getFactionInvites().add(target.getName());
-                    caller.sendMessage(Text.of("\u00a7aSuccessfully invited player '" + target.getName() + "' to your faction."));
-                    target.sendMessage(Text.of("\u00a7aYou've been invited to join the faction '" + modDPName + "\u00a7a' by " + caller.getName() + ". Type /factions join " + callerFac.getFactionName() + " to join the faction."));
+                    caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully invited player '" + target.getName() + "' to your faction."));
+                    target.sendMessage(Text.of("\u00a7a[Factions] | You've been invited to join the faction '" + modDPName + "\u00a7a' by " + caller.getName() + ". Type /factions join " + callerFac.getFactionName() + " to join the faction."));
                     XManager.getXManager().writeFactions();
 
                 }

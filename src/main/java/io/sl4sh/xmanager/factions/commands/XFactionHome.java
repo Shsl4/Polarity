@@ -55,7 +55,7 @@ public class XFactionHome implements CommandExecutor {
         if(safeLoc.isPresent()){
 
             caller.setLocation(safeLoc.get());
-            caller.sendMessage(Text.of("\u00a7aSuccessfully teleported at your faction's home!"));
+            caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully teleported at your faction's home!"));
 
         }
         else{

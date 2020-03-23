@@ -94,7 +94,7 @@ public class  XFactionPerm implements CommandExecutor {
 
                         }
 
-                        caller.sendMessage(Text.of("\u00a7aSuccessfully set " + permName + " permission to " + value + " for player " + targetPlayer.getName()));
+                        caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully set " + permName + " permission to " + value + " for player " + targetPlayer.getName()));
 
                     }
                     else{

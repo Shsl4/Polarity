@@ -46,7 +46,7 @@ public class XFactionSetHome implements CommandExecutor {
 
         if(!XFactionCommandManager.getPlayerFactionPermissions(caller).isPresent() || !XFactionCommandManager.getPlayerFactionPermissions(caller).get().getConfigure()) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
-        if(caller.getWorld().getDimension().getType() != DimensionTypes.OVERWORLD) { caller.sendMessage(Text.of("\u00a7cYour faction home must be located in the overworld.")); return; }
+        if(caller.getWorld().getDimension().getType() != DimensionTypes.OVERWORLD) { caller.sendMessage(Text.of("\u00a7c[Factions] | Your faction home must be located in the overworld.")); return; }
 
         Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<World>(caller.getWorld(), caller.getPosition()));
 
@@ -55,7 +55,7 @@ public class XFactionSetHome implements CommandExecutor {
             callerFaction.setFactionHome(safeLoc.get());
             XManager.getXManager().writeFactions();
             XManager.getXManager().writePlayerInfo();
-            caller.sendMessage(Text.of("\u00a7aSuccessfully set your faction's home!"));
+            caller.sendMessage(Text.of("\u00a7a[Factions] | Successfully set your faction's home!"));
 
         }
         else{
