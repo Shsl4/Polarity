@@ -1,14 +1,13 @@
 package io.sl4sh.xmanager.tablist;
 
-import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.factions.commands.XFactionCommandManager;
-import io.sl4sh.xmanager.factions.XFaction;
-import org.slf4j.Logger;
+import io.sl4sh.xmanager.XUtilities;
+import io.sl4sh.xmanager.XFaction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.tab.TabList;
 import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
@@ -16,23 +15,21 @@ public class XTabListManager {
 
     public static void refreshTabLists(){
 
-        XManager.xLogWarning("Refreshing TabLists...");
-
         for(Player tPlayer : Sponge.getServer().getOnlinePlayers()){
 
             TabList tPlayerTabList = tPlayer.getTabList();
-            Optional<XFaction> optTargetPlayerFaction = XFactionCommandManager.getPlayerFaction(tPlayer);
-            tPlayerTabList.setHeader(Text.of("  \u00a7b\u00A7kl\u00a7b Welcome to \u00A7d\u00A7lFactions\u00A7b " + tPlayer.getName() + "\u00a7b! \u00A7kl"));
+            Optional<XFaction> optTargetPlayerFaction = XUtilities.getPlayerFaction(tPlayer);
+            tPlayerTabList.setHeader(Text.of(TextColors.AQUA , "  \u00A7kl" , TextColors.RESET , TextColors.AQUA , " Welcome to" , TextColors.LIGHT_PURPLE , " \u00A7lFactions " , TextColors.RESET , TextColors.AQUA , tPlayer.getName() , "! \u00A7kl" , TextColors.RESET , "  "));
 
             if(optTargetPlayerFaction.isPresent()){
 
-                String niceDisplayName = optTargetPlayerFaction.get().getFactionDisplayName().replace("&", "\u00a7");
-                tPlayerTabList.setFooter(Text.of("\u00a7b Your current faction is " + niceDisplayName + "\u00a7b "));
+                String niceDisplayName = XUtilities.getStringReplacingModifierChar(optTargetPlayerFaction.get().getFactionDisplayName());
+                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " Your current faction is " , niceDisplayName , TextColors.RESET , TextColors.AQUA , " "));
 
             }
             else{
 
-                tPlayerTabList.setFooter(Text.of(" \u00a7bYou currently do not have any faction "));
+                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " You currently do not have any faction "));
 
             }
 
@@ -43,14 +40,14 @@ public class XTabListManager {
                 if(opIPlayerEntry.isPresent()){
 
                     TabListEntry iPlayerEntry = opIPlayerEntry.get();
-                    Optional<XFaction> optIPlayerFaction = XFactionCommandManager.getPlayerFaction(iPlayer);
+                    Optional<XFaction> optIPlayerFaction = XUtilities.getPlayerFaction(iPlayer);
 
                     if(optIPlayerFaction.isPresent()){
 
                         if(!optIPlayerFaction.get().getFactionPrefix().equals("")){
 
-                            String iPlyFacPrefix = optIPlayerFaction.get().getFactionPrefix().replace("&", "\u00a7");
-                            iPlayerEntry.setDisplayName(Text.of(iPlyFacPrefix + "\u00A7r " + iPlayer.getName()));
+                            String nicePrefix = XUtilities.getStringReplacingModifierChar(optIPlayerFaction.get().getFactionPrefix());
+                            iPlayerEntry.setDisplayName(Text.of(nicePrefix , TextColors.RESET, " " , iPlayer.getName()));
 
                         }
                         else{
@@ -69,17 +66,13 @@ public class XTabListManager {
                 }
                 else{
 
-                    XManager.xLogError("Entry absent. UUID = " + iPlayer.getUniqueId());
-                    XManager.xLogError(tPlayerTabList.getEntries().toString());
-                    XManager.xLogError(tPlayerTabList.toString());
+                    // Entry Absent
 
                 }
 
             }
 
         }
-
-        XManager.xLogSuccess("TabLists Refreshed.");
 
     }
 
