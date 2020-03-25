@@ -8,10 +8,18 @@ import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class XUtilities {
@@ -251,6 +259,26 @@ public class XUtilities {
     public static String getStringReplacingModifierChar(String str){
 
         return str.replace("&", "\u00a7");
+
+    }
+
+    // https://github.com/Zerthick/PlayerShopsRPG/blob/master/src/main/java/io/github/zerthick/playershopsrpg/utils/config/serializers/ItemStackHOCONSerializer.java
+    public static String serializeSnapShot(ItemStackSnapshot snapshot) throws IOException {
+
+        DataContainer container = snapshot.toContainer();
+        StringWriter stringWriter = new StringWriter();
+
+        DataFormats.HOCON.writeTo(stringWriter, container);
+
+        return stringWriter.toString();
+    }
+
+    // https://github.com/Zerthick/PlayerShopsRPG/blob/master/src/main/java/io/github/zerthick/playershopsrpg/utils/config/serializers/ItemStackHOCONSerializer.java
+    public static ItemStackSnapshot deserializeSnapShot(String filePath) throws IOException {
+
+        String content = new String(Files.readAllBytes(Paths.get(filePath)));
+        DataContainer container = DataFormats.HOCON.read(content);
+        return ItemStack.builder().fromContainer(container).build().createSnapshot();
 
     }
 

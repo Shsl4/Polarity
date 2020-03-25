@@ -61,7 +61,7 @@ public class XFactionsSetHome implements CommandExecutor {
 
         XFaction callerFaction = optCallerFaction.get();
 
-        if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getConfigure()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<>(caller.getWorld(), caller.getPosition()));
 

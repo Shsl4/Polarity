@@ -83,7 +83,7 @@ public class XFactionsAllyDecline implements CommandExecutor {
         Optional<XFactionMemberData> optTargetMemberData = XUtilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getConfigure()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         // Return if no alliance request was sent by the provided faction
         if(!targetFaction.getFactionAllyInvites().contains(callerFaction.getFactionName())) { caller.sendMessage(XError.XERROR_NOALLYRQ.getDesc()); return; }
@@ -98,7 +98,7 @@ public class XFactionsAllyDecline implements CommandExecutor {
         for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
 
             // If the player is allowed to configure the faction
-            if(playerData.permissions.getConfigure()){
+            if(playerData.permissions.getManage()){
 
                 Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(playerData.playerName);
 

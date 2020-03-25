@@ -70,7 +70,7 @@ public class XFactionsSetDisplayName implements CommandExecutor {
 
             if(!optPermData.isPresent()) { ply.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-            if(optPermData.get().getConfigure()){
+            if(optPermData.get().getManage()){
 
                 if(displayName.equals("")){
 

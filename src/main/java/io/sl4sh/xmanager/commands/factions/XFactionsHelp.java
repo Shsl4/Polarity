@@ -70,14 +70,14 @@ public class XFactionsHelp implements CommandExecutor {
         caller.sendMessage(Text.of(helpAccentColor, "/factions home ", TextColors.WHITE, "Teleport to your faction's home (if set)."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions showclaims ", TextColors.WHITE, "Shows your faction's claimed chunks. Watch the flames particles!"));
 
-        if(!optMbData.get().getConfigure()) { return; }
+        if(!optMbData.get().getManage()) { return; }
 
         caller.sendMessage(Text.of(helpAccentColor, "/factions claim ", TextColors.WHITE, "Claims a chunk for your faction."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions unclaim ", TextColors.WHITE, "Unclaims one of your faction's chunks."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions sethome ", TextColors.WHITE, "Sets your faction's home."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions ally ", TextColors.WHITE, "Manage alliances for your faction."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions kick ", TextColors.WHITE, "Kicks a member from your faction."));
-        caller.sendMessage(Text.of(helpAccentColor, "/factions perm ", TextColors.WHITE, "Sets permissions for a member of your faction."));
+        caller.sendMessage(Text.of(helpAccentColor, "/factions setperm ", TextColors.WHITE, "Sets permissions for a member of your faction."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions setdisplayname ", TextColors.WHITE, "Sets your faction's display name."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions setprefix ", TextColors.WHITE, "Sets your faction's prefix."));
 

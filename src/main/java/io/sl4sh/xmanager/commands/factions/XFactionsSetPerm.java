@@ -4,6 +4,7 @@ import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
+import io.sl4sh.xmanager.enums.XPermissionTypes;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -18,15 +19,15 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-public class XFactionsPerm implements CommandExecutor {
+public class XFactionsSetPerm implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
                 .description(Text.of("Sets a permission for a member of your faction."))
-                .arguments(GenericArguments.player(Text.of("targetPlayer")), GenericArguments.string(Text.of("permName")), GenericArguments.bool(Text.of("value")))
-                .permission("xmanager.factions.perm")
-                .executor(new XFactionsPerm())
+                .arguments(GenericArguments.player(Text.of("targetPlayer")), GenericArguments.enumValue(Text.of("permName"), XPermissionTypes.class), GenericArguments.bool(Text.of("value")))
+                .permission("xmanager.factions.setperm")
+                .executor(new XFactionsSetPerm())
                 .build();
 
     }
@@ -42,10 +43,10 @@ public class XFactionsPerm implements CommandExecutor {
             if(args.getOne("targetPlayer").isPresent() && args.getOne("permName").isPresent() && args.getOne("value").isPresent()){
 
                 Player targetPlayer = (Player)args.getOne("targetPlayer").get();
-                String permName = args.getOne("permName").get().toString();
+                XPermissionTypes targetPermission = (XPermissionTypes)args.getOne("permName").get();
                 Boolean val = (Boolean)args.getOne("value").get();
 
-                factionSetPerm(targetPlayer, permName, val, ply);
+                factionSetPerm(targetPlayer, targetPermission, val, ply);
 
             }
             else{
@@ -61,7 +62,7 @@ public class XFactionsPerm implements CommandExecutor {
     }
 
 
-    private void factionSetPerm(Player targetPlayer, String permName, Boolean value, Player caller){
+    private void factionSetPerm(Player targetPlayer, XPermissionTypes targetPermission, Boolean value, Player caller){
 
         Optional<XFaction> optCallerFaction = XUtilities.getPlayerFaction(caller);
 
@@ -75,7 +76,7 @@ public class XFactionsPerm implements CommandExecutor {
 
             XFactionPermissionData callerPermData = optCallerPermData.get();
 
-            if(callerPermData.getConfigure()){
+            if(callerPermData.getManage()){
 
                 Optional<XFactionPermissionData> optTargetPermData = XUtilities.getPlayerFactionPermissions(targetPlayer);
 
@@ -87,35 +88,30 @@ public class XFactionsPerm implements CommandExecutor {
 
                     if(!callerFaction.isOwner(targetPlayer.getName())){
 
-                        switch (permName){
+                        switch (targetPermission){
 
-                            case "interact":
+                            case Interact:
 
                                 targetPermData.setInteract(value);
                                 break;
 
-                            case "claim":
+                            case Claim:
 
                                 targetPermData.setClaim(value);
                                 break;
 
-                            case "configure":
+                            case Manage:
 
-                                targetPermData.setConfigure(value);
+                                targetPermData.setManage(value);
                                 break;
-
-                            default:
-
-                                caller.sendMessage(XError.XERROR_INVALIDPERM.getDesc());
-                                return;
 
                         }
 
-                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully set " , permName , " permission to " , value , " for player " , targetPlayer.getName()));
+                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully set " , targetPermission , " permission to " , value , " for player " , targetPlayer.getName()));
                     }
                     else{
 
-                        caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc());
+                        caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | The owner's permissions can't be changed"));
 
                     }
 

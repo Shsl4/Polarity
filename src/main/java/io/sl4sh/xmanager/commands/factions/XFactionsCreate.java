@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XManager;
@@ -78,7 +79,7 @@ public class XFactionsCreate implements CommandExecutor {
                 List<XFactionMemberData> factionMembers = new ArrayList<>();
                 XFactionMemberData mbData = new XFactionMemberData(creator.getName(), new XFactionPermissionData(true, true, true));
                 factionMembers.add(mbData);
-                XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, new ArrayList<>(), null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+                XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, new ArrayList<>(), new XManagerLocationData(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
                 XFactionContainer factions = XManager.getXManager().getFactionsContainer();
 

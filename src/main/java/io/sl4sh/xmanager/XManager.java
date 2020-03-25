@@ -6,14 +6,17 @@ import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
-import io.sl4sh.xmanager.commands.XManagerHub;
-import io.sl4sh.xmanager.commands.XManagerProtectChunk;
-import io.sl4sh.xmanager.commands.XManagerSetHub;
-import io.sl4sh.xmanager.commands.XManagerUnProtectChunk;
+import io.sl4sh.xmanager.commands.*;
+import io.sl4sh.xmanager.commands.economy.XEconomyMainCommand;
+import io.sl4sh.xmanager.commands.economy.XTradeBuilder;
 import io.sl4sh.xmanager.commands.factions.XFactionsClaim;
 import io.sl4sh.xmanager.commands.factions.XFactionsMainCommand;
+import io.sl4sh.xmanager.commands.tradebuilder.XTradeBuilderMainCommand;
+import io.sl4sh.xmanager.data.XAccountContainer;
 import io.sl4sh.xmanager.data.XConfigData;
 import io.sl4sh.xmanager.data.XManagerKnownUserData;
+import io.sl4sh.xmanager.economy.XEconomyService;
+import io.sl4sh.xmanager.economy.XPlayerAccount;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.data.factions.XFactionContainer;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
@@ -41,6 +44,8 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.merchant.TradeOffer;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
@@ -48,6 +53,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -55,6 +61,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Plugin(
@@ -90,6 +99,45 @@ public class XManager {
     private XFactionContainer factionsContainer;
     private XConfigData configData;
     private XManagerKnownUserData knownUsers;
+    private XEconomyService economyService;
+    private XAccountContainer accountContainer;
+    @Nonnull
+    private List<TradeOffer> tradesList = new ArrayList<>();
+    private XTradeBuilder tradeBuilder;
+
+    @Nonnull
+    public List<TradeOffer> getTradesList(){
+
+        return tradesList;
+
+    }
+
+    public XTradeBuilder newTradeBuilder(){
+
+        tradeBuilder = new XTradeBuilder();
+        return tradeBuilder;
+
+    }
+
+    public Optional<XTradeBuilder> getTradeBuilder(){
+
+        if(tradeBuilder == null) { return Optional.empty(); }
+
+        return Optional.of(tradeBuilder);
+
+    }
+
+    public XEconomyService getXEconomyService(){
+
+        return economyService;
+
+    }
+
+    public List<XPlayerAccount> getPlayerAccounts(){
+
+        return this.accountContainer.getPlayerAccounts();
+
+    }
 
     public XConfigData getConfigData(){
 
@@ -114,6 +162,26 @@ public class XManager {
         // Register the plugin's commands.
         PluginContainer plugin = Sponge.getPluginManager().getPlugin("xmanager").get();
 
+        Sponge.getServiceManager().setProvider(plugin, XEconomyService.class, new XEconomyService());
+        Optional<XEconomyService> xEconomyService = Sponge.getServiceManager().provide(XEconomyService.class);
+
+        if (xEconomyService.isPresent()) {
+
+            economyService = xEconomyService.get();
+            Sponge.getCommandManager().register(plugin, XEconomyMainCommand.getCommandSpec(), "economy");
+
+        }
+        else{
+
+            xLogger.warn("##############################################################");
+            xLogger.warn("#                                                            #");
+            xLogger.warn("#     [XManager] | Economy service failed to initialize!     #");
+            xLogger.warn("#                                                            #");
+            xLogger.warn("##############################################################");
+
+        }
+
+        Sponge.getCommandManager().register(plugin, XTradeBuilderMainCommand.getCommandSpec(), "tradebuilder");
         Sponge.getCommandManager().register(plugin, XFactionsMainCommand.getCommandSpec(), "factions");
         Sponge.getCommandManager().register(plugin, XManagerProtectChunk.getCommandSpec(), "protectchunk");
         Sponge.getCommandManager().register(plugin, XManagerUnProtectChunk.getCommandSpec(), "unprotectchunk");
@@ -141,6 +209,8 @@ public class XManager {
 
         writeFactionsConfigurationFile();
         writeMainDataConfigurationFile();
+        writeKnownUsersConfigurationFile();
+        writeFactionsConfigurationFile();
 
     }
 
@@ -424,21 +494,15 @@ public class XManager {
                 }
 
                 knownUsers.getPlayersUUIDs().add(event.getTargetEntity().getUniqueId());
-
-                try {
-
-                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                    String content = gson.toJson(knownUsers);
-                    Files.write(Paths.get("config/XManager/", "KnownUsers.json"), content.getBytes(Charsets.UTF_8));
-
-
-                } catch (IOException e) {
-
-                    xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
-
-                }
+                writeKnownUsersConfigurationFile();
 
             }
+
+        }
+
+        if(economyService != null){
+
+            economyService.getOrCreateAccount(event.getTargetEntity().getUniqueId());
 
         }
 
@@ -471,22 +535,8 @@ public class XManager {
 
         } catch (FileNotFoundException e) {
 
-            // If the config file does not exist, try and create a new one in the config path
-            try {
-
-                factionsContainer = new XFactionContainer();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(factionsContainer);
-                Files.write(Paths.get("config/XManager/", "Factions.json"), content.getBytes(Charsets.UTF_8));
-
-
-            }
-            // Print an error if the creation fails.
-            catch (IOException eIO) {
-
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + eIO.getMessage());
-
-            }
+            factionsContainer = new XFactionContainer();
+            writeFactionsConfigurationFile();
 
         }
 
@@ -498,20 +548,8 @@ public class XManager {
 
         } catch (FileNotFoundException e) {
 
-            // If the config file does not exist, try and create a new one in the config path
-            try {
-
-                configData = new XConfigData();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(configData);
-                Files.write(Paths.get("config/XManager/", "MainData.json"), content.getBytes(Charsets.UTF_8));
-
-            } catch (IOException eIO) {
-
-                // Print an error if the creation fails.
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + eIO.getMessage());
-
-            }
+            configData = new XConfigData();
+            writeMainDataConfigurationFile();
 
         }
 
@@ -523,20 +561,52 @@ public class XManager {
 
         } catch (FileNotFoundException e) {
 
-            // If the config file does not exist, try and create a new one in the config path
-            try {
+            knownUsers = new XManagerKnownUserData();
+            writeKnownUsersConfigurationFile();
 
-                knownUsers = new XManagerKnownUserData();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(knownUsers);
-                Files.write(Paths.get("config/XManager/", "KnownUsers.json"), content.getBytes(Charsets.UTF_8));
+        }
 
-            } catch (IOException eIO) {
+        // Try, read and load the accounts data config file
+        try {
 
-                // Print an error if the creation fails.
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + eIO.getMessage());
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            accountContainer = gson.fromJson(new FileReader("config/XManager/Accounts.json"), XAccountContainer.class);
+
+        } catch (FileNotFoundException e) {
+
+            accountContainer = new XAccountContainer();
+            writeAccountsConfigurationFile();
+
+        }
+
+        File tradesDir = new File("config/XManager/Trades/");
+
+        if(tradesDir.exists() && tradesDir.isDirectory()){
+
+            int it = 0;
+
+            for(File tradeDirectory : Objects.requireNonNull(tradesDir.listFiles())){
+
+                try{
+
+                    ItemStackSnapshot firstItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/firstItem");
+                    ItemStackSnapshot secondItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/secondItem");
+                    ItemStackSnapshot sellingItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/sellingItem");
+
+                    Optional<TradeOffer> optTrade = new XTradeBuilder(firstItem, secondItem, sellingItem).makeTradeOffer();
+
+                }
+                catch(IOException ioError){
+
+                    ioError.printStackTrace();
+
+                }
+
+                it++;
 
             }
+
+            xLogger.warn("[XManager] | Loaded " + getTradesList().size() + " trade recipes.");
 
         }
 
@@ -581,6 +651,111 @@ public class XManager {
             } catch (IOException e) {
 
                 xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
+
+            }
+
+        }
+
+    }
+
+    public void writeKnownUsersConfigurationFile(){
+
+        if(knownUsers != null){
+
+            try {
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String content = gson.toJson(knownUsers);
+                Files.write(Paths.get("config/XManager/", "KnownUsers.json"), content.getBytes(Charsets.UTF_8));
+
+
+            } catch (IOException e) {
+
+                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
+
+            }
+
+        }
+
+    }
+
+    public void writeAccountsConfigurationFile(){
+
+        if(accountContainer != null){
+
+            try {
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String content = gson.toJson(accountContainer);
+                Files.write(Paths.get("config/XManager/", "Accounts.json"), content.getBytes(Charsets.UTF_8));
+
+            } catch (IOException eIO) {
+
+                // Print an error if the creation fails.
+                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + eIO.getMessage());
+
+            }
+
+        }
+
+    }
+
+    public void writeCustomTrades(){
+
+        if(getTradesList().size() > 0){
+
+            File configDir = new File("config/XManager/Trades");
+
+            // Print an error if the creation fails.
+            if(!configDir.exists() && !configDir.mkdir()){
+
+                xLogger.error(XError.XERROR_DIRWRITEFAIL.getDesc().toPlain());
+                return;
+
+            }
+
+            int it = 0;
+
+            for(TradeOffer offer : tradesList){
+
+                try{
+
+                    File tradeDir = new File("config/XManager/Trades/" + it);
+
+                    if(tradeDir.exists() || tradeDir.mkdir()){
+
+                        String firstItemData = XUtilities.serializeSnapShot(offer.getFirstBuyingItem());
+                        String sellingItemData = XUtilities.serializeSnapShot(offer.getSellingItem());
+
+                        Files.write(Paths.get("config/XManager/Trades/" + it, "firstItem"), firstItemData.getBytes(Charsets.UTF_8));
+                        Files.write(Paths.get("config/XManager/Trades/" + it, "sellingItem"), sellingItemData.getBytes(Charsets.UTF_8));
+
+                        String secondItemData;
+
+                        if(offer.getSecondBuyingItem().isPresent()){
+
+                            secondItemData = XUtilities.serializeSnapShot(offer.getSecondBuyingItem().get());
+
+                        }
+                        else{
+
+                            secondItemData = XUtilities.serializeSnapShot(ItemStackSnapshot.NONE);
+
+                        }
+
+                        Files.write(Paths.get("config/XManager/Trades/" + it, "secondItem"), secondItemData.getBytes(Charsets.UTF_8));
+
+
+                    }
+
+                }
+                catch(IOException err){
+
+                    continue;
+
+                }
+
+                it++;
 
             }
 

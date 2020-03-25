@@ -28,7 +28,7 @@ public class XFactionsMainCommand implements CommandExecutor {
                 .child(XFactionsList.getCommandSpec(), "list")
                 .child(XFactionsSetDisplayName.getCommandSpec(), "setdisplayname")
                 .child(XFactionsSetPrefix.getCommandSpec(), "setprefix")
-                .child(XFactionsPerm.getCommandSpec(), "perm")
+                .child(XFactionsSetPerm.getCommandSpec(), "setperm")
                 .child(XFactionsInvite.getCommandSpec(), "invite")
                 .child(XFactionsJoin.getCommandSpec(), "join")
                 .child(XFactionsKick.getCommandSpec(), "kick")

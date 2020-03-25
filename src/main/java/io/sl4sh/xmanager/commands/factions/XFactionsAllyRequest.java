@@ -89,7 +89,7 @@ public class XFactionsAllyRequest implements CommandExecutor {
         Optional<XFactionMemberData> optTargetMemberData = XUtilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getConfigure()) {  caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
         // Return if an ally request was already submitted to the provided faction
         if(callerFaction.getFactionAllyInvites().contains(targetFactionName)) {  caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You already submitted an ally request to this faction. Ask their owner to accept it.")); return; }
@@ -105,7 +105,7 @@ public class XFactionsAllyRequest implements CommandExecutor {
         for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
 
             // If the player is allowed to configure the faction
-            if(playerData.permissions.getConfigure()){
+            if(playerData.permissions.getManage()){
 
                 Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(playerData.playerName);
 

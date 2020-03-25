@@ -76,7 +76,7 @@ public class XFactionsInvite implements CommandExecutor {
 
             if(!optMemberData.isPresent()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-            if(optMemberData.get().getConfigure()){
+            if(optMemberData.get().getManage()){
 
                 if(!XUtilities.getPlayerFaction(target).isPresent()){
 

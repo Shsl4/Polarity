@@ -77,7 +77,7 @@ public class XFactionsSetPrefix implements CommandExecutor {
 
             if(!optPermData.isPresent()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-            if(optPermData.get().getConfigure()){
+            if(optPermData.get().getManage()){
 
                 if(factionPrefix.equals("")){
 

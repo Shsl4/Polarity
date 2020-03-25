@@ -84,7 +84,7 @@ public class XFactionsDeAlly implements CommandExecutor {
         Optional<XFactionMemberData> optTargetMemberData = XUtilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getConfigure()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         targetFaction.getFactionAllies().remove(callerFaction.getFactionName());
         callerFaction.getFactionAllies().remove(targetFactionName);

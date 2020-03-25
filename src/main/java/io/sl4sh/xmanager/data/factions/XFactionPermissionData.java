@@ -4,7 +4,7 @@ public class XFactionPermissionData {
 
     private Boolean claim = false;
     private Boolean interact = false;
-    private Boolean configure = false;
+    private Boolean manage = false;
 
     public void setClaim(Boolean claim) {
         this.claim = claim;
@@ -14,16 +14,16 @@ public class XFactionPermissionData {
         return claim;
     }
 
-    public Boolean getConfigure() {
-        return configure;
+    public Boolean getManage() {
+        return manage;
     }
 
     public Boolean getInteract() {
         return interact;
     }
 
-    public void setConfigure(Boolean configure) {
-        this.configure = configure;
+    public void setManage(Boolean manage) {
+        this.manage = manage;
     }
 
     public void setInteract(Boolean interact) {
@@ -38,7 +38,7 @@ public class XFactionPermissionData {
 
         this.claim = claim;
         this.interact = interact;
-        this.configure = configure;
+        this.manage = configure;
 
     }
 

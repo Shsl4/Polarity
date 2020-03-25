@@ -71,7 +71,7 @@ public class XFactionsKick implements CommandExecutor {
 
         XFaction callerFaction = optCallerFaction.get();
 
-        if(!XUtilities.getPlayerFactionPermissions(Caller).isPresent() || !XUtilities.getPlayerFactionPermissions(Caller).get().getConfigure()) { Caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!XUtilities.getPlayerFactionPermissions(Caller).isPresent() || !XUtilities.getPlayerFactionPermissions(Caller).get().getManage()) { Caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         if(Caller.equals(TargetPlayer)) { Caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot kick yourself, use /factions leave instead.")); return; }
 
