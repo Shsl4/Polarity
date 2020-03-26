@@ -23,8 +23,7 @@ public class XTabListManager {
 
             if(optTargetPlayerFaction.isPresent()){
 
-                String niceDisplayName = XUtilities.getStringReplacingModifierChar(optTargetPlayerFaction.get().getFactionDisplayName());
-                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " Your current faction is " , niceDisplayName , TextColors.RESET , TextColors.AQUA , " "));
+                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " Your current faction is " , optTargetPlayerFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.AQUA , " "));
 
             }
             else{
@@ -46,8 +45,7 @@ public class XTabListManager {
 
                         if(!optIPlayerFaction.get().getFactionPrefix().equals("")){
 
-                            String nicePrefix = XUtilities.getStringReplacingModifierChar(optIPlayerFaction.get().getFactionPrefix());
-                            iPlayerEntry.setDisplayName(Text.of(nicePrefix , TextColors.RESET, " " , iPlayer.getName()));
+                            iPlayerEntry.setDisplayName(Text.of(optIPlayerFaction.get().getFactionPrefix() , TextColors.RESET, " " , iPlayer.getName()));
 
                         }
                         else{

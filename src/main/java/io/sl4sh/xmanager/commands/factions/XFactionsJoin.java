@@ -83,7 +83,7 @@ public class XFactionsJoin implements CommandExecutor {
 
                 targetFaction.getFactionInvites().remove(ply.getName());
 
-                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  XUtilities.getStringReplacingModifierChar(targetFaction.getFactionDisplayName()), TextColors.GREEN, "!"));
+                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
 
                 for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
 

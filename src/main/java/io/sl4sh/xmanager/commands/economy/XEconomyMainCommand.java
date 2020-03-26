@@ -21,6 +21,7 @@ public class XEconomyMainCommand implements CommandExecutor {
                 .child(XEconomyAdminTransfer.getCommandSpec(), "admintransfer")
                 .child(XEconomyShowBalance.getCommandSpec(), "showbalance")
                 .child(XEconomyHelp.getCommandSpec(), "help")
+                .child(XEconomyShopTest.getCommandSpec(), "shop")
                 .executor(new XEconomyMainCommand())
                 .build();
 

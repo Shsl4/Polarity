@@ -1,9 +1,21 @@
 package io.sl4sh.xmanager.data.factions;
 
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+
+import javax.annotation.Nonnull;
+
+
+@ConfigSerializable
 public class XFactionMemberData {
 
-    public String playerName;
-    public XFactionPermissionData permissions;
+    @Nonnull
+    @Setting(value = "playerName")
+    public String playerName = "";
+
+    @Nonnull
+    @Setting(value = "permissions")
+    public XFactionPermissionData permissions = new XFactionPermissionData();
 
     public XFactionPermissionData getPermissions() {
         return permissions;

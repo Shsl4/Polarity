@@ -83,9 +83,7 @@ public class XFactionsInvite implements CommandExecutor {
                     callerFac.getFactionInvites().add(target.getName());
                     caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully invited player '" , target.getName() , "' to your faction."));
 
-                    String niceDisplayName = XUtilities.getStringReplacingModifierChar(callerFac.getFactionDisplayName());
-
-                    target.sendMessage(Text.of(TextColors.GREEN,"[Factions] | You've been invited to join the faction '" , niceDisplayName, TextColors.GREEN, "' by " , caller.getName() , ". Type /factions join " , callerFac.getFactionName(), TextColors.GREEN, " to join the faction."));
+                    target.sendMessage(Text.of(TextColors.GREEN,"[Factions] | You've been invited to join the faction '" , callerFac.getFactionDisplayName(), TextColors.GREEN, "' by " , caller.getName() , ". Type /factions join " , callerFac.getFactionName(), TextColors.GREEN, " to join the faction."));
                     XManager.getXManager().writeFactionsConfigurationFile();
 
                 }

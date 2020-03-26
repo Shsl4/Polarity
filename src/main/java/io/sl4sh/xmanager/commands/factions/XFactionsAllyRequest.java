@@ -97,9 +97,7 @@ public class XFactionsAllyRequest implements CommandExecutor {
         // Add the provided faction to the caller's faction alliance invitation list and notify the caller
         callerFaction.getFactionAllyInvites().add(targetFactionName);
 
-        String niceTargetDisplayName = XUtilities.getStringReplacingModifierChar(targetFaction.getFactionDisplayName());
-
-        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully submitted your ally request to " , niceTargetDisplayName));
+        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully submitted your ally request to " , targetFaction.getFactionDisplayName()));
 
         // For each TARGET faction's member
         for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
@@ -109,11 +107,9 @@ public class XFactionsAllyRequest implements CommandExecutor {
 
                 Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(playerData.playerName);
 
-                String niceCallerDisplayName = XUtilities.getStringReplacingModifierChar(callerFaction.getFactionDisplayName());
-
                 // Check if the player exists / is online
                 // Notify the player that they received an alliance request
-                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", niceCallerDisplayName, TextColors.RESET, TextColors.AQUA, " just sent you an alliance request! Type /factions ally accept ", callerFaction.getFactionName(), " to accept the alliance or /factions ally decline ", callerFaction.getFactionName(), " to decline it.")));
+                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.AQUA, " just sent you an alliance request! Type /factions ally accept ", callerFaction.getFactionName(), " to accept the alliance or /factions ally decline ", callerFaction.getFactionName(), " to decline it.")));
 
             }
 

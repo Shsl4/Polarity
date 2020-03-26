@@ -1,12 +1,12 @@
 package io.sl4sh.xmanager.commands.factions;
 
 import com.flowpowered.math.vector.Vector3i;
+import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
-import io.sl4sh.xmanager.data.factions.XFactionContainer;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
@@ -18,6 +18,8 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,11 +59,12 @@ public class XFactionsClaim implements CommandExecutor {
 
     void claimChunk(Player ply) {
 
-        Vector3i chunkToClaim = ply.getLocation().getChunkPosition();
-
         if(XUtilities.isLocationProtected(ply.getLocation())) { ply.sendMessage(XError.XERROR_PROTECTED.getDesc()); return; }
 
-        if (!isChunkClaimed(chunkToClaim)) {
+        String worldName = ply.getWorld().getName();
+        Vector3i chunkPosition = ply.getLocation().getChunkPosition();
+
+        if (!isLocationClaimed(worldName, chunkPosition)) {
 
             Optional<XFaction> optionalXFaction = XUtilities.getPlayerFaction(ply);
 
@@ -77,13 +80,13 @@ public class XFactionsClaim implements CommandExecutor {
 
                     if (playerFaction.getFactionClaims() != null) {
 
-                        if(isChunkAdjacentToClaimedChunks(chunkToClaim, ply)){
+                        if(isChunkAdjacentToClaimedChunks(worldName, chunkPosition, ply)){
 
-                            playerFaction.getFactionClaims().add(chunkToClaim.toString());
+                            playerFaction.getFactionClaims().add(new XManagerLocationData(ply.getWorld().getName(), ply.getLocation().getChunkPosition().toString()));
 
                             if (XManager.getXManager().writeFactionsConfigurationFile()) {
 
-                                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Chunk successfully claimed! " , chunkToClaim.toString()));
+                                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Chunk successfully claimed! " , ply.getLocation().getChunkPosition().toString()));
 
                             }
 
@@ -118,15 +121,15 @@ public class XFactionsClaim implements CommandExecutor {
     }
 
 
-    static public Boolean isChunkClaimed(Vector3i chunkLocation) {
+    static public Boolean isLocationClaimed(String worldName, Vector3i location) {
 
-        XFactionContainer factionContainer = XManager.getXManager().getFactionsContainer();
+        List<XFaction> factionContainer = XManager.getXManager().getFactions();
 
-        if (!factionContainer.getFactionList().isEmpty()) {
+        if (!factionContainer.isEmpty()) {
 
-            for (XFaction faction : factionContainer.getFactionList()) {
+            for (XFaction faction : factionContainer) {
 
-                if (faction.getFactionClaims().contains(chunkLocation.toString())) {
+                if (faction.isClaimed(worldName, location)) {
 
                     return true;
 
@@ -136,12 +139,11 @@ public class XFactionsClaim implements CommandExecutor {
 
         }
 
-
         return false;
 
     }
 
-    boolean isChunkAdjacentToClaimedChunks(Vector3i chunkLocation, Player ply) {
+    boolean isChunkAdjacentToClaimedChunks(String worldName, Vector3i location, Player ply) {
 
         Optional<XFaction> optPlayerFaction = XUtilities.getPlayerFaction(ply);
 
@@ -156,16 +158,19 @@ public class XFactionsClaim implements CommandExecutor {
         }
         else {
 
-            for(Vector3i adjCh : getAdjacentChunks(chunkLocation)){
+            for(Vector3i adjCh : getAdjacentChunks(location)){
 
-                if(getClaimedChunkFaction(adjCh) != null && getClaimedChunkFaction(adjCh) == playerFaction){
+                System.out.println(adjCh);
+
+                Optional<XFaction> optOwningFaction = getClaimedChunkFaction(worldName, adjCh);
+
+                if(optOwningFaction.isPresent() && optOwningFaction.get() == playerFaction){
 
                     return true;
 
                 }
 
             }
-
 
         }
 
@@ -190,21 +195,22 @@ public class XFactionsClaim implements CommandExecutor {
     }
 
 
-    static public XFaction getClaimedChunkFaction(Vector3i chunkLocation) {
 
-        XFactionContainer factionContainer = XManager.getXManager().getFactionsContainer();
+    static public Optional<XFaction> getClaimedChunkFaction(String worldName, Vector3i location) {
 
-        for (XFaction faction : factionContainer.getFactionList()) {
+        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
 
-            if (faction.getFactionClaims().contains(chunkLocation.toString())) {
+        for (XFaction faction : factionsContainer) {
 
-                return faction;
+            if(faction.isClaimed(worldName, location)){
+
+                return Optional.of(faction);
 
             }
 
         }
 
-        return null;
+        return Optional.empty();
 
     }
 

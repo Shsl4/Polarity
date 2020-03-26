@@ -1,5 +1,7 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import com.flowpowered.math.vector.Vector3i;
+import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XUtilities;
@@ -15,6 +17,8 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
@@ -66,13 +70,14 @@ public class XFactionsUnClaim implements CommandExecutor {
 
             if(permData.getClaim()){
 
-                String targetChunk = ply.getLocation().getChunkPosition().toString();
+                String worldName = ply.getWorld().getName();
+                Vector3i chunkPosition = ply.getLocation().getChunkPosition();
 
-                if(plyFac.getFactionClaims().contains(targetChunk)){
+                if(plyFac.isClaimed(worldName, chunkPosition)){
 
-                    plyFac.getFactionClaims().remove(targetChunk);
+                    plyFac.removeClaim(worldName, chunkPosition);
 
-                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully unclaimed chunk! ", targetChunk));
+                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully unclaimed chunk! ", chunkPosition));
 
                 }
                 else{

@@ -79,7 +79,7 @@ public class XFactionsForceDisband implements CommandExecutor {
 
     private Boolean forceDisbandFaction(String factionName){
 
-        List<XFaction> factions = XManager.getXManager().getFactionsContainer().getFactionList();
+        List<XFaction> factions = XManager.getXManager().getFactions();
 
         Optional<XFaction> optPendingDeleteFaction = XUtilities.getFactionByName(factionName);
 

@@ -1,7 +1,7 @@
-package io.sl4sh.xmanager.commands.tradebuilder;
+package io.sl4sh.xmanager.commands.trade;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.commands.economy.XTradeBuilder;
+import io.sl4sh.xmanager.economy.XTradeBuilder;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -15,15 +15,15 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-public class XTradeBuilderSellingItem implements CommandExecutor {
+public class XTradeSetSecondBuyingItem implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
-                .description(Text.of("Sets the trade selling item."))
-                .permission("xmanager.tradebuilder.setsellingitem")
+                .description(Text.of("Sets the trade second item."))
+                .permission("xmanager.trade.setseconditem")
                 .arguments(GenericArguments.integer(Text.of("count")))
-                .executor(new XTradeBuilderSellingItem())
+                .executor(new XTradeSetSecondBuyingItem())
                 .build();
 
     }
@@ -41,7 +41,7 @@ public class XTradeBuilderSellingItem implements CommandExecutor {
 
             if(caller.getItemInHand(HandTypes.MAIN_HAND).isPresent() && caller.getItemInHand(HandTypes.MAIN_HAND).get() != ItemStack.empty()){
 
-                tradeBuilder.sellingItem = ItemStack.of(caller.getItemInHand(HandTypes.MAIN_HAND).get().getType(), (int)args.getOne("count").get()).createSnapshot();
+                tradeBuilder.secondBuyingItem = ItemStack.of(caller.getItemInHand(HandTypes.MAIN_HAND).get().getType(), (int)args.getOne("count").get()).createSnapshot();
                 caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Value set."));
 
             }

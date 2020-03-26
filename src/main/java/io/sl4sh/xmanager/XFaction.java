@@ -1,53 +1,99 @@
 package io.sl4sh.xmanager;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
+import com.google.common.reflect.TypeToken;
 import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.DataSerializable;
+import org.spongepowered.api.data.DataView;
+import org.spongepowered.api.data.persistence.AbstractDataBuilder;
+import org.spongepowered.api.data.persistence.DataBuilder;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.ResettableBuilder;
+import org.spongepowered.api.util.TypeTokens;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+@ConfigSerializable
 public class XFaction {
 
-    private String factionName;
+    @Nonnull
+    @Setting(value = "factionName")
+    private String factionName = "name";
 
-    private String factionDisplayName;
+    @Nonnull
+    @Setting(value = "factionDisplayName")
+    private String factionDisplayName = "";
 
-    private String factionPrefix;
+    @Nonnull
+    @Setting(value = "factionPrefix")
+    private String factionPrefix = "";
 
     //Faction's owner player name
-    private String factionOwner;
+    @Nonnull
+    @Setting(value = "factionOwner")
+    private String factionOwner = "owner";
 
     //Contains faction's members data
-    private List<XFactionMemberData> factionMembers;
+    @Nonnull
+    @Setting(value = "factionMembers")
+    private List<XFactionMemberData> factionMembers = new ArrayList<>();
 
     //Contains factions's claimed chunks locations
-    private List<String> factionClaims = new ArrayList<String>();
+    @Nonnull
+    @Setting(value = "factionClaims")
+    private List<XManagerLocationData> factionClaims = new ArrayList<>();
 
     //Contains faction's homes data
+    @Nonnull
+    @Setting(value = "factionHome")
     private XManagerLocationData factionHome = new XManagerLocationData();
 
     //Contains allied factions names
-    private List<String> factionAllies;
+    @Nonnull
+    @Setting(value = "factionAllies")
+    private List<String> factionAllies = new ArrayList<>();
 
     //Contains enemy factions names
-    private List<String> factionEnemies;
+    @Nonnull
+    @Setting(value = "factionEnemies")
+    private List<String> factionEnemies = new ArrayList<>();
 
     //Contains invited player names
-    private List<String> factionInvites;
+    @Nonnull
+    @Setting(value = "factionInvites")
+    private List<String> factionInvites = new ArrayList<>();
 
     //Contains invited player names
-    private List<String> factionAllyInvites;
+    @Nonnull
+    @Setting(value = "factionAllyInvites")
+    private List<String> factionAllyInvites = new ArrayList<>();
 
     public XFaction(){
-
 
     }
 
@@ -69,7 +115,7 @@ public class XFaction {
 
     }
 
-    public void setFactionClaims(List<String> factionClaims){
+    public void setFactionClaims(List<XManagerLocationData> factionClaims){
 
         this.factionClaims = factionClaims;
 
@@ -117,7 +163,7 @@ public class XFaction {
 
     }
 
-    public List<String> getFactionClaims(){
+    public List<XManagerLocationData> getFactionClaims(){
 
         return this.factionClaims;
 
@@ -153,7 +199,7 @@ public class XFaction {
 
     }
 
-    public XFaction(String factionName, String factionPrefix, String factionDisplayName, String factionOwner, List<XFactionMemberData> factionMembers, List<String> factionClaims,
+    public XFaction(String factionName, String factionPrefix, String factionDisplayName, String factionOwner, List<XFactionMemberData> factionMembers, List<XManagerLocationData> factionClaims,
                     XManagerLocationData factionHome, List<String> factionAllies, List<String> factionEnemies, List<String> factionInvites, List<String> factionAllyInvites){
 
         this.factionName = factionName;
@@ -186,7 +232,7 @@ public class XFaction {
 
     public void listMembers(CommandSource src){
 
-        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , XUtilities.getStringReplacingModifierChar(getFactionDisplayName()) , TextColors.RESET, TextColors.DARK_GREEN, " Members ============"));
+        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getFactionDisplayName() , TextColors.RESET, TextColors.DARK_GREEN, " Members ============"));
 
         List<XFactionMemberData> glData = this.getFactionMembers();
         int it = 1;
@@ -212,7 +258,7 @@ public class XFaction {
 
     public void listAllies(@Nonnull CommandSource src){
 
-        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , XUtilities.getStringReplacingModifierChar(getFactionDisplayName()), TextColors.RESET, TextColors.DARK_GREEN, " Allies ============"));
+        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getFactionDisplayName(), TextColors.RESET, TextColors.DARK_GREEN, " Allies ============"));
 
         if(getFactionAllies().size() <= 0){
 
@@ -229,7 +275,7 @@ public class XFaction {
 
             if(!optAlliedFaction.isPresent()) { continue; }
 
-            src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , XUtilities.getStringReplacingModifierChar(optAlliedFaction.get().getFactionDisplayName()) , TextColors.RESET , TextColors.GREEN ," | Raw Name: " , TextColors.WHITE , optAlliedFaction.get().getFactionName()));
+            src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , optAlliedFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.GREEN ," | Raw Name: " , TextColors.WHITE , optAlliedFaction.get().getFactionName()));
 
             it++;
 
@@ -244,6 +290,40 @@ public class XFaction {
             if(mbData.getPlayerName().equals(targetPlayer.getName())){
 
                 mbData.permissions = permData;
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
+    public boolean isClaimed(String worldName, Vector3i location){
+
+        for(XManagerLocationData locationData : getFactionClaims()){
+
+            if(locationData.getDimensionName().equals(worldName) && locationData.getLocation().equals(location.toString())){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
+
+    public boolean removeClaim(String worldName, Vector3i location){
+
+        for(XManagerLocationData locationData : getFactionClaims()){
+
+            if(locationData.getDimensionName().equals(worldName) && locationData.getLocation().equals(location.toString())){
+
+                getFactionClaims().remove(locationData);
                 return true;
 
             }
@@ -280,4 +360,6 @@ public class XFaction {
     public void setFactionAllyInvites(List<String> factionAllyInvites) {
         this.factionAllyInvites = factionAllyInvites;
     }
+
+
 }

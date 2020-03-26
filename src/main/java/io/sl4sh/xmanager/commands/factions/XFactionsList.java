@@ -47,7 +47,7 @@ public class XFactionsList implements CommandExecutor {
 
         src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ Factions list ============"));
 
-        List<XFaction> factionList = XManager.getXManager().getFactionsContainer().getFactionList();
+        List<XFaction> factionList = XManager.getXManager().getFactions();
 
         if(factionList.size() <= 0){
 
@@ -60,7 +60,7 @@ public class XFactionsList implements CommandExecutor {
 
             for(XFaction faction : factionList){
 
-                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , XUtilities.getStringReplacingModifierChar(faction.getFactionDisplayName()), listTintColor , " | Owner: " , TextColors.WHITE , faction.getFactionOwner() , listTintColor , " | Raw name: " , TextColors.WHITE , faction.getFactionName()));
+                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getFactionDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getFactionOwner() , listTintColor , " | Raw name: " , TextColors.WHITE , faction.getFactionName()));
                 it++;
 
             }

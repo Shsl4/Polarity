@@ -1,9 +1,18 @@
 package io.sl4sh.xmanager.data.factions;
 
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+
+@ConfigSerializable
 public class XFactionPermissionData {
 
+    @Setting(value = "claim")
     private Boolean claim = false;
+
+    @Setting(value = "interact")
     private Boolean interact = false;
+
+    @Setting(value = "manage")
     private Boolean manage = false;
 
     public void setClaim(Boolean claim) {

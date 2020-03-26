@@ -1,7 +1,7 @@
-package io.sl4sh.xmanager.commands.tradebuilder;
+package io.sl4sh.xmanager.commands.trade;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.commands.economy.XTradeBuilder;
+import io.sl4sh.xmanager.economy.XTradeBuilder;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -9,22 +9,21 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-public class XTradeBuilderSetFirstBuyingItem implements CommandExecutor {
+public class XTradeSetFirstBuyingItem implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
                 .description(Text.of("Sets the trade first item."))
                 .arguments(GenericArguments.integer(Text.of("count")))
-                .permission("xmanager.tradebuilder.setfirstitem")
-                .executor(new XTradeBuilderSetFirstBuyingItem())
+                .permission("xmanager.trade.setfirstitem")
+                .executor(new XTradeSetFirstBuyingItem())
                 .build();
 
     }

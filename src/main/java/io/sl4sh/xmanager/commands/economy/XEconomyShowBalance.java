@@ -1,6 +1,12 @@
 package io.sl4sh.xmanager.commands.economy;
 
+import de.dosmike.sponge.megamenus.MegaMenus;
+import de.dosmike.sponge.megamenus.api.MenuRenderer;
+import de.dosmike.sponge.megamenus.impl.BaseMenuImpl;
 import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.economy.XEconomyShopRecipe;
+import io.sl4sh.xmanager.economy.XOnShopButtonClick;
+import io.sl4sh.xmanager.economy.ui.XButton;
 import io.sl4sh.xmanager.economy.XDollar;
 import io.sl4sh.xmanager.economy.XEconomyService;
 import io.sl4sh.xmanager.enums.XError;
@@ -8,15 +14,18 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.inventory.property.SlotPos;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 public class XEconomyShowBalance implements CommandExecutor {
@@ -54,7 +63,8 @@ public class XEconomyShowBalance implements CommandExecutor {
 
     private void showBalance(Player caller){
 
-        XEconomyService economyService = XManager.getXManager().getXEconomyService();
+        // The economy service will always be present as the command is registered only if the economy service registered
+        XEconomyService economyService = XManager.getXManager().getXEconomyService().get();
 
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
 

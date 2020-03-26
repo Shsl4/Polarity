@@ -102,10 +102,8 @@ public class XFactionsAllyDecline implements CommandExecutor {
 
                 Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(playerData.playerName);
 
-                String niceCallerDisplayName = XUtilities.getStringReplacingModifierChar(callerFaction.getFactionDisplayName());
-
                 // Check if the player exists / is online, Notify the player that their alliance request has been declined
-                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "[Factions] | ", niceCallerDisplayName, TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
+                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "[Factions] | ", callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
 
             }
 

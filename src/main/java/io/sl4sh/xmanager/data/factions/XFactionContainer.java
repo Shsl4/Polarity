@@ -1,33 +1,45 @@
 package io.sl4sh.xmanager.data.factions;
 
 import io.sl4sh.xmanager.XFaction;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.List;
 
+@ConfigSerializable
 public class XFactionContainer {
 
-    public ArrayList<XFaction> factionList = new ArrayList<>();
+    @Nonnull
+    @Setting(value = "factionsList")
+    public List<XFaction> factionsList = new ArrayList<>();
 
-    public ArrayList<XFaction> getFactionList(){
+    public List<XFaction> getFactionsList(){
 
-        return this.factionList;
-
-    }
-
-    public void setFactionList(ArrayList<XFaction> factionList){
-
-        this.factionList = factionList;
+        return this.factionsList;
 
     }
 
-    public void addFaction(XFaction faction){
+    public void setFactionsList(List<XFaction> factionsList){
 
-        this.factionList.add(faction);
+        this.factionsList = factionsList;
+
+    }
+
+    public void add(XFaction faction){
+
+        this.factionsList.add(faction);
+
+    }
+
+    public XFactionContainer(List<XFaction> factionList){
+
+        this.factionsList = factionList;
 
     }
 
     public XFactionContainer(){
-
 
     }
 

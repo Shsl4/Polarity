@@ -67,7 +67,8 @@ public class XEconomyTransfer implements CommandExecutor {
 
         if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | You can't transfer money to yourself.")); return; }
 
-        XEconomyService economyService = XManager.getXManager().getXEconomyService();
+        // The economy service will always be present as the command is registered only if the economy service registered
+        XEconomyService economyService = XManager.getXManager().getXEconomyService().get();
 
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
         Optional<UniqueAccount> optTargetAccount = economyService.getOrCreateAccount(target.getUniqueId());

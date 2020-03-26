@@ -18,8 +18,8 @@ import org.spongepowered.api.world.World;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 
 public class XUtilities {
@@ -65,11 +65,11 @@ public class XUtilities {
 
     static public Boolean doesFactionExist(String factionName) {
 
-        XFactionContainer factionsContainer = XManager.getXManager().getFactionsContainer();
+        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
 
         if(factionsContainer != null) {
 
-            for(XFaction faction : factionsContainer.getFactionList()){
+            for(XFaction faction : factionsContainer){
 
                 if(faction.getFactionName().equals(factionName)){
 
@@ -87,11 +87,12 @@ public class XUtilities {
 
     static public Optional<XFaction> getFactionByName(String factionName){
 
-        XFactionContainer factionsContainer = XManager.getXManager().getFactionsContainer();
+        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
+
 
         if(factionsContainer != null) {
 
-            for(XFaction faction : factionsContainer.getFactionList()){
+            for(XFaction faction : factionsContainer){
 
                 if(faction.getFactionName().equals(factionName)){
 
@@ -151,11 +152,11 @@ public class XUtilities {
 
     static public Optional<XFaction> getPlayerFaction(Player player){
 
-        XFactionContainer fContainer = XManager.getXManager().getFactionsContainer();
+        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
 
-        if(fContainer != null){
+        if(factionsContainer != null){
 
-            for(XFaction faction : fContainer.getFactionList()){
+            for(XFaction faction : factionsContainer){
 
                 for(XFactionMemberData memberData : faction.getFactionMembers()){
 
@@ -250,35 +251,6 @@ public class XUtilities {
         }
 
         return strBld.toString();
-
-    }
-
-
-    // Replace "&" with "\u00a7" in the faction's prefix or display name, otherwise the color doesn't apply in game
-    // Example: "&cPrefix" becomes (*Red colored*) "Prefix"
-    public static String getStringReplacingModifierChar(String str){
-
-        return str.replace("&", "\u00a7");
-
-    }
-
-    // https://github.com/Zerthick/PlayerShopsRPG/blob/master/src/main/java/io/github/zerthick/playershopsrpg/utils/config/serializers/ItemStackHOCONSerializer.java
-    public static String serializeSnapShot(ItemStackSnapshot snapshot) throws IOException {
-
-        DataContainer container = snapshot.toContainer();
-        StringWriter stringWriter = new StringWriter();
-
-        DataFormats.HOCON.writeTo(stringWriter, container);
-
-        return stringWriter.toString();
-    }
-
-    // https://github.com/Zerthick/PlayerShopsRPG/blob/master/src/main/java/io/github/zerthick/playershopsrpg/utils/config/serializers/ItemStackHOCONSerializer.java
-    public static ItemStackSnapshot deserializeSnapShot(String filePath) throws IOException {
-
-        String content = new String(Files.readAllBytes(Paths.get(filePath)));
-        DataContainer container = DataFormats.HOCON.read(content);
-        return ItemStack.builder().fromContainer(container).build().createSnapshot();
 
     }
 

@@ -101,9 +101,7 @@ public class XFactionsAllyAccept implements CommandExecutor {
             // Check if the player exists / is online
             // Notify the player of the alliance creation
 
-            String niceCallerDisplayName = XUtilities.getStringReplacingModifierChar(callerFaction.getFactionDisplayName());
-
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", niceCallerDisplayName, TextColors.RESET, TextColors.AQUA, " are now your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
 
         }
 
@@ -112,11 +110,9 @@ public class XFactionsAllyAccept implements CommandExecutor {
 
             Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(callerFactionMbData.playerName);
 
-            String niceTargetDisplayName = XUtilities.getStringReplacingModifierChar(targetFaction.getFactionDisplayName());
-
             // Check if the player exists / is online
             // Notify the player of the alliance creation
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", niceTargetDisplayName, TextColors.RESET, TextColors.AQUA, " are now your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", targetFaction.getFactionDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
 
         }
 

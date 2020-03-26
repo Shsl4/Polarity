@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import com.flowpowered.math.vector.Vector3d;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
@@ -65,7 +66,7 @@ public class XFactionsHome implements CommandExecutor {
 
         if(!optHomeWorld.isPresent()) {  caller.sendMessage(Text.of(TextColors.RED, "This home can't be accessed right now.")); return; }
 
-        Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<>(optHomeWorld.get(), XUtilities.getStringAsVector3d(CallerFaction.getFactionHome().getLocation())));
+        Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<World>(optHomeWorld.get(), XUtilities.getStringAsVector3d(CallerFaction.getFactionHome().getLocation())));
 
         if(safeLoc.isPresent()){
 

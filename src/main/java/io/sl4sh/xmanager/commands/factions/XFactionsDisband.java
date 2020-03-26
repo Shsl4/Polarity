@@ -75,7 +75,7 @@ public class XFactionsDisband implements CommandExecutor {
 
                 }
 
-                XManager.getXManager().getFactionsContainer().getFactionList().remove(pendingDeleteFaction);
+                XManager.getXManager().getFactions().remove(pendingDeleteFaction);
                 XManager.getXManager().writeFactionsConfigurationFile();
 
             }

@@ -71,7 +71,7 @@ public class XFactionsLeave implements CommandExecutor {
 
                     if(targetFaction.getFactionMembers().remove(optMemberData.get())){
 
-                        ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , XUtilities.getStringReplacingModifierChar(targetFaction.getFactionDisplayName()) , TextColors.GREEN, "!"));
+                        ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
                         XTabListManager.refreshTabLists();
 
                     }

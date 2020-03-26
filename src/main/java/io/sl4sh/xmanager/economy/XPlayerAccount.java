@@ -2,6 +2,8 @@ package io.sl4sh.xmanager.economy;
 
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.economy.transactiontypes.XTransactionTypes;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Event;
@@ -21,15 +23,21 @@ import org.spongepowered.api.text.format.TextColors;
 import java.math.BigDecimal;
 import java.util.*;
 
+@ConfigSerializable
 public class XPlayerAccount implements UniqueAccount{
 
+    @Setting(value = "playerUUID")
     private UUID playerUUID = UUID.randomUUID();
+
+    @Setting(value = "playerName")
     private String playerName = "None";
-    private BigDecimal playerBalance = BigDecimal.ZERO;
+
+    @Setting(value = "playerBalance")
+    private float playerBalance = 0;
 
     public XPlayerAccount() {}
 
-    public XPlayerAccount(UUID playerUUID, String playerName, BigDecimal playerBalance){
+    public XPlayerAccount(UUID playerUUID, String playerName, float playerBalance){
 
         this.playerUUID = playerUUID;
         this.playerName = playerName;
@@ -81,14 +89,14 @@ public class XPlayerAccount implements UniqueAccount{
 
     @Override
     public BigDecimal getBalance(Currency currency, Set<Context> contexts) {
-        return playerBalance;
+        return BigDecimal.valueOf(playerBalance);
     }
 
     @Override
     public Map<Currency, BigDecimal> getBalances(Set<Context> contexts) {
 
         Map<Currency, BigDecimal> balances = new HashMap<Currency, BigDecimal>();
-        balances.put(new XDollar(), playerBalance);
+        balances.put(new XDollar(), BigDecimal.valueOf(playerBalance));
         return balances;
 
     }
@@ -98,7 +106,7 @@ public class XPlayerAccount implements UniqueAccount{
 
         if(currency instanceof XDollar){
 
-            playerBalance = amount;
+            playerBalance = amount.floatValue();
 
             XManager.getXManager().writeAccountsConfigurationFile();
 
@@ -131,7 +139,7 @@ public class XPlayerAccount implements UniqueAccount{
 
         if(currency instanceof XDollar){
 
-            setBalance(currency, playerBalance.add(amount), cause, contexts);
+            setBalance(currency, amount.add(BigDecimal.valueOf(playerBalance)), cause, contexts);
 
             printIncomeMessage(currency, amount, cause);
 
@@ -150,7 +158,7 @@ public class XPlayerAccount implements UniqueAccount{
 
             if(this.hasEnoughBalanceToWithdraw(amount)){
 
-                playerBalance = playerBalance.subtract(amount);
+                setBalance(currency, BigDecimal.valueOf(playerBalance - amount.floatValue()), cause, contexts);
                 return new XTransactionResult(this, currency, amount, contexts, ResultType.SUCCESS, XTransactionTypes.Withdraw.getTransactionType());
 
             }
@@ -165,7 +173,7 @@ public class XPlayerAccount implements UniqueAccount{
 
     private boolean hasEnoughBalanceToWithdraw(BigDecimal amount){
 
-        return playerBalance.subtract(amount).floatValue() > 0;
+        return playerBalance - amount.floatValue() >= 0;
 
     }
 

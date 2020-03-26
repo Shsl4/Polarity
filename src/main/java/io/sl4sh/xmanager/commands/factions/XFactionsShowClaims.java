@@ -2,6 +2,7 @@ package io.sl4sh.xmanager.commands.factions;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XUtilities;
@@ -63,36 +64,39 @@ public class XFactionsShowClaims implements CommandExecutor {
 
         if(callerFaction.getFactionClaims().size() == 0) { Caller.sendMessage(XInfo.XERROR_NOCLAIMS.getDesc()); return; }
 
-        for(String ChunkStr : callerFaction.getFactionClaims()){
+        for(XManagerLocationData ChunkStr : callerFaction.getFactionClaims()){
 
-            Vector3i ChunkLoc = XUtilities.getStringAsVector3i(ChunkStr);
+            if(ChunkStr.getDimensionName().equals(Caller.getWorld().getName())){
 
-            if(!Caller.getWorld().getChunk(ChunkLoc).isPresent()) { XError.XERROR_UNKNOWN.getDesc(); return; }
+                Vector3i ChunkLoc = XUtilities.getStringAsVector3i(ChunkStr.getLocation());
 
-            Vector3d ChunkMax = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMax().toDouble();
-            Vector3d ChunkMin = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMin().toDouble();
+                if(!Caller.getWorld().getChunk(ChunkLoc).isPresent()) { XError.XERROR_UNKNOWN.getDesc(); return; }
 
-            //Vector3d ChunkCentre = new Vector3d((ChunkMax.getX() + ChunkMin.getX()) / 2, 80.0, (ChunkMax.getZ() + ChunkMin.getZ()) / 2);
+                Vector3d ChunkMax = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMax().toDouble();
+                Vector3d ChunkMin = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMin().toDouble();
 
-            ParticleEffect effect = ParticleEffect.builder().type(ParticleTypes.FLAME).quantity(1).build();
+                //Vector3d ChunkCentre = new Vector3d((ChunkMax.getX() + ChunkMin.getX()) / 2, 80.0, (ChunkMax.getZ() + ChunkMin.getZ()) / 2);
 
-            for(int it = 0; it < 160; it++){
+                ParticleEffect effect = ParticleEffect.builder().type(ParticleTypes.FLAME).quantity(1).build();
 
-                Vector3d ChunkLim1 = new Vector3d(ChunkMin.getX(), it, ChunkMin.getZ());
-                Vector3d ChunkLim2 = new Vector3d(ChunkMax.getX() + 1,  it, ChunkMax.getZ() + 1);
-                Vector3d ChunkLim3 = new Vector3d(ChunkMin.getX() + (ChunkMax.getX() - ChunkMin.getX()) + 1,  it, ChunkMin.getZ());
-                Vector3d ChunkLim4 = new Vector3d(ChunkMin.getX() ,  it, ChunkMin.getZ() + (ChunkMax.getZ() - ChunkMin.getZ()) + 1);
+                for(int it = 0; it < 160; it++){
 
-                Caller.spawnParticles(effect, ChunkLim1);
-                Caller.spawnParticles(effect, ChunkLim2);
-                Caller.spawnParticles(effect, ChunkLim3);
-                Caller.spawnParticles(effect, ChunkLim4);
+                    Vector3d ChunkLim1 = new Vector3d(ChunkMin.getX(), it, ChunkMin.getZ());
+                    Vector3d ChunkLim2 = new Vector3d(ChunkMax.getX() + 1,  it, ChunkMax.getZ() + 1);
+                    Vector3d ChunkLim3 = new Vector3d(ChunkMin.getX() + (ChunkMax.getX() - ChunkMin.getX()) + 1,  it, ChunkMin.getZ());
+                    Vector3d ChunkLim4 = new Vector3d(ChunkMin.getX() ,  it, ChunkMin.getZ() + (ChunkMax.getZ() - ChunkMin.getZ()) + 1);
 
-                /*XManager.xLogInfo("Lim1: "+ ChunkLim1.toString());
-                XManager.xLogInfo("Lim2: "+ ChunkLim2.toString());
-                XManager.xLogInfo("Lim3: "+ ChunkLim3.toString());
-                XManager.xLogInfo("Lim4: "+ ChunkLim4.toString());*/
+                    Caller.spawnParticles(effect, ChunkLim1);
+                    Caller.spawnParticles(effect, ChunkLim2);
+                    Caller.spawnParticles(effect, ChunkLim3);
+                    Caller.spawnParticles(effect, ChunkLim4);
 
+                    /*XManager.xLogInfo("Lim1: "+ ChunkLim1.toString());
+                    XManager.xLogInfo("Lim2: "+ ChunkLim2.toString());
+                    XManager.xLogInfo("Lim3: "+ ChunkLim3.toString());
+                    XManager.xLogInfo("Lim4: "+ ChunkLim4.toString());*/
+
+                }
 
             }
 

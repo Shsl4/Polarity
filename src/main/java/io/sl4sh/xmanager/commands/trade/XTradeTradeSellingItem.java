@@ -1,31 +1,29 @@
-package io.sl4sh.xmanager.commands.tradebuilder;
+package io.sl4sh.xmanager.commands.trade;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.commands.economy.XTradeBuilder;
-import io.sl4sh.xmanager.commands.economy.XVillager;
+import io.sl4sh.xmanager.economy.XTradeBuilder;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.item.merchant.TradeOffer;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-public class XTradeBuilderBuild implements CommandExecutor {
+public class XTradeTradeSellingItem implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
-                .description(Text.of("Builds the trade."))
-                .permission("xmanager.tradebuilder.build")
-                .executor(new XTradeBuilderBuild())
+                .description(Text.of("Sets the trade selling item."))
+                .permission("xmanager.trade.setsellingitem")
+                .arguments(GenericArguments.integer(Text.of("count")))
+                .executor(new XTradeTradeSellingItem())
                 .build();
 
     }
@@ -41,18 +39,15 @@ public class XTradeBuilderBuild implements CommandExecutor {
 
             XTradeBuilder tradeBuilder = XManager.getXManager().getTradeBuilder().get();
 
-            Optional<TradeOffer> optTradeOffer = tradeBuilder.makeTradeOffer();
+            if(caller.getItemInHand(HandTypes.MAIN_HAND).isPresent() && caller.getItemInHand(HandTypes.MAIN_HAND).get() != ItemStack.empty()){
 
-            if(optTradeOffer.isPresent()){
-
-                List<TradeOffer> tradeOfferList = new ArrayList<>();
-                tradeOfferList.add(optTradeOffer.get());
-                XVillager.spawnEntity(caller.getLocation(), Text.of(TextColors.GOLD, "Mitroglou"), tradeOfferList, caller);
+                tradeBuilder.sellingItem = ItemStack.of(caller.getItemInHand(HandTypes.MAIN_HAND).get().getType(), (int)args.getOne("count").get()).createSnapshot();
+                caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Value set."));
 
             }
             else{
 
-                caller.sendMessage(Text.of(TextColors.RED, "[XManager] | Trade offer is absent."));
+                caller.sendMessage(Text.of(TextColors.RED, "[XManager] | No item held."));
 
             }
 
@@ -61,4 +56,5 @@ public class XTradeBuilderBuild implements CommandExecutor {
         return CommandResult.success();
 
     }
+
 }

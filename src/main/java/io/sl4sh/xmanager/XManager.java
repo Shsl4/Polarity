@@ -2,27 +2,26 @@ package io.sl4sh.xmanager;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.Charsets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import io.sl4sh.xmanager.commands.*;
 import io.sl4sh.xmanager.commands.economy.XEconomyMainCommand;
-import io.sl4sh.xmanager.commands.economy.XTradeBuilder;
+import io.sl4sh.xmanager.economy.XTradeBuilder;
+import io.sl4sh.xmanager.economy.XTradeContainer;
 import io.sl4sh.xmanager.commands.factions.XFactionsClaim;
 import io.sl4sh.xmanager.commands.factions.XFactionsMainCommand;
-import io.sl4sh.xmanager.commands.tradebuilder.XTradeBuilderMainCommand;
+import io.sl4sh.xmanager.commands.trade.XTradeMainCommand;
 import io.sl4sh.xmanager.data.XAccountContainer;
 import io.sl4sh.xmanager.data.XConfigData;
 import io.sl4sh.xmanager.data.XManagerKnownUserData;
+import io.sl4sh.xmanager.data.factions.XFactionContainer;
 import io.sl4sh.xmanager.economy.XEconomyService;
 import io.sl4sh.xmanager.economy.XPlayerAccount;
 import io.sl4sh.xmanager.enums.XError;
-import io.sl4sh.xmanager.data.factions.XFactionContainer;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.Sponge;
@@ -44,8 +43,6 @@ import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.item.merchant.TradeOffer;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
@@ -54,16 +51,9 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Plugin(
@@ -88,27 +78,48 @@ public class XManager {
     @DefaultConfig(sharedRoot = true)
     private Path defaultConfig;
 
-    @Inject
-    @DefaultConfig(sharedRoot = true)
-    private ConfigurationLoader<CommentedConfigurationNode> configManager;
+    @Nonnull
+    private final HoconConfigurationLoader factionsConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Factions.hocon")).build();
+
+    @Nonnull
+    private final HoconConfigurationLoader knownUsersConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/KnownUsers.hocon")).build();
+
+    @Nonnull
+    private final HoconConfigurationLoader accountsConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Accounts.hocon")).build();
+
+    @Nonnull
+    private final HoconConfigurationLoader mainDataConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/MainData.hocon")).build();
+
+    @Nonnull
+    private final HoconConfigurationLoader tradesDataConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Trades.hocon")).build();
 
     @Inject
     @ConfigDir(sharedRoot = false)
     private Path privateConfigDir;
 
-    private XFactionContainer factionsContainer;
-    private XConfigData configData;
-    private XManagerKnownUserData knownUsers;
-    private XEconomyService economyService;
-    private XAccountContainer accountContainer;
     @Nonnull
-    private List<TradeOffer> tradesList = new ArrayList<>();
+    private XFactionContainer factionsContainer = new XFactionContainer();
+
+    @Nonnull
+    private XConfigData configData = new XConfigData();
+
+    @Nonnull
+    private XManagerKnownUserData knownUsers = new XManagerKnownUserData();
+
+    @Nonnull
+    private XTradeContainer tradesContainer = new XTradeContainer();
+
+    private XEconomyService economyService;
+
+    @Nonnull
+    private XAccountContainer accountContainer = new XAccountContainer();
+
     private XTradeBuilder tradeBuilder;
 
     @Nonnull
-    public List<TradeOffer> getTradesList(){
+    public XTradeContainer getTradesContainer(){
 
-        return tradesList;
+        return tradesContainer;
 
     }
 
@@ -127,9 +138,9 @@ public class XManager {
 
     }
 
-    public XEconomyService getXEconomyService(){
+    public Optional<XEconomyService> getXEconomyService(){
 
-        return economyService;
+        return economyService == null ? Optional.empty() : Optional.of(economyService);
 
     }
 
@@ -145,9 +156,9 @@ public class XManager {
 
     }
 
-    public XFactionContainer getFactionsContainer(){
+    public List<XFaction> getFactions(){
 
-        return this.factionsContainer;
+        return this.factionsContainer.getFactionsList();
 
     }
 
@@ -181,7 +192,7 @@ public class XManager {
 
         }
 
-        Sponge.getCommandManager().register(plugin, XTradeBuilderMainCommand.getCommandSpec(), "tradebuilder");
+        Sponge.getCommandManager().register(plugin, XTradeMainCommand.getCommandSpec(), "trade");
         Sponge.getCommandManager().register(plugin, XFactionsMainCommand.getCommandSpec(), "factions");
         Sponge.getCommandManager().register(plugin, XManagerProtectChunk.getCommandSpec(), "protectchunk");
         Sponge.getCommandManager().register(plugin, XManagerUnProtectChunk.getCommandSpec(), "unprotectchunk");
@@ -229,24 +240,27 @@ public class XManager {
             if(snap.getFinal().getLocation().isPresent())
             {
 
+                World world = Sponge.getServer().getWorld(snap.getFinal().getWorldUniqueId()).get();
+
                 // Prevent block placement in protected areas
                 if(XUtilities.isLocationProtected(snap.getFinal().getLocation().get())) { event.setCancelled(true); return; }
 
-                Vector3i chunkPos = snap.getFinal().getLocation().get().getChunkPosition();
+                String worldName = snap.getFinal().getLocation().get().getExtent().getName();
+                Vector3i chunkPosition = snap.getFinal().getLocation().get().getChunkPosition();
 
-                if(XFactionsClaim.isChunkClaimed(chunkPos)){
+                if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
 
                     if(event.getSource() instanceof Player){
 
                         Player ply = (Player)event.getSource();
 
-                        XFaction owningFaction = XFactionsClaim.getClaimedChunkFaction(chunkPos);
+                        Optional<XFaction> owningFaction = XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition);
 
-                        if(owningFaction == null) { return; }
+                        if(!owningFaction.isPresent()) { return; }
 
                         Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(ply);
 
-                        if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
+                        if(optTargetFaction.isPresent() && owningFaction.get() == optTargetFaction.get()) {
 
                             Optional<XFactionPermissionData> optPermData = XUtilities.getPlayerFactionPermissions(ply);
 
@@ -261,14 +275,13 @@ public class XManager {
                             }
 
                         }
-                        else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+                        else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction.get())){
 
                             return;
 
                         }
 
-                        String niceDisplayName = XUtilities.getStringReplacingModifierChar(owningFaction.getFactionDisplayName());
-                        ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , niceDisplayName , TextColors.RESET , TextColors.RED , "."));
+                        ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , owningFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.RED , "."));
 
                     }
 
@@ -298,21 +311,22 @@ public class XManager {
             // Prevent block breaking in protected areas
             if(XUtilities.isLocationProtected(location)) { event.setCancelled(true); return; }
 
-            Vector3i chunkPos = location.getChunkPosition();
+            String worldName = location.getExtent().getName();
+            Vector3i chunkPosition = location.getChunkPosition();
 
-            if(XFactionsClaim.isChunkClaimed(chunkPos)){
+            if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
 
                 if(event.getSource() instanceof Player){
 
                     Player ply = (Player)event.getSource();
 
-                    XFaction owningFaction = XFactionsClaim.getClaimedChunkFaction(chunkPos);
+                    Optional<XFaction> optOwningFaction = XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition);
 
-                    if(owningFaction == null) { return; }
+                    if(!optOwningFaction.isPresent()) { return; }
 
                     Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(ply);
 
-                    if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
+                    if(optTargetFaction.isPresent() && optOwningFaction.get() == optTargetFaction.get()) {
 
                         Optional<XFactionPermissionData> optPermData = XUtilities.getPlayerFactionPermissions(ply);
 
@@ -327,14 +341,13 @@ public class XManager {
                         }
 
                     }
-                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(optOwningFaction.get())){
 
                         return;
 
                     }
 
-                    String niceDisplayName = XUtilities.getStringReplacingModifierChar(owningFaction.getFactionDisplayName());
-                    ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , niceDisplayName , TextColors.RESET , TextColors.RED , "."));
+                    ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , optOwningFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.RED , "."));
 
                 }
 
@@ -359,21 +372,22 @@ public class XManager {
 
         if(event.getTargetBlock().getLocation().isPresent()){
 
-            Vector3i chunkPos = event.getTargetBlock().getLocation().get().getChunkPosition();
+            String worldName = event.getTargetBlock().getLocation().get().getExtent().getName();
+            Vector3i chunkPosition = event.getTargetBlock().getLocation().get().getChunkPosition();
 
-            if(XFactionsClaim.isChunkClaimed(chunkPos)){
+            if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
 
                 if(event.getSource() instanceof Player){
 
                     Player ply = (Player)event.getSource();
 
-                    XFaction owningFaction = XFactionsClaim.getClaimedChunkFaction(chunkPos);
+                    Optional<XFaction> owningFaction = XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition);
 
-                    if(owningFaction == null) { return; }
+                    if(!owningFaction.isPresent()) { return; }
 
                     Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(ply);
 
-                    if(optTargetFaction.isPresent() && owningFaction == optTargetFaction.get()) {
+                    if(optTargetFaction.isPresent() && owningFaction.get() == optTargetFaction.get()) {
 
                         Optional<XFactionPermissionData> optPermData = XUtilities.getPlayerFactionPermissions(ply);
 
@@ -388,14 +402,13 @@ public class XManager {
                         }
 
                     }
-                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction)){
+                    else if(optTargetFaction.isPresent() && optTargetFaction.get().isFactionAllied(owningFaction.get())){
 
                         return;
 
                     }
 
-                    String niceDisplayName = XUtilities.getStringReplacingModifierChar(owningFaction.getFactionDisplayName());
-                    ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , niceDisplayName , TextColors.RESET , TextColors.RED , "."));
+                    ply.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc() , " Chunk owned by " , owningFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.RED , "."));
 
                 }
 
@@ -462,11 +475,11 @@ public class XManager {
             Player ply = (Player)event.getSource();
             Optional<XFaction> optXFac = XUtilities.getPlayerFaction(ply);
 
-            String message = XUtilities.getStringReplacingModifierChar(event.getRawMessage().toPlain());
+            String message = event.getRawMessage().toPlain().replace("&", "\u00a7");
 
             if(optXFac.isPresent() && !optXFac.get().getFactionPrefix().equals("")){
 
-                String nicePrefix = XUtilities.getStringReplacingModifierChar(optXFac.get().getFactionPrefix());
+                String nicePrefix = optXFac.get().getFactionPrefix();
                 event.setMessage(Text.of(nicePrefix, "\u00a7r <" , ply.getName() , "> " , message));
 
             }
@@ -483,22 +496,19 @@ public class XManager {
     @Listener
     public void onPlayerJoined(ClientConnectionEvent.Join event){
 
-        if(knownUsers != null) {
+        if (!knownUsers.getPlayersUUIDs().contains(event.getTargetEntity().getUniqueId())) {
 
-            if (!knownUsers.getPlayersUUIDs().contains(event.getTargetEntity().getUniqueId())) {
+            for (Player ply : Sponge.getGame().getServer().getOnlinePlayers()) {
 
-                for (Player ply : Sponge.getGame().getServer().getOnlinePlayers()) {
-
-                    ply.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "Please welcome ", TextColors.YELLOW, event.getTargetEntity().getName(), TextColors.LIGHT_PURPLE, " to the server!"));
-
-                }
-
-                knownUsers.getPlayersUUIDs().add(event.getTargetEntity().getUniqueId());
-                writeKnownUsersConfigurationFile();
+                ply.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "Please welcome ", TextColors.YELLOW, event.getTargetEntity().getName(), TextColors.LIGHT_PURPLE, " to the server!"));
 
             }
 
+            knownUsers.getPlayersUUIDs().add(event.getTargetEntity().getUniqueId());
+            writeKnownUsersConfigurationFile();
+
         }
+
 
         if(economyService != null){
 
@@ -510,125 +520,100 @@ public class XManager {
 
     }
 
-    private void initLoadConfig(){
+    private void initLoadConfig() {
 
-        File configDir = new File("config/XManager");
+        File configDir = new File("config/XManager/");
+        configDir.mkdirs();
 
-        //Try and create the XManager config directory if not present
-        if(!configDir.exists()){
+        loadFactions();
+        loadKnownUsers();
+        loadMainData();
+        loadPlayerAccounts();
+        loadCustomTrades();
 
-            // Print an error if the creation fails.
-            if(!configDir.mkdir()){
 
-                xLogger.error(XError.XERROR_DIRWRITEFAIL.getDesc().toPlain());
-                return;
+    }
 
-            }
+    public Boolean loadFactions(){
 
-        }
-
-        // Try, read and load the Factions config file
         try {
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            factionsContainer = gson.fromJson(new FileReader("config/XManager/Factions.json"), XFactionContainer.class);
-
-        } catch (FileNotFoundException e) {
-
-            factionsContainer = new XFactionContainer();
-            writeFactionsConfigurationFile();
+            XFactionContainer newData = factionsConfigLoader.load().getValue(TypeToken.of(XFactionContainer.class));
+            if(newData != null) {factionsContainer = newData; return true;}
+        } catch (ObjectMappingException | IOException ignored) {
 
         }
 
-        // Try, read and load the main data config file
+        this.xLogger.warn("[XManager] | Failed to load factions config. Using new data.");
+        return false;
+
+    }
+
+    public Boolean loadMainData(){
+
         try {
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            configData = gson.fromJson(new FileReader("config/XManager/MainData.json"), XConfigData.class);
-
-        } catch (FileNotFoundException e) {
-
-            configData = new XConfigData();
-            writeMainDataConfigurationFile();
+            XConfigData newData = mainDataConfigLoader.load().getValue(TypeToken.of(XConfigData.class));
+            if(newData != null) {configData = newData; return true;}
+        } catch (ObjectMappingException | IOException ignored) {
 
         }
 
-        // Try, read and load the known users data config file
+        this.xLogger.warn("[XManager] | Failed to load main config. Using new data.");
+        return false;
+
+    }
+
+    public Boolean loadPlayerAccounts(){
+
         try {
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            knownUsers = gson.fromJson(new FileReader("config/XManager/KnownUsers.json"), XManagerKnownUserData.class);
-
-        } catch (FileNotFoundException e) {
-
-            knownUsers = new XManagerKnownUserData();
-            writeKnownUsersConfigurationFile();
+            XAccountContainer newData = accountsConfigLoader.load().getValue(TypeToken.of(XAccountContainer.class));
+            if(newData != null) {accountContainer = newData; return true;}
+        } catch (ObjectMappingException | IOException ignored) {
 
         }
 
-        // Try, read and load the accounts data config file
+        this.xLogger.warn("[XManager] | Failed to load player accounts config. Using new data.");
+        return false;
+
+    }
+
+    public Boolean loadKnownUsers(){
+
         try {
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            accountContainer = gson.fromJson(new FileReader("config/XManager/Accounts.json"), XAccountContainer.class);
-
-        } catch (FileNotFoundException e) {
-
-            accountContainer = new XAccountContainer();
-            writeAccountsConfigurationFile();
+            XManagerKnownUserData newData = knownUsersConfigLoader.load().getValue(TypeToken.of(XManagerKnownUserData.class));
+            if(newData != null) {knownUsers = newData; return true;}
+        } catch (ObjectMappingException | IOException ignored) {
 
         }
 
-        File tradesDir = new File("config/XManager/Trades/");
+        this.xLogger.warn("[XManager] | Failed to load known users config. Using new data.");
+        return false;
 
-        if(tradesDir.exists() && tradesDir.isDirectory()){
+    }
 
-            int it = 0;
+    public Boolean loadCustomTrades(){
 
-            for(File tradeDirectory : Objects.requireNonNull(tradesDir.listFiles())){
-
-                try{
-
-                    ItemStackSnapshot firstItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/firstItem");
-                    ItemStackSnapshot secondItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/secondItem");
-                    ItemStackSnapshot sellingItem = XUtilities.deserializeSnapShot("config/XManager/Trades/" + it + "/sellingItem");
-
-                    Optional<TradeOffer> optTrade = new XTradeBuilder(firstItem, secondItem, sellingItem).makeTradeOffer();
-
-                }
-                catch(IOException ioError){
-
-                    ioError.printStackTrace();
-
-                }
-
-                it++;
-
-            }
-
-            xLogger.warn("[XManager] | Loaded " + getTradesList().size() + " trade recipes.");
+        try {
+            XTradeContainer newData = tradesDataConfigLoader.load().getValue(TypeToken.of(XTradeContainer.class));
+            if(newData != null) {tradesContainer = newData; return true;}
+        } catch (ObjectMappingException | IOException ignored) {
 
         }
+
+        this.xLogger.warn("[XManager] | Failed to load trades config. Using new data.");
+        return false;
 
     }
 
 
     public Boolean writeFactionsConfigurationFile(){
 
-        if(factionsContainer != null){
+        if(getFactions().size() > 0){
 
             try {
-
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(factionsContainer);
-                Files.write(Paths.get("config/XManager/", "Factions.json"), content.getBytes(Charsets.UTF_8));
+                factionsConfigLoader.save(factionsConfigLoader.createEmptyNode().setValue(TypeToken.of(XFactionContainer.class), factionsContainer));
                 return true;
-
-            } catch (IOException e) {
-
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
+            } catch (IOException | ObjectMappingException e) {
                 return false;
-
             }
 
         }
@@ -637,129 +622,71 @@ public class XManager {
 
     }
 
-    public void writeMainDataConfigurationFile(){
+    public boolean writeMainDataConfigurationFile(){
 
-        if(configData != null){
+        try {
 
-            try {
+            mainDataConfigLoader.save(mainDataConfigLoader.createEmptyNode().setValue(TypeToken.of(XConfigData.class), configData));
+            return true;
 
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(configData);
-                Files.write(Paths.get("config/XManager/", "MainData.json"), content.getBytes(Charsets.UTF_8));
+        } catch (IOException | ObjectMappingException e) {
 
-
-            } catch (IOException e) {
-
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
-
-            }
+            return false;
 
         }
 
     }
 
-    public void writeKnownUsersConfigurationFile(){
+    public boolean writeKnownUsersConfigurationFile(){
 
-        if(knownUsers != null){
+        if(knownUsers.getPlayersUUIDs().size() > 0){
 
             try {
-
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(knownUsers);
-                Files.write(Paths.get("config/XManager/", "KnownUsers.json"), content.getBytes(Charsets.UTF_8));
-
-
-            } catch (IOException e) {
-
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + e.getMessage());
-
+                knownUsersConfigLoader.save(knownUsersConfigLoader.createEmptyNode().setValue(TypeToken.of(XManagerKnownUserData.class), knownUsers));
+                return true;
+            } catch (IOException | ObjectMappingException e) {
+                return false;
             }
+
+        }
+
+        return false;
+
+    }
+
+    public boolean writeAccountsConfigurationFile(){
+
+        try {
+
+            accountsConfigLoader.save(accountsConfigLoader.createEmptyNode().setValue(TypeToken.of(XAccountContainer.class), accountContainer));
+            return true;
+
+        } catch (IOException | ObjectMappingException e) {
+
+            return false;
 
         }
 
     }
 
-    public void writeAccountsConfigurationFile(){
+    public boolean writeCustomTrades(){
 
-        if(accountContainer != null){
+        if(getTradesContainer().getTradeList().size() > 0){
 
             try {
 
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String content = gson.toJson(accountContainer);
-                Files.write(Paths.get("config/XManager/", "Accounts.json"), content.getBytes(Charsets.UTF_8));
+                tradesDataConfigLoader.save(tradesDataConfigLoader.createEmptyNode().setValue(TypeToken.of(XTradeContainer.class), tradesContainer));
+                return true;
 
-            } catch (IOException eIO) {
+            } catch (IOException | ObjectMappingException e) {
 
-                // Print an error if the creation fails.
-                xLogger.error(XError.XERROR_FILEWRITEFAIL.getDesc() + eIO.getMessage());
+                return false;
 
             }
 
         }
 
-    }
-
-    public void writeCustomTrades(){
-
-        if(getTradesList().size() > 0){
-
-            File configDir = new File("config/XManager/Trades");
-
-            // Print an error if the creation fails.
-            if(!configDir.exists() && !configDir.mkdir()){
-
-                xLogger.error(XError.XERROR_DIRWRITEFAIL.getDesc().toPlain());
-                return;
-
-            }
-
-            int it = 0;
-
-            for(TradeOffer offer : tradesList){
-
-                try{
-
-                    File tradeDir = new File("config/XManager/Trades/" + it);
-
-                    if(tradeDir.exists() || tradeDir.mkdir()){
-
-                        String firstItemData = XUtilities.serializeSnapShot(offer.getFirstBuyingItem());
-                        String sellingItemData = XUtilities.serializeSnapShot(offer.getSellingItem());
-
-                        Files.write(Paths.get("config/XManager/Trades/" + it, "firstItem"), firstItemData.getBytes(Charsets.UTF_8));
-                        Files.write(Paths.get("config/XManager/Trades/" + it, "sellingItem"), sellingItemData.getBytes(Charsets.UTF_8));
-
-                        String secondItemData;
-
-                        if(offer.getSecondBuyingItem().isPresent()){
-
-                            secondItemData = XUtilities.serializeSnapShot(offer.getSecondBuyingItem().get());
-
-                        }
-                        else{
-
-                            secondItemData = XUtilities.serializeSnapShot(ItemStackSnapshot.NONE);
-
-                        }
-
-                        Files.write(Paths.get("config/XManager/Trades/" + it, "secondItem"), secondItemData.getBytes(Charsets.UTF_8));
-
-
-                    }
-
-                }
-                catch(IOException err){
-
-                    continue;
-
-                }
-
-                it++;
-
-            }
-
-        }
+        return false;
 
     }
 

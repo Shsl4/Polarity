@@ -8,9 +8,20 @@ version = pluginVersion
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
+repositories {
+    mavenCentral()
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+    maven { url "https://jitpack.io" }
+}
+
 dependencies {
     compileOnly 'org.spongepowered:spongeapi:7.1.0'
     annotationProcessor 'org.spongepowered:spongeapi:7.1.0'
+    compile 'org.spongepowered:configurate-hocon:3.6'
+    compile 'com.github.DosMike:MegaMenus:master-SNAPSHOT'
 }
 
 sponge.plugin.id = pluginId

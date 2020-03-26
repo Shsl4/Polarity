@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import com.flowpowered.math.vector.Vector3d;
 import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
@@ -21,6 +22,8 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,11 +84,11 @@ public class XFactionsCreate implements CommandExecutor {
                 factionMembers.add(mbData);
                 XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, new ArrayList<>(), new XManagerLocationData(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
-                XFactionContainer factions = XManager.getXManager().getFactionsContainer();
+                List<XFaction> factions = XManager.getXManager().getFactions();
 
                 if(factions != null){
 
-                    factions.addFaction(faction);
+                    factions.add(faction);
                     XManager.getXManager().writeFactionsConfigurationFile();
                     creator.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
                     XTabListManager.refreshTabLists();
