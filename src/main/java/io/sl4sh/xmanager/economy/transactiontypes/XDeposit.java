@@ -5,11 +5,11 @@ import org.spongepowered.api.service.economy.transaction.TransactionType;
 public class XDeposit implements TransactionType {
     @Override
     public String getId() {
-        return "buy";
+        return "deposit";
     }
 
     @Override
     public String getName() {
-        return "Buy";
+        return "Deposit";
     }
 }

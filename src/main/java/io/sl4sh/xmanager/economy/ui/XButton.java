@@ -5,14 +5,12 @@ import de.dosmike.sponge.megamenus.api.elements.concepts.IClickable;
 import de.dosmike.sponge.megamenus.api.elements.concepts.IPressable;
 import de.dosmike.sponge.megamenus.api.listener.OnClickListener;
 import de.dosmike.sponge.megamenus.api.listener.OnKeyListener;
-import de.dosmike.sponge.megamenus.impl.BaseMenuImpl;
 import de.dosmike.sponge.megamenus.impl.RenderManager;
 import de.dosmike.sponge.megamenus.impl.TextMenuRenderer;
 import de.dosmike.sponge.megamenus.impl.elements.IElementImpl;
-import io.sl4sh.xmanager.economy.XDollar;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.economy.XEconomyShopRecipe;
-import io.sl4sh.xmanager.economy.XOnShopButtonClick;
-import org.spongepowered.api.Sponge;
+import io.sl4sh.xmanager.economy.events.XShopButtonClickEvent;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemType;
@@ -135,7 +133,7 @@ public final class XButton extends IElementImpl implements IClickable<XButton>, 
         copy.defaultName = this.defaultName;
         copy.defaultIcon = this.defaultIcon;
         copy.defaultLore = new LinkedList(this.defaultLore);
-        copy.clickListener = new XOnShopButtonClick();
+        copy.clickListener = new XShopButtonClickEvent();
         copy.shopRecipe = this.shopRecipe;
         copy.playerLocale = this.playerLocale;
 

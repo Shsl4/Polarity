@@ -1,10 +1,8 @@
 package io.sl4sh.xmanager.commands.economy;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.commands.XManagerProtectChunk;
-import io.sl4sh.xmanager.economy.XDollar;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.economy.XEconomyService;
-import io.sl4sh.xmanager.economy.XPlayerAccount;
 import io.sl4sh.xmanager.enums.XError;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -25,15 +23,15 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
 
-public class XEconomyTransfer implements CommandExecutor {
+public class XEconomyPlayerTransfer implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
                 .description(Text.of("Transfer money to another player's account."))
-                .permission("xmanager.economy.transfer")
+                .permission("xmanager.economy.playertransfer")
                 .arguments(GenericArguments.player(Text.of("targetPlayer")), GenericArguments.bigDecimal(Text.of("amount")))
-                .executor(new XEconomyTransfer())
+                .executor(new XEconomyPlayerTransfer())
                 .build();
 
     }

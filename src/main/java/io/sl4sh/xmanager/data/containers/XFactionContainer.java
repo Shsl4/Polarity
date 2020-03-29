@@ -1,4 +1,4 @@
-package io.sl4sh.xmanager.data.factions;
+package io.sl4sh.xmanager.data.containers;
 
 import io.sl4sh.xmanager.XFaction;
 import ninja.leaping.configurate.objectmapping.Setting;

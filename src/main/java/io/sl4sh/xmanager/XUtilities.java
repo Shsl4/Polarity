@@ -3,22 +3,14 @@ package io.sl4sh.xmanager;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import io.sl4sh.xmanager.data.XManagerLocationData;
-import io.sl4sh.xmanager.data.factions.XFactionContainer;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +18,7 @@ public class XUtilities {
 
     public static boolean isLocationProtected(Location<World> target){
 
-       for(XManagerLocationData locationData : XManager.getXManager().getConfigData().getServerProtectedChunks()){
+       for(XManagerLocationData locationData : XManager.getConfigData().getServerProtectedChunks()){
 
             if(locationData.getLocation().equals(target.getChunkPosition().toString()) && locationData.getDimensionName().equals(target.getExtent().getName())) { return true; }
 
@@ -42,7 +34,7 @@ public class XUtilities {
 
         int it = 0;
 
-        for(XManagerLocationData locationData : XManager.getXManager().getConfigData().getServerProtectedChunks()){
+        for(XManagerLocationData locationData : XManager.getConfigData().getServerProtectedChunks()){
 
             if(targetWorld.getName().equals(locationData.getDimensionName())){
 
@@ -65,7 +57,7 @@ public class XUtilities {
 
     static public Boolean doesFactionExist(String factionName) {
 
-        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
+        List<XFaction> factionsContainer = XManager.getFactions();
 
         if(factionsContainer != null) {
 
@@ -87,7 +79,7 @@ public class XUtilities {
 
     static public Optional<XFaction> getFactionByName(String factionName){
 
-        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
+        List<XFaction> factionsContainer = XManager.getFactions();
 
 
         if(factionsContainer != null) {
@@ -152,9 +144,11 @@ public class XUtilities {
 
     static public Optional<XFaction> getPlayerFaction(Player player){
 
-        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
+        List<XFaction> factionsContainer = XManager.getFactions();
 
         if(factionsContainer != null){
+
+            if(factionsContainer.size() <= 0) {System.out.println("factions container is empty");}
 
             for(XFaction faction : factionsContainer){
 
@@ -169,6 +163,11 @@ public class XUtilities {
                 }
 
             }
+
+        }
+        else{
+
+            System.out.println("factions container is null");
 
         }
 

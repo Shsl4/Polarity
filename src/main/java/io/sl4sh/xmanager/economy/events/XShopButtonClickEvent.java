@@ -1,8 +1,14 @@
-package io.sl4sh.xmanager.economy;
+package io.sl4sh.xmanager.economy.events;
 
 import de.dosmike.sponge.megamenus.api.listener.OnClickListener;
 import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
+import io.sl4sh.xmanager.economy.XEconomyService;
+import io.sl4sh.xmanager.economy.XEconomyShopRecipe;
+import io.sl4sh.xmanager.economy.transactionidentifiers.XShopIdentifier;
 import io.sl4sh.xmanager.economy.ui.XButton;
+import org.spongepowered.api.effect.sound.SoundType;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
@@ -15,22 +21,22 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
 
-public class XOnShopButtonClick implements OnClickListener<XButton> {
+public class XShopButtonClickEvent implements OnClickListener<XButton> {
 
     @Override
     public void onClick(XButton button, Player player, int i, boolean b) {
 
         if(button.getShopRecipe() != null && button.getShopRecipe().isValidRecipe()){
 
-            makeTransaction(player, button.getShopRecipe(), button);
+            makeTransaction(player, button.getShopRecipe());
 
         }
 
     }
 
-    public static void makeTransaction(Player player, XEconomyShopRecipe recipe, XButton button){
+    public static void makeTransaction(Player player, XEconomyShopRecipe recipe){
 
-        Optional<XEconomyService> optEconomyService = XManager.getXManager().getXEconomyService();
+        Optional<XEconomyService> optEconomyService = XManager.getXEconomyService();
 
         if(optEconomyService.isPresent()){
 
@@ -43,6 +49,8 @@ public class XOnShopButtonClick implements OnClickListener<XButton> {
             UniqueAccount playerAccount = optPlayerAccount.get();
 
             XDollar dollarCurrency = new XDollar();
+
+            if(!player.getInventory().canFit(recipe.getTargetItem().createStack())) { player.sendMessage(Text.of(TextColors.RED, "[Economy] | You do not have space in your inventory.")); return; }
 
             TransactionResult result = playerAccount.withdraw(dollarCurrency, BigDecimal.valueOf(recipe.getPrice()), Cause.of(EventContext.empty(), new XShopIdentifier()), new HashSet<>());
 
@@ -59,6 +67,7 @@ public class XOnShopButtonClick implements OnClickListener<XButton> {
 
                     if (!format.endsWith("s") && recipe.getTargetItem().getQuantity() > 1) { format = format + "s"; }
 
+                    player.playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, player.getPosition(), 0.75);
                     player.sendMessage(Text.of(TextColors.AQUA, "[Economy] | You just bought ", recipe.getTargetItem().getQuantity(), " ", format, " for ", dollarCurrency.format(BigDecimal.valueOf(recipe.getPrice()), 2), TextColors.AQUA, "."));
                     player.getInventory().offer(recipe.getTargetItem().createStack());
 

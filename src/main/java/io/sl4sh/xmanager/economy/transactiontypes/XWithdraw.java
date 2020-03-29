@@ -5,11 +5,11 @@ import org.spongepowered.api.service.economy.transaction.TransactionType;
 public class XWithdraw implements TransactionType {
     @Override
     public String getId() {
-        return "gift";
+        return "withdraw";
     }
 
     @Override
     public String getName() {
-        return "Gift";
+        return "Withdraw";
     }
 }

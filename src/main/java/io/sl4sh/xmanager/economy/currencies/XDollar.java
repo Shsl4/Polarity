@@ -1,4 +1,4 @@
-package io.sl4sh.xmanager.economy;
+package io.sl4sh.xmanager.economy.currencies;
 
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.text.Text;

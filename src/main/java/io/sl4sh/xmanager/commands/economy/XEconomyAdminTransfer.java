@@ -1,8 +1,8 @@
 package io.sl4sh.xmanager.commands.economy;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.economy.XAdminIdentifier;
-import io.sl4sh.xmanager.economy.XDollar;
+import io.sl4sh.xmanager.economy.transactionidentifiers.XAdminIdentifier;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;

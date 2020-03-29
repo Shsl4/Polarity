@@ -1,41 +1,22 @@
 package io.sl4sh.xmanager;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.reflect.TypeToken;
 import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
+import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
 import io.sl4sh.xmanager.tablist.XTabListManager;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.DataQuery;
-import org.spongepowered.api.data.DataSerializable;
-import org.spongepowered.api.data.DataView;
-import org.spongepowered.api.data.persistence.AbstractDataBuilder;
-import org.spongepowered.api.data.persistence.DataBuilder;
-import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.ResettableBuilder;
-import org.spongepowered.api.util.TypeTokens;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @ConfigSerializable
@@ -93,100 +74,109 @@ public class XFaction {
     @Setting(value = "factionAllyInvites")
     private List<String> factionAllyInvites = new ArrayList<>();
 
-    public XFaction(){
+    @Setting(value = "factionAccount")
+    private XFactionAccount factionAccount;
 
-    }
+    public XFaction() {}
 
-    public void setFactionName(String factionName){
+    public void setFactionName(@Nonnull String factionName){
 
         this.factionName = factionName;
 
     }
 
-    public void setFactionOwner(String factionOwner){
+    public void setFactionOwner(@Nonnull String factionOwner){
 
         this.factionOwner = factionOwner;
 
     }
 
-    public void setFactionMembers(List<XFactionMemberData> factionMembers){
+    public void setFactionMembers(@Nonnull List<XFactionMemberData> factionMembers){
 
         this.factionMembers = factionMembers;
 
     }
 
-    public void setFactionClaims(List<XManagerLocationData> factionClaims){
+    public void setFactionClaims(@Nonnull List<XManagerLocationData> factionClaims){
 
         this.factionClaims = factionClaims;
 
     }
 
-    public void setFactionHome(XManagerLocationData factionHome){
+    public void setFactionHome(@Nonnull XManagerLocationData factionHome){
 
         this.factionHome = factionHome;
 
     }
 
-    public void setFactionAllies(List<String> factionAllies){
+    public void setFactionAllies(@Nonnull List<String> factionAllies){
 
         this.factionAllies = factionAllies;
 
     }
 
-    public void setFactionEnemies(List<String> factionEnemies){
+    public void setFactionEnemies(@Nonnull List<String> factionEnemies){
 
         this.factionEnemies = factionEnemies;
 
     }
 
-    public void setFactionInvites(List<String> factionInvites){
+    public void setFactionInvites(@Nonnull List<String> factionInvites){
 
         this.factionInvites = factionInvites;
 
     }
 
+    @Nonnull
     public String getFactionName(){
 
         return this.factionName;
 
     }
 
+    @Nonnull
     public String getFactionOwner(){
 
         return this.factionOwner;
 
     }
 
+    @Nonnull
     public List<XFactionMemberData> getFactionMembers(){
 
         return this.factionMembers;
 
     }
 
+    @Nonnull
     public List<XManagerLocationData> getFactionClaims(){
 
         return this.factionClaims;
 
     }
 
+    @Nonnull
     public XManagerLocationData getFactionHome(){
 
         return this.factionHome;
 
     }
 
+    @Nonnull
     public List<String> getFactionAllies(){
 
         return this.factionAllies;
 
     }
 
+    @Nonnull
     public List<String> getFactionEnemies(){
 
         return this.factionEnemies;
 
     }
 
+    @Nonnull
     public List<String> getFactionInvites(){
 
         return this.factionInvites;
@@ -199,20 +189,22 @@ public class XFaction {
 
     }
 
-    public XFaction(String factionName, String factionPrefix, String factionDisplayName, String factionOwner, List<XFactionMemberData> factionMembers, List<XManagerLocationData> factionClaims,
-                    XManagerLocationData factionHome, List<String> factionAllies, List<String> factionEnemies, List<String> factionInvites, List<String> factionAllyInvites){
+    public XFaction(@Nonnull String factionName, @Nonnull Player factionOwner){
 
         this.factionName = factionName;
-        this.factionPrefix = factionPrefix;
-        this.factionDisplayName = factionDisplayName;
-        this.factionOwner = factionOwner;
-        this.factionMembers = factionMembers;
-        this.factionClaims = factionClaims;
-        this.factionHome = factionHome;
-        this.factionAllies = factionAllies;
-        this.factionEnemies = factionEnemies;
-        this.factionInvites = factionInvites;
-        this.factionAllyInvites = factionAllyInvites;
+        this.factionOwner = factionOwner.getName();
+        this.factionPrefix = "";
+        this.factionDisplayName = "";
+        this.factionMembers = new ArrayList<>();
+        this.factionClaims = new ArrayList<>();
+        this.factionHome = new XManagerLocationData();
+        this.factionAllies = new ArrayList<>();
+        this.factionEnemies = new ArrayList<>();
+        this.factionInvites = new ArrayList<>();
+        this.factionAllyInvites = new ArrayList<>();
+        this.factionAccount = null;
+
+        this.factionMembers.add(new XFactionMemberData(factionOwner.getName(), new XFactionPermissionData(true, true, true)));
 
         XTabListManager.refreshTabLists();
 
@@ -362,4 +354,11 @@ public class XFaction {
     }
 
 
+    public Optional<Account> getFactionAccount() {
+        return factionAccount == null ? Optional.empty() : Optional.of(factionAccount);
+    }
+
+    public void setFactionAccount(XFactionAccount factionAccount) {
+        this.factionAccount = factionAccount;
+    }
 }

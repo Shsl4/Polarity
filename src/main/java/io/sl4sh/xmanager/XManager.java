@@ -6,17 +6,22 @@ import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import io.sl4sh.xmanager.commands.*;
 import io.sl4sh.xmanager.commands.economy.XEconomyMainCommand;
-import io.sl4sh.xmanager.economy.XTradeBuilder;
-import io.sl4sh.xmanager.economy.XTradeContainer;
+import io.sl4sh.xmanager.data.XImmutableMerchantData;
+import io.sl4sh.xmanager.data.XMerchantData;
+import io.sl4sh.xmanager.data.XMerchantDataManipulatorBuilder;
+import io.sl4sh.xmanager.data.containers.XShopProfilesContainer;
+import io.sl4sh.xmanager.data.containers.XTradeProfilesContainer;
+import io.sl4sh.xmanager.economy.merchants.XHuman;
+import io.sl4sh.xmanager.commands.shopbuilder.XShopBuilderMain;
+import io.sl4sh.xmanager.economy.*;
 import io.sl4sh.xmanager.commands.factions.XFactionsClaim;
 import io.sl4sh.xmanager.commands.factions.XFactionsMainCommand;
-import io.sl4sh.xmanager.commands.trade.XTradeMainCommand;
-import io.sl4sh.xmanager.data.XAccountContainer;
+import io.sl4sh.xmanager.commands.trade.XTradeBuilderMain;
+import io.sl4sh.xmanager.data.containers.XAccountContainer;
 import io.sl4sh.xmanager.data.XConfigData;
-import io.sl4sh.xmanager.data.XManagerKnownUserData;
-import io.sl4sh.xmanager.data.factions.XFactionContainer;
-import io.sl4sh.xmanager.economy.XEconomyService;
-import io.sl4sh.xmanager.economy.XPlayerAccount;
+import io.sl4sh.xmanager.data.containers.XFactionContainer;
+import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
+import io.sl4sh.xmanager.economy.merchants.XVillager;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
@@ -28,7 +33,12 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
+import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.DataRegistration;
 import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.data.key.Key;
+import org.spongepowered.api.data.type.Careers;
+import org.spongepowered.api.data.value.mutable.Value;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.tab.TabList;
@@ -39,20 +49,28 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.ConstructEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
+import org.spongepowered.api.event.game.GameRegistryEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.merchant.TradeOffer;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.generator.dummy.DummyObjectProvider;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,18 +89,8 @@ public class XManager {
     @Inject
     private Logger xLogger;
 
-    @Inject
-    private Game game;
-
-    @Inject
-    @DefaultConfig(sharedRoot = true)
-    private Path defaultConfig;
-
     @Nonnull
     private final HoconConfigurationLoader factionsConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Factions.hocon")).build();
-
-    @Nonnull
-    private final HoconConfigurationLoader knownUsersConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/KnownUsers.hocon")).build();
 
     @Nonnull
     private final HoconConfigurationLoader accountsConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Accounts.hocon")).build();
@@ -93,9 +101,8 @@ public class XManager {
     @Nonnull
     private final HoconConfigurationLoader tradesDataConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Trades.hocon")).build();
 
-    @Inject
-    @ConfigDir(sharedRoot = false)
-    private Path privateConfigDir;
+    @Nonnull
+    private final HoconConfigurationLoader shopProfilesConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/ShopProfiles.hocon")).build();
 
     @Nonnull
     private XFactionContainer factionsContainer = new XFactionContainer();
@@ -104,61 +111,49 @@ public class XManager {
     private XConfigData configData = new XConfigData();
 
     @Nonnull
-    private XManagerKnownUserData knownUsers = new XManagerKnownUserData();
+    private XTradeProfilesContainer tradesProfiles = new XTradeProfilesContainer();
 
     @Nonnull
-    private XTradeContainer tradesContainer = new XTradeContainer();
-
-    private XEconomyService economyService;
+    private XShopProfilesContainer shopProfiles = new XShopProfilesContainer();
 
     @Nonnull
     private XAccountContainer accountContainer = new XAccountContainer();
 
-    private XTradeBuilder tradeBuilder;
+    private XEconomyService economyService;
+
+    public static Key<Value<String>> SHOP_DATA_NAME = DummyObjectProvider.createFor(Key.class, "SHOP_DATA_NAME");
+
+    public static Optional<XEconomyService> getXEconomyService(){
+
+        return getXManager().economyService == null ? Optional.empty() : Optional.of(getXManager().economyService);
+
+    }
 
     @Nonnull
-    public XTradeContainer getTradesContainer(){
+    public static XShopProfilesContainer getShopProfiles() { return getXManager().shopProfiles; }
 
-        return tradesContainer;
+    @Nonnull
+    public static XTradeProfilesContainer getTradeProfiles(){
 
-    }
-
-    public XTradeBuilder newTradeBuilder(){
-
-        tradeBuilder = new XTradeBuilder();
-        return tradeBuilder;
+        return getXManager().tradesProfiles;
 
     }
 
-    public Optional<XTradeBuilder> getTradeBuilder(){
+    public static List<XPlayerAccount> getPlayerAccounts(){
 
-        if(tradeBuilder == null) { return Optional.empty(); }
-
-        return Optional.of(tradeBuilder);
+        return getXManager().accountContainer.getPlayerAccounts();
 
     }
 
-    public Optional<XEconomyService> getXEconomyService(){
+    public static XConfigData getConfigData(){
 
-        return economyService == null ? Optional.empty() : Optional.of(economyService);
-
-    }
-
-    public List<XPlayerAccount> getPlayerAccounts(){
-
-        return this.accountContainer.getPlayerAccounts();
+        return getXManager().configData;
 
     }
 
-    public XConfigData getConfigData(){
+    public static List<XFaction> getFactions(){
 
-        return this.configData;
-
-    }
-
-    public List<XFaction> getFactions(){
-
-        return this.factionsContainer.getFactionsList();
+        return getXManager().factionsContainer.getFactionsList();
 
     }
 
@@ -192,26 +187,61 @@ public class XManager {
 
         }
 
-        Sponge.getCommandManager().register(plugin, XTradeMainCommand.getCommandSpec(), "trade");
+        Sponge.getCommandManager().register(plugin, XTradeBuilderMain.getCommandSpec(), "trade");
         Sponge.getCommandManager().register(plugin, XFactionsMainCommand.getCommandSpec(), "factions");
         Sponge.getCommandManager().register(plugin, XManagerProtectChunk.getCommandSpec(), "protectchunk");
         Sponge.getCommandManager().register(plugin, XManagerUnProtectChunk.getCommandSpec(), "unprotectchunk");
         Sponge.getCommandManager().register(plugin, XManagerSetHub.getCommandSpec(), "sethub");
         Sponge.getCommandManager().register(plugin, XManagerHub.getCommandSpec(), "hub");
+        Sponge.getCommandManager().register(plugin, XManagerReloadShops.getCommandSpec(), "reloadshops");
+        Sponge.getCommandManager().register(plugin, XShopBuilderMain.getCommandSpec(), "shopbuilder");
+        Sponge.getCommandManager().register(plugin, XTradeBuilderMain.getCommandSpec(), "tradebuilder");
+
+    }
+
+    @Listener
+    public void onRegisterKeys(GameRegistryEvent.Register<Key<?>> event) {
+
+        SHOP_DATA_NAME = Key.builder()
+                .type(new TypeToken<Value<String>>() {})
+                .query(DataQuery.of("ShopDataName"))
+                .name("ShopDataName")
+                .id("shopdataname")
+                .build();
+        event.register(SHOP_DATA_NAME);
+
+    }
+
+    @Listener
+    public void onServerPreInit(GamePreInitializationEvent event){
+
+        PluginContainer plugin = Sponge.getPluginManager().getPlugin("xmanager").get();
+
+        DataRegistration.builder()
+                .dataClass(XMerchantData.class)
+                .immutableClass(XImmutableMerchantData.class)
+                .builder(new XMerchantDataManipulatorBuilder())
+                .manipulatorId("xmerchant_dr")
+                .dataName("XMerchantData Registration")
+                .buildAndRegister(plugin);
+
+        Sponge.getEventManager().registerListeners(plugin, new XHuman());
+        Sponge.getEventManager().registerListeners(plugin, new XVillager());
+
 
     }
 
 
     @Listener
-    public void onServerInit(GameInitializationEvent event) throws IOException {
+    public void onServerInit(GameInitializationEvent event) {
 
         initLoadConfig();
 
-        xLogger.info("\u00a7d##################################################");
-        xLogger.info("\u00a7d#                                                #");
-        xLogger.info("\u00a7d#     [XManager] | Successfully Initialized!     #");
-        xLogger.info("\u00a7d#                                                #");
-        xLogger.info("\u00a7d##################################################");
+        xLogger.info("\u00a7a##################################################");
+        xLogger.info("\u00a7a#                                                #");
+        xLogger.info("\u00a7a#     [XManager] | Successfully Initialized!     #");
+        xLogger.info("\u00a7a#                                                #");
+        xLogger.info("\u00a7a##################################################");
 
     }
 
@@ -220,8 +250,9 @@ public class XManager {
 
         writeFactionsConfigurationFile();
         writeMainDataConfigurationFile();
-        writeKnownUsersConfigurationFile();
         writeFactionsConfigurationFile();
+        writeShopProfiles();
+        writeCustomTrades();
 
     }
 
@@ -493,10 +524,11 @@ public class XManager {
 
     }
 
+
     @Listener
     public void onPlayerJoined(ClientConnectionEvent.Join event){
 
-        if (!knownUsers.getPlayersUUIDs().contains(event.getTargetEntity().getUniqueId())) {
+        if (!event.getTargetEntity().hasPlayedBefore()) {
 
             for (Player ply : Sponge.getGame().getServer().getOnlinePlayers()) {
 
@@ -504,11 +536,7 @@ public class XManager {
 
             }
 
-            knownUsers.getPlayersUUIDs().add(event.getTargetEntity().getUniqueId());
-            writeKnownUsersConfigurationFile();
-
         }
-
 
         if(economyService != null){
 
@@ -526,11 +554,10 @@ public class XManager {
         configDir.mkdirs();
 
         loadFactions();
-        loadKnownUsers();
         loadMainData();
         loadPlayerAccounts();
         loadCustomTrades();
-
+        loadShopProfiles();
 
     }
 
@@ -539,7 +566,7 @@ public class XManager {
         try {
             XFactionContainer newData = factionsConfigLoader.load().getValue(TypeToken.of(XFactionContainer.class));
             if(newData != null) {factionsContainer = newData; return true;}
-        } catch (ObjectMappingException | IOException ignored) {
+        } catch (ObjectMappingException | IOException e) {
 
         }
 
@@ -576,25 +603,25 @@ public class XManager {
 
     }
 
-    public Boolean loadKnownUsers(){
+    public Boolean loadCustomTrades(){
 
         try {
-            XManagerKnownUserData newData = knownUsersConfigLoader.load().getValue(TypeToken.of(XManagerKnownUserData.class));
-            if(newData != null) {knownUsers = newData; return true;}
+            XTradeProfilesContainer newData = tradesDataConfigLoader.load().getValue(TypeToken.of(XTradeProfilesContainer.class));
+            if(newData != null) {tradesProfiles = newData; return true;}
         } catch (ObjectMappingException | IOException ignored) {
 
         }
 
-        this.xLogger.warn("[XManager] | Failed to load known users config. Using new data.");
+        this.xLogger.warn("[XManager] | Failed to load trades config. Using new data.");
         return false;
 
     }
 
-    public Boolean loadCustomTrades(){
+    public Boolean loadShopProfiles(){
 
         try {
-            XTradeContainer newData = tradesDataConfigLoader.load().getValue(TypeToken.of(XTradeContainer.class));
-            if(newData != null) {tradesContainer = newData; return true;}
+            XShopProfilesContainer newData = shopProfilesConfigLoader.load().getValue(TypeToken.of(XShopProfilesContainer.class));
+            if(newData != null) {shopProfiles = newData; return true;}
         } catch (ObjectMappingException | IOException ignored) {
 
         }
@@ -613,6 +640,7 @@ public class XManager {
                 factionsConfigLoader.save(factionsConfigLoader.createEmptyNode().setValue(TypeToken.of(XFactionContainer.class), factionsContainer));
                 return true;
             } catch (IOException | ObjectMappingException e) {
+                e.printStackTrace();
                 return false;
             }
 
@@ -637,23 +665,6 @@ public class XManager {
 
     }
 
-    public boolean writeKnownUsersConfigurationFile(){
-
-        if(knownUsers.getPlayersUUIDs().size() > 0){
-
-            try {
-                knownUsersConfigLoader.save(knownUsersConfigLoader.createEmptyNode().setValue(TypeToken.of(XManagerKnownUserData.class), knownUsers));
-                return true;
-            } catch (IOException | ObjectMappingException e) {
-                return false;
-            }
-
-        }
-
-        return false;
-
-    }
-
     public boolean writeAccountsConfigurationFile(){
 
         try {
@@ -671,22 +682,34 @@ public class XManager {
 
     public boolean writeCustomTrades(){
 
-        if(getTradesContainer().getTradeList().size() > 0){
+        try {
 
-            try {
+            tradesDataConfigLoader.save(tradesDataConfigLoader.createEmptyNode().setValue(TypeToken.of(XTradeProfilesContainer.class), tradesProfiles));
+            return true;
 
-                tradesDataConfigLoader.save(tradesDataConfigLoader.createEmptyNode().setValue(TypeToken.of(XTradeContainer.class), tradesContainer));
-                return true;
+        } catch (IOException | ObjectMappingException e) {
 
-            } catch (IOException | ObjectMappingException e) {
-
-                return false;
-
-            }
+            return false;
 
         }
 
-        return false;
+    }
+
+    public boolean writeShopProfiles(){
+
+        try {
+
+            shopProfilesConfigLoader.save(shopProfilesConfigLoader.createEmptyNode().setValue(TypeToken.of(XShopProfilesContainer.class), shopProfiles));
+            return true;
+
+        } catch (IOException | ObjectMappingException e) {
+
+            e.printStackTrace();
+
+            return false;
+
+        }
+
 
     }
 

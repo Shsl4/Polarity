@@ -1,77 +1,55 @@
-package io.sl4sh.xmanager.economy;
+package io.sl4sh.xmanager.economy.accounts;
 
 import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.economy.XTransactionResult;
+import io.sl4sh.xmanager.economy.XTransferResult;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.economy.transactiontypes.XTransactionTypes;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.EventContext;
-import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.service.context.Context;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.Account;
-import org.spongepowered.api.service.economy.account.UniqueAccount;
+import org.spongepowered.api.service.economy.account.VirtualAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
 import org.spongepowered.api.service.economy.transaction.TransferResult;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
 
+import javax.annotation.Nonnull;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @ConfigSerializable
-public class XPlayerAccount implements UniqueAccount{
+public class XFactionAccount implements VirtualAccount {
 
-    @Setting(value = "playerUUID")
-    private UUID playerUUID = UUID.randomUUID();
+    @Nonnull
+    @Setting(value = "factionName")
+    private String factionName = "None";
 
-    @Setting(value = "playerName")
-    private String playerName = "None";
+    @Setting(value = "factionBalance")
+    private float factionBalance = 500;
 
-    @Setting(value = "playerBalance")
-    private float playerBalance = 0;
-
-    public XPlayerAccount() {}
-
-    public XPlayerAccount(UUID playerUUID, String playerName, float playerBalance){
-
-        this.playerUUID = playerUUID;
-        this.playerName = playerName;
-        this.playerBalance = playerBalance;
-
+    public XFactionAccount(String factionName, float factionBalance) {
+        this.factionName = factionName;
+        this.factionBalance = factionBalance;
     }
 
-    public XPlayerAccount(Player player){
-
-        playerUUID = player.getUniqueId();
-        playerName = player.getName();
-
-    }
-
-    public String getTargetPlayerName(){
-
-        return playerName;
-
-    }
-
-    public Optional<Player> getTargetPlayer(){
-
-        return Sponge.getServer().getPlayer(playerUUID);
-
-    }
+    public XFactionAccount () {}
 
     @Override
     public Text getDisplayName() {
-        return Text.of(playerName, "'s Account");
+        return Text.of(getFactionName() + "'s account");
     }
 
     @Override
     public BigDecimal getDefaultBalance(Currency currency) {
-        return BigDecimal.ZERO;
+
+        return BigDecimal.valueOf(500.0f);
+
     }
 
     @Override
@@ -84,21 +62,18 @@ public class XPlayerAccount implements UniqueAccount{
         }
 
         return false;
-
     }
 
     @Override
     public BigDecimal getBalance(Currency currency, Set<Context> contexts) {
-        return BigDecimal.valueOf(playerBalance);
+        return BigDecimal.valueOf(factionBalance);
     }
 
     @Override
     public Map<Currency, BigDecimal> getBalances(Set<Context> contexts) {
-
         Map<Currency, BigDecimal> balances = new HashMap<Currency, BigDecimal>();
-        balances.put(new XDollar(), BigDecimal.valueOf(playerBalance));
+        balances.put(new XDollar(), BigDecimal.valueOf(factionBalance));
         return balances;
-
     }
 
     @Override
@@ -106,7 +81,7 @@ public class XPlayerAccount implements UniqueAccount{
 
         if(currency instanceof XDollar){
 
-            playerBalance = amount.floatValue();
+            factionBalance = amount.floatValue();
 
             XManager.getXManager().writeAccountsConfigurationFile();
 
@@ -139,9 +114,7 @@ public class XPlayerAccount implements UniqueAccount{
 
         if(currency instanceof XDollar){
 
-            setBalance(currency, amount.add(BigDecimal.valueOf(playerBalance)), cause, contexts);
-
-            printIncomeMessage(currency, amount, cause);
+            setBalance(currency, amount.add(BigDecimal.valueOf(factionBalance)), cause, contexts);
 
             return new XTransactionResult(this, currency, amount, contexts, ResultType.SUCCESS, XTransactionTypes.Deposit.getTransactionType());
 
@@ -158,7 +131,7 @@ public class XPlayerAccount implements UniqueAccount{
 
             if(this.hasEnoughBalanceToWithdraw(amount)){
 
-                setBalance(currency, BigDecimal.valueOf(playerBalance - amount.floatValue()), cause, contexts);
+                setBalance(currency, BigDecimal.valueOf(factionBalance - amount.floatValue()), cause, contexts);
                 return new XTransactionResult(this, currency, amount, contexts, ResultType.SUCCESS, XTransactionTypes.Withdraw.getTransactionType());
 
             }
@@ -173,7 +146,7 @@ public class XPlayerAccount implements UniqueAccount{
 
     private boolean hasEnoughBalanceToWithdraw(BigDecimal amount){
 
-        return playerBalance - amount.floatValue() >= 0;
+        return factionBalance - amount.floatValue() >= 0;
 
     }
 
@@ -194,7 +167,7 @@ public class XPlayerAccount implements UniqueAccount{
 
     @Override
     public String getIdentifier() {
-        return playerName + "'s Account";
+        return factionName;
     }
 
     @Override
@@ -202,42 +175,19 @@ public class XPlayerAccount implements UniqueAccount{
         return null;
     }
 
-    @Override
-    public UUID getUniqueId() {
-        return playerUUID;
+    public String getFactionName() {
+        return factionName;
     }
 
-    private void printIncomeMessage(Currency currency, BigDecimal amount, Cause cause){
-
-        if(currency instanceof XDollar && getTargetPlayer().isPresent()){
-
-            XDollar dollarCurrency = (XDollar)currency;
-            Player targetPlayer = getTargetPlayer().get();
-
-            if(cause.allOf(XAdminIdentifier.class).size() > 0){
-
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | ", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account by an administrator!"));
-                return;
-
-            }
-
-            if(cause.containsType(Player.class)){
-
-                if(cause.first(Player.class).isPresent()){
-
-                    Player senderPlayer = cause.first(Player.class).get();
-
-                    targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | You just received ", dollarCurrency.format(amount, 2), TextColors.AQUA, " from ", senderPlayer.getName(), "!"));
-                    return;
-
-                }
-
-            }
-
-            targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | You just received ", dollarCurrency.format(amount, 2), TextColors.AQUA, "!"));
-
-        }
-
+    public void setFactionName(String factionName) {
+        this.factionName = factionName;
     }
 
+    public float getFactionBalance() {
+        return factionBalance;
+    }
+
+    public void setFactionBalance(float factionBalance) {
+        this.factionBalance = factionBalance;
+    }
 }

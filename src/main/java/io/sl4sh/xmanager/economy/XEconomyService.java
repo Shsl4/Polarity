@@ -1,6 +1,10 @@
 package io.sl4sh.xmanager.economy;
 
+import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
+import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.context.ContextCalculator;
@@ -9,9 +13,8 @@ import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 
+import javax.annotation.Nonnull;
 import java.util.*;
-
-import static io.sl4sh.xmanager.XManager.getXManager;
 
 public class XEconomyService implements EconomyService {
 
@@ -34,7 +37,7 @@ public class XEconomyService implements EconomyService {
     @Override
     public boolean hasAccount(UUID uuid) {
 
-        for(XPlayerAccount account : getXManager().getPlayerAccounts()){
+        for(XPlayerAccount account : XManager.getPlayerAccounts()){
 
             if(account.getUniqueId().equals(uuid)){
 
@@ -49,13 +52,23 @@ public class XEconomyService implements EconomyService {
     }
 
     @Override
-    public boolean hasAccount(String identifier) {
+    public boolean hasAccount(@Nonnull String identifier) {
 
-        for(XPlayerAccount account : getXManager().getPlayerAccounts()){
+        for(XPlayerAccount account : XManager.getPlayerAccounts()){
 
             if(account.getTargetPlayerName().equals(identifier)){
 
                 return true;
+
+            }
+
+        }
+
+        for(XFaction faction : XManager.getFactions()){
+
+            if(faction.getFactionName().equals(identifier)){
+
+                return faction.getFactionAccount().isPresent();
 
             }
 
@@ -68,9 +81,9 @@ public class XEconomyService implements EconomyService {
     @Override
     public Optional<UniqueAccount> getOrCreateAccount(UUID uuid) {
 
-        if(getXManager().getPlayerAccounts() == null) { return Optional.empty(); }
+        if(XManager.getPlayerAccounts() == null) { return Optional.empty(); }
 
-        for(XPlayerAccount account : getXManager().getPlayerAccounts()){
+        for(XPlayerAccount account : XManager.getPlayerAccounts()){
 
             if(account.getUniqueId().equals(uuid)){
 
@@ -88,7 +101,7 @@ public class XEconomyService implements EconomyService {
 
         XPlayerAccount newAccount = new XPlayerAccount(targetPlayer);
 
-        getXManager().getPlayerAccounts().add(newAccount);
+        XManager.getPlayerAccounts().add(newAccount);
 
         XManager.getXManager().writeAccountsConfigurationFile();
 
@@ -99,31 +112,17 @@ public class XEconomyService implements EconomyService {
     @Override
     public Optional<Account> getOrCreateAccount(String identifier) {
 
-        if(getXManager().getPlayerAccounts() == null) { return Optional.empty(); }
+        for(XFaction faction : XManager.getFactions()){
 
-        for(XPlayerAccount account : getXManager().getPlayerAccounts()){
+            if(faction.getFactionName().equals(identifier)){
 
-            if(account.getTargetPlayerName().equals(identifier)){
-
-                return Optional.of(account);
+                return faction.getFactionAccount().isPresent() ? faction.getFactionAccount() : Optional.of(new XFactionAccount(identifier, 500));
 
             }
 
         }
 
-        Optional<Player> optTargetPlayer = Sponge.getServer().getPlayer(identifier);
-
-        if(!optTargetPlayer.isPresent()) { return Optional.empty(); }
-
-        Player targetPlayer = optTargetPlayer.get();
-
-        XPlayerAccount newAccount = new XPlayerAccount(targetPlayer);
-
-        getXManager().getPlayerAccounts().add(newAccount);
-
-        XManager.getXManager().writeAccountsConfigurationFile();
-
-        return Optional.of(newAccount);
+        return Optional.empty();
 
     }
 

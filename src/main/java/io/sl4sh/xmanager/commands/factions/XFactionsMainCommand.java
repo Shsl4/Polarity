@@ -38,6 +38,9 @@ public class XFactionsMainCommand implements CommandExecutor {
                 .child(XFactionsSetOwner.getCommandSpec(), "setowner")
                 .child(XFactionsAlly.getCommandSpec(), "ally")
                 .child(XFactionsDeAlly.getCommandSpec(), "deally")
+                .child(XFactionsWithdraw.getCommandSpec(), "withdraw")
+                .child(XFactionsPay.getCommandSpec(), "pay")
+                .child(XFactionsShowBalance.getCommandSpec(), "showbalance")
                 .executor(new XFactionsMainCommand())
                 .build();
 

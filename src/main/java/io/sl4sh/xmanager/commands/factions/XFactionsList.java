@@ -60,7 +60,7 @@ public class XFactionsList implements CommandExecutor {
 
             for(XFaction faction : factionList){
 
-                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getFactionDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getFactionOwner() , listTintColor , " | Raw name: " , TextColors.WHITE , faction.getFactionName()));
+                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getFactionDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getFactionOwner() , listTintColor , " | Real name: " , TextColors.WHITE , faction.getFactionName()));
                 it++;
 
             }

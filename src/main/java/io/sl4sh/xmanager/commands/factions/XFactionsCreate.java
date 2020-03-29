@@ -1,15 +1,12 @@
 package io.sl4sh.xmanager.commands.factions;
 
-import com.flowpowered.math.vector.Vector3d;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.economy.XEconomyService;
+import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
-import io.sl4sh.xmanager.data.factions.XFactionContainer;
-import io.sl4sh.xmanager.data.factions.XFactionMemberData;
-import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
@@ -22,10 +19,8 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
-import java.util.ArrayList;
+import javax.annotation.Nonnull;
 import java.util.List;
 
 public class XFactionsCreate implements CommandExecutor {
@@ -79,27 +74,16 @@ public class XFactionsCreate implements CommandExecutor {
 
             if(!XUtilities.doesFactionExist(factionName)){
 
-                List<XFactionMemberData> factionMembers = new ArrayList<>();
-                XFactionMemberData mbData = new XFactionMemberData(creator.getName(), new XFactionPermissionData(true, true, true));
-                factionMembers.add(mbData);
-                XFaction faction = new XFaction(factionName, "", "", creator.getName(), factionMembers, new ArrayList<>(), new XManagerLocationData(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+                XFaction faction = new XFaction(factionName, creator);
 
-                List<XFaction> factions = XManager.getXManager().getFactions();
+                @Nonnull List<XFaction> factions = XManager.getFactions();
 
-                if(factions != null){
-
-                    factions.add(faction);
-                    XManager.getXManager().writeFactionsConfigurationFile();
-                    creator.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
-                    XTabListManager.refreshTabLists();
-
-
-                }
-                else{
-
-                    creator.sendMessage(XError.XERROR_FILEREADFAIL.getDesc());
-
-                }
+                factions.add(faction);
+                XEconomyService economyService = XManager.getXEconomyService().get();
+                faction.setFactionAccount((XFactionAccount) economyService.getOrCreateAccount(factionName).get());
+                creator.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
+                XManager.getXManager().writeFactionsConfigurationFile();
+                XTabListManager.refreshTabLists();
 
             }
             else{

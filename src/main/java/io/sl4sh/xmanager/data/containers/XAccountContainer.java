@@ -1,6 +1,6 @@
-package io.sl4sh.xmanager.data;
+package io.sl4sh.xmanager.data.containers;
 
-import io.sl4sh.xmanager.economy.XPlayerAccount;
+import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
