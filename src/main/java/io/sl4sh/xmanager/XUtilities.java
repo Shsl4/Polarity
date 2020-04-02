@@ -5,6 +5,10 @@ import com.flowpowered.math.vector.Vector3i;
 import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
+import net.minecraft.world.WorldServer;
+import noppes.npcs.api.IWorld;
+import noppes.npcs.api.NpcAPI;
+import noppes.npcs.api.entity.IPlayer;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
@@ -15,6 +19,29 @@ import java.util.List;
 import java.util.Optional;
 
 public class XUtilities {
+
+    public static Optional<Player> iPlayerToSpongePlayer(IPlayer player){
+
+        return Sponge.getServer().getPlayer(player.getName());
+
+    }
+
+    public static Optional<WorldServer> getSpongeWorldToServerWorld(World world){
+
+
+        for(IWorld iWorld : NpcAPI.Instance().getIWorlds()){
+
+            if(iWorld.getName().equals(world.getName())){
+
+                return Optional.of(iWorld.getMCWorld());
+
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
 
     public static boolean isLocationProtected(Location<World> target){
 
@@ -146,28 +173,17 @@ public class XUtilities {
 
         List<XFaction> factionsContainer = XManager.getFactions();
 
-        if(factionsContainer != null){
+        for(XFaction faction : factionsContainer){
 
-            if(factionsContainer.size() <= 0) {System.out.println("factions container is empty");}
+            for(XFactionMemberData memberData : faction.getFactionMembers()){
 
-            for(XFaction faction : factionsContainer){
+                if(memberData.getPlayerName().equals(player.getName())){
 
-                for(XFactionMemberData memberData : faction.getFactionMembers()){
-
-                    if(memberData.getPlayerName().equals(player.getName())){
-
-                        return Optional.of(faction);
-
-                    }
+                    return Optional.of(faction);
 
                 }
 
             }
-
-        }
-        else{
-
-            System.out.println("factions container is null");
 
         }
 

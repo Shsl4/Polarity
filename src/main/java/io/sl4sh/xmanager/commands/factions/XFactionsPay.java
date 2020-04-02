@@ -13,6 +13,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
@@ -42,7 +43,18 @@ public class XFactionsPay implements CommandExecutor {
 
         if(src instanceof Player){
 
-            payPlayer((Player)src, (Player)args.getOne("playerName").get(), (BigDecimal)args.getOne("amount").get());
+            Player caller = (Player)src;
+
+            if(payPlayer(caller, (Player)args.getOne("playerName").get(), (BigDecimal)args.getOne("amount").get())){
+
+                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), 0.75);
+
+            }
+            else{
+
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+
+            }
 
         }
 
@@ -50,26 +62,26 @@ public class XFactionsPay implements CommandExecutor {
 
     }
 
-    private void payPlayer(Player caller, Player target, BigDecimal amount){
+    private boolean payPlayer(Player caller, Player target, BigDecimal amount){
 
         Optional<XFaction> optCallerFaction = XUtilities.getPlayerFaction(caller);
         Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(target);
 
-        if(!optCallerFaction.isPresent()) { caller.sendMessage(Text.of(XError.XERROR_NOXF.getDesc())); return; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(Text.of(XError.XERROR_NOXF.getDesc())); return false; }
 
-        if(!optTargetFaction.isPresent() || !optCallerFaction.get().equals(optTargetFaction.get())) { caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc())); return; }
+        if(!optTargetFaction.isPresent() || !optCallerFaction.get().equals(optTargetFaction.get())) { caller.sendMessage(Text.of(XError.XERROR_NOTAMEMBER.getDesc())); return false; }
 
-        if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getManage()) {caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getManage()) {caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return false; }
 
-        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot pay yourself. Use /factions withdraw instead")); return; }
+        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot pay yourself. Use /factions withdraw instead")); return false; }
 
         XFaction faction = optCallerFaction.get();
 
-        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
         XEconomyService economyService = XManager.getXEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
         Account targetAccount = economyService.getOrCreateAccount(target.getUniqueId()).get();
         Account factionAccount = economyService.getOrCreateAccount(faction.getFactionName()).get();
@@ -82,17 +94,18 @@ public class XFactionsPay implements CommandExecutor {
 
             case SUCCESS:
 
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Economy] | Successfully transferred ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", target.getName(), TextColors.GREEN, "!"));
-                return;
+                caller.sendMessage(Text.of(TextColors.GREEN, "[Economy] | Successfully transferred ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", TextColors.LIGHT_PURPLE, target.getName(), TextColors.GREEN, TextColors.GREEN, "!"));
+                return true;
 
             case ACCOUNT_NO_FUNDS:
 
                 caller.sendMessage(Text.of(TextColors.RED, "[Economy] | You faction does not have enough money to do that!"));
-                return;
+                return false;
 
         }
 
         caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+        return false;
 
     }
 

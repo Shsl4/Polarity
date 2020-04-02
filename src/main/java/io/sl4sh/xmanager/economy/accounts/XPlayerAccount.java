@@ -2,10 +2,13 @@ package io.sl4sh.xmanager.economy.accounts;
 
 import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.XManager;
+import io.sl4sh.xmanager.economy.XSellConfirmationUI;
 import io.sl4sh.xmanager.economy.XTransactionResult;
 import io.sl4sh.xmanager.economy.XTransferResult;
 import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.economy.transactionidentifiers.XAdminIdentifier;
+import io.sl4sh.xmanager.economy.transactionidentifiers.XPlayRewardIdentifier;
+import io.sl4sh.xmanager.economy.transactionidentifiers.XSellIdentifier;
 import io.sl4sh.xmanager.economy.transactiontypes.XTransactionTypes;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
@@ -222,6 +225,20 @@ public class XPlayerAccount implements UniqueAccount{
             if(cause.allOf(XAdminIdentifier.class).size() > 0){
 
                 targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | ", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account by an administrator!"));
+                return;
+
+            }
+
+            if(cause.allOf(XPlayRewardIdentifier.class).size() > 0){
+
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | ", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account for being online!"));
+                return;
+
+            }
+
+            if(cause.allOf(XSellIdentifier.class).size() > 0){
+
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "[Economy] | ", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account for selling items!"));
                 return;
 
             }

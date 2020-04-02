@@ -2,10 +2,11 @@ package io.sl4sh.xmanager.economy;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 
 @ConfigSerializable
-public class XEconomyShopRecipe {
+public class XShopRecipe {
 
     @Setting(value = "price")
     private float price = 0.0f;
@@ -13,9 +14,9 @@ public class XEconomyShopRecipe {
     @Setting(value = "targetItem")
     private ItemStackSnapshot targetItem = ItemStackSnapshot.NONE;
 
-    public XEconomyShopRecipe() {}
+    public XShopRecipe() {}
 
-    public XEconomyShopRecipe(float price, ItemStackSnapshot targetItem) {
+    public XShopRecipe(float price, ItemStackSnapshot targetItem) {
         this.price = price;
         this.targetItem = targetItem;
     }
@@ -33,12 +34,15 @@ public class XEconomyShopRecipe {
     }
 
     public void setPrice(float price) {
+
+        if(price < 0) { this.price = 0.0f; return;}
+
         this.price = price;
     }
 
     public boolean isValidRecipe(){
 
-        return price > 0.0f && targetItem != ItemStackSnapshot.NONE;
+        return price > 0.0f && targetItem.getType() != ItemTypes.BARRIER && targetItem.getType() != ItemTypes.AIR;
 
     }
 

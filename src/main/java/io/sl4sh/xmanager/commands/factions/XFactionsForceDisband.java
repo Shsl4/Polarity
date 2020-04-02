@@ -16,6 +16,7 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -45,26 +46,18 @@ public class XFactionsForceDisband implements CommandExecutor {
 
             ConsoleSource serv = (ConsoleSource)src;
 
-            if(args.getOne("factionName").isPresent()){
+            if(forceDisbandFaction(args.getOne("factionName").get().toString().toLowerCase())){
 
-                if(forceDisbandFaction(args.getOne("factionName").get().toString().toLowerCase())){
-
-                    serv.sendMessage(Text.of(TextColors.GREEN, "[Factions] | The faction " , args.getOne("factionName").get().toString().toLowerCase() , " has been successfully disbanded."));
-                    XTabListManager.refreshTabLists();
-
-                }
-                else{
-
-                    serv.sendMessage(Text.of(TextColors.RED, "[Factions] | Failed to disband the faction. Does it exists?"));
-
-                }
+                serv.sendMessage(Text.of(TextColors.GREEN, "[Factions] | The faction " , args.getOne("factionName").get().toString().toLowerCase() , " has been successfully disbanded."));
+                XTabListManager.refreshTabLists();
 
             }
             else{
 
-                serv.sendMessage(XError.XERROR_UNKNOWN.getDesc());
+                serv.sendMessage(Text.of(TextColors.RED, "[Factions] | Failed to disband the faction. Does it exists?"));
 
             }
+
 
         }
         else{
@@ -79,7 +72,7 @@ public class XFactionsForceDisband implements CommandExecutor {
 
     private Boolean forceDisbandFaction(String factionName){
 
-        List<XFaction> factions = XManager.getXManager().getFactions();
+        List<XFaction> factions = XManager.getFactions();
 
         Optional<XFaction> optPendingDeleteFaction = XUtilities.getFactionByName(factionName);
 
@@ -104,6 +97,7 @@ public class XFactionsForceDisband implements CommandExecutor {
             for(Player ply : players){
 
                 ply.sendMessage(Text.of(TextColors.RED, "\u00a7l[Factions] | Your faction has been disbanded by an administrator."));
+                ply.playSound(SoundTypes.AMBIENT_CAVE, ply.getPosition(), 0.75);
 
             }
 

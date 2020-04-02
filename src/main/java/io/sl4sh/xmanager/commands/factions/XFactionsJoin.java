@@ -15,6 +15,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -67,31 +68,37 @@ public class XFactionsJoin implements CommandExecutor {
 
     }
 
-    private void joinFaction(Player ply, String factionName){
+    private void joinFaction(Player caller, String factionName){
 
         if(XUtilities.doesFactionExist(factionName)){
 
             Optional<XFaction> optFac = XUtilities.getFactionByName(factionName);
 
-            if(!optFac.isPresent()) { ply.sendMessage(XError.XERROR_XFNULL.getDesc()); return; }
+            if(!optFac.isPresent()) { caller.sendMessage(XError.XERROR_XFNULL.getDesc()); return; }
 
             XFaction targetFaction = optFac.get();
 
-            if(targetFaction.getFactionInvites().contains(ply.getName())){
+            if(targetFaction.getFactionInvites().contains(caller.getName())){
 
-                targetFaction.getFactionMembers().add(new XFactionMemberData(ply.getName(), new XFactionPermissionData(false, true, false)));
+                targetFaction.getFactionMembers().add(new XFactionMemberData(caller.getName(), new XFactionPermissionData(false, true, false)));
 
-                targetFaction.getFactionInvites().remove(ply.getName());
+                targetFaction.getFactionInvites().remove(caller.getName());
 
-                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), 0.75);
 
                 for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
 
-                    if(mbData.getPlayerName().equals(ply.getName())) { continue; }
+                    if(mbData.getPlayerName().equals(caller.getName())) { continue; }
 
                     Optional<Player> optPlayer = XUtilities.getPlayerByName(mbData.getPlayerName());
 
-                    optPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.YELLOW, "[Factions] | ", TextColors.LIGHT_PURPLE, ply.getName(), TextColors.YELLOW, " just joined your faction!")));
+                    if(optPlayer.isPresent()){
+
+                        optPlayer.get().sendMessage(Text.of(TextColors.YELLOW, "[Factions] | ", TextColors.LIGHT_PURPLE, caller.getName(), TextColors.YELLOW, " just joined your faction!"));
+                        optPlayer.get().playSound(SoundTypes.BLOCK_NOTE_BELL, optPlayer.get().getPosition(), 0.75);
+
+                    }
 
                 }
 
@@ -101,14 +108,14 @@ public class XFactionsJoin implements CommandExecutor {
             }
             else{
 
-                ply.sendMessage(XError.XERROR_NOTINVITED.getDesc());
+                caller.sendMessage(XError.XERROR_NOTINVITED.getDesc());
 
             }
 
         }
         else{
 
-            ply.sendMessage(XError.XERROR_XFNULL.getDesc());
+            caller.sendMessage(XError.XERROR_XFNULL.getDesc());
 
         }
 

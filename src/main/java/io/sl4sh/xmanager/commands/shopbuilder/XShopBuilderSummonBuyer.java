@@ -1,10 +1,9 @@
-package io.sl4sh.xmanager.commands.trade;
+package io.sl4sh.xmanager.commands.shopbuilder;
 
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.economy.XShopProfile;
-import io.sl4sh.xmanager.economy.XTradeProfile;
-import io.sl4sh.xmanager.economy.merchants.XHuman;
-import io.sl4sh.xmanager.economy.merchants.XVillager;
+import io.sl4sh.xmanager.economy.merchants.XBuyerNPC;
+import io.sl4sh.xmanager.economy.merchants.XShopNPC;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -18,15 +17,14 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-public class XTradeBuilderSummon implements CommandExecutor {
+public class XShopBuilderSummonBuyer implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
-                .description(Text.of("Summons a villager with the selected profile name."))
-                .arguments(GenericArguments.string(Text.of("profileName")))
-                .permission("xmanager.tradebuilder.summon")
-                .executor(new XTradeBuilderSummon())
+                .description(Text.of("Summons a buyer"))
+                .permission("xmanager.summonbuyer")
+                .executor(new XShopBuilderSummonBuyer())
                 .build();
 
     }
@@ -38,13 +36,7 @@ public class XTradeBuilderSummon implements CommandExecutor {
 
             Player caller = (Player)src;
 
-            String profileName = (String)args.getOne("profileName").get();
-
-            Optional<XTradeProfile> optionalXTradeProfile = XManager.getTradeProfiles().getTradeProfileByName(profileName);
-
-            if(!optionalXTradeProfile.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[ShopBuilder] | This profile name does not exist.")); return CommandResult.success(); }
-
-            XVillager.summonMerchant(caller.getWorld(), caller, profileName);
+            XBuyerNPC.summonNPC(caller.getWorld(), caller);
 
         }
 

@@ -19,14 +19,14 @@ import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
-public class XManagerReloadShops implements CommandExecutor {
+public class XManagerReloadMainData implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
-                .description(Text.of("Reload the shops and trade configuration"))
-                .permission("xmanager.reloadshops")
-                .executor(new XManagerReloadShops())
+                .description(Text.of("Reloads the main data configuration"))
+                .permission("xmanager.reloadmaindata")
+                .executor(new XManagerReloadMainData())
                 .build();
 
     }
@@ -36,30 +36,9 @@ public class XManagerReloadShops implements CommandExecutor {
 
         XManager plugin = XManager.getXManager();
 
-        plugin.loadShopProfiles();
+        plugin.loadMainData();
 
-        for(World world : Sponge.getServer().getWorlds()){
-
-            for(Entity entity : world.getEntities()){
-
-                if(!entity.get(XMerchantData.class).isPresent()) { continue; }
-
-                Optional<XShopProfile> optShopProfile = XManager.getShopProfiles().getShopProfileByName(entity.get(XMerchantData.class).get().merchantData().get());
-
-                net.minecraft.entity.Entity mcEntity = (net.minecraft.entity.Entity)entity;
-
-                ICustomNpc npc = (ICustomNpc) NpcAPI.Instance().getIEntity(mcEntity);
-
-                if(!optShopProfile.isPresent()) { npc.getAdvanced().setLine(0, 0, "I am currently unavailable", ""); continue; }
-
-                XShopProfile shopProfile = optShopProfile.get();
-
-
-            }
-
-        }
-
-        src.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Reloaded trades and shop profiles."));
+        src.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Reloaded Main data."));
 
         return CommandResult.success();
 

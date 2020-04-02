@@ -16,6 +16,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -42,16 +43,20 @@ public class XFactionsCreate implements CommandExecutor {
 
         if (src instanceof Player) {
 
-            Player ply = (Player) src;
+            Player caller = (Player) src;
 
             if(args.getOne("factionName").isPresent()){
 
-                createFaction(ply, args.getOne("factionName").get().toString().toLowerCase());
+                if(!createFaction(caller, args.getOne("factionName").get().toString().toLowerCase())){
+
+                    caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+
+                }
 
             }
             else{
 
-                ply.sendMessage(XError.XERROR_UNKNOWN.getDesc());
+                caller.sendMessage(XError.XERROR_UNKNOWN.getDesc());
 
             }
 
@@ -66,41 +71,43 @@ public class XFactionsCreate implements CommandExecutor {
 
     }
 
-    private void createFaction(Player creator, String newFactionName) {
+    private boolean createFaction(Player caller, String newFactionName) {
 
         String factionName = XUtilities.getStringWithoutModifiers(newFactionName);
 
-        if(!XUtilities.getPlayerFaction(creator).isPresent()){
+        if(!XUtilities.getPlayerFaction(caller).isPresent()){
 
             if(!XUtilities.doesFactionExist(factionName)){
 
-                XFaction faction = new XFaction(factionName, creator);
+                XFaction faction = new XFaction(factionName, caller);
 
                 @Nonnull List<XFaction> factions = XManager.getFactions();
 
                 factions.add(faction);
                 XEconomyService economyService = XManager.getXEconomyService().get();
                 faction.setFactionAccount((XFactionAccount) economyService.getOrCreateAccount(factionName).get());
-                creator.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
+                caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
+                caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), 0.75);
                 XManager.getXManager().writeFactionsConfigurationFile();
                 XTabListManager.refreshTabLists();
+                return true;
 
             }
             else{
 
-                creator.sendMessage(Text.of(TextColors.RED, "[Factions] | A faction named " , factionName , " already exists!"));
+                caller.sendMessage(Text.of(TextColors.RED, "[Factions] | A faction named " , factionName , " already exists!"));
 
             }
 
         }
         else{
 
-            creator.sendMessage(XInfo.XERROR_XFMEMBER.getDesc());
+            caller.sendMessage(XInfo.XERROR_XFMEMBER.getDesc());
 
         }
 
+        return false;
+
     }
-
-
 
 }

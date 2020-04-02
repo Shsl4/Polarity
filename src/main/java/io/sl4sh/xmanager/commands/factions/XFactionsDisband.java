@@ -14,6 +14,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -37,11 +38,13 @@ public class XFactionsDisband implements CommandExecutor {
 
         if (src instanceof Player) {
 
-            Player ply = (Player) src;
+            Player caller = (Player) src;
 
-            disbandFaction(ply);
-            XTabListManager.refreshTabLists();
+            if(!disbandFaction(caller)){
 
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+
+            }
 
         }
         else{
@@ -54,7 +57,7 @@ public class XFactionsDisband implements CommandExecutor {
 
     }
 
-    private void disbandFaction(Player caller){
+    private boolean disbandFaction(Player caller){
 
         Optional<XFaction> optPendingDeleteFaction = XUtilities.getPlayerFaction(caller);
 
@@ -69,14 +72,17 @@ public class XFactionsDisband implements CommandExecutor {
                     if(Sponge.getServer().getPlayer(memberData.getPlayerName()).isPresent()){
 
                         Player factionPlayer = Sponge.getServer().getPlayer(memberData.getPlayerName()).get();
-                        factionPlayer.sendMessage(Text.of(TextColors.RED, ("\u00a7l[Factions] | Your faction has been disbanded by the owner. (" + caller.getName() + ")")));
+                        factionPlayer.sendMessage(Text.of(TextColors.RED, "[Factions] | Your faction has been disbanded by the owner. (", caller.getName(), ")"));
+                        factionPlayer.playSound(SoundTypes.AMBIENT_CAVE, factionPlayer.getPosition(), 0.75);
 
                     }
 
                 }
 
-                XManager.getXManager().getFactions().remove(pendingDeleteFaction);
+                XManager.getFactions().remove(pendingDeleteFaction);
                 XManager.getXManager().writeFactionsConfigurationFile();
+                XTabListManager.refreshTabLists();
+                return true;
 
             }
             else{
@@ -91,6 +97,8 @@ public class XFactionsDisband implements CommandExecutor {
             caller.sendMessage(XError.XERROR_NOXF.getDesc());
 
         }
+
+        return false;
 
     }
 

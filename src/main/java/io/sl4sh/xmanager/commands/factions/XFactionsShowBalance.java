@@ -12,6 +12,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
@@ -65,6 +66,8 @@ public class XFactionsShowBalance implements CommandExecutor {
         XDollar dollarCurrency = new XDollar();
 
         caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | Your current faction's balance is ", dollarCurrency.format(factionAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
+        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), 0.75);
+
 
     }
 

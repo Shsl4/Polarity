@@ -12,6 +12,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -36,8 +37,12 @@ public class XFactionsLeave implements CommandExecutor {
 
         if (src instanceof Player) {
 
-            Player ply = (Player) src;
-            leaveFaction(ply);
+            Player caller = (Player) src;
+            if(!leaveFaction(caller)){
+
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+
+            }
 
         }
         else{
@@ -50,34 +55,51 @@ public class XFactionsLeave implements CommandExecutor {
 
     }
 
-    private void leaveFaction(Player ply){
+    private boolean leaveFaction(Player caller){
 
-        Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(ply);
+        Optional<XFaction> optTargetFaction = XUtilities.getPlayerFaction(caller);
 
         if(optTargetFaction.isPresent()){
 
             XFaction targetFaction = optTargetFaction.get();
 
-            if(targetFaction.getFactionOwner().equals(ply.getName())){
+            if(targetFaction.getFactionOwner().equals(caller.getName())){
 
-                ply.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You can't leave the faction you own. Use /factions disband instead, or /factions setowner to set a new owner."));
+                caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You can't leave the faction you own. Use /factions disband instead, or /factions setowner to set a new owner."));
 
             }
             else{
 
-                Optional<XFactionMemberData> optMemberData = XUtilities.getMemberDataForPlayer(ply);
+                Optional<XFactionMemberData> optMemberData = XUtilities.getMemberDataForPlayer(caller);
 
                 if(optMemberData.isPresent()){
 
                     if(targetFaction.getFactionMembers().remove(optMemberData.get())){
 
-                        ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                        caller.playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, caller.getPosition(), 0.75);
+
+                        for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
+
+                            if(mbData.getPlayerName().equals(caller.getName())) { continue; }
+
+                            Optional<Player> optPlayer = XUtilities.getPlayerByName(mbData.getPlayerName());
+
+                            if(optPlayer.isPresent()){
+
+                                optPlayer.get().sendMessage(Text.of(TextColors.RED, "[Factions] | ", TextColors.LIGHT_PURPLE, caller.getName(), TextColors.RED, " just left your faction!"));
+                                optPlayer.get().playSound(SoundTypes.BLOCK_NOTE_BASS, optPlayer.get().getPosition(), 0.75);
+
+                            }
+
+                        }
+
                         XTabListManager.refreshTabLists();
 
                     }
                     else{
 
-                        ply.sendMessage(XError.XERROR_UNKNOWN.getDesc());
+                        caller.sendMessage(XError.XERROR_UNKNOWN.getDesc());
 
                     }
 
@@ -85,7 +107,7 @@ public class XFactionsLeave implements CommandExecutor {
                 }
                 else{
 
-                    ply.sendMessage(XError.XERROR_UNKNOWN.getDesc());
+                    caller.sendMessage(XError.XERROR_UNKNOWN.getDesc());
 
                 }
 
@@ -94,9 +116,11 @@ public class XFactionsLeave implements CommandExecutor {
         }
         else{
 
-            ply.sendMessage(Text.of((XError.XERROR_NOXF.getDesc())));
+            caller.sendMessage(Text.of((XError.XERROR_NOXF.getDesc())));
 
         }
+
+        return false;
 
     }
 

@@ -38,6 +38,9 @@ public class XEconomyHelp implements CommandExecutor {
         caller.sendMessage(Text.of(helpAccentColor, "/economy (help) ", TextColors.WHITE, "Prints this help menu."));
         caller.sendMessage(Text.of(helpAccentColor, "/economy transfer ", TextColors.WHITE, "Transfers money to a player."));
         caller.sendMessage(Text.of(helpAccentColor, "/economy showbalance ", TextColors.WHITE, "Shows your current balance."));
+        caller.sendMessage(Text.of(helpAccentColor, "/economy factiontransfer ", TextColors.WHITE, "Transfers money to a faction."));
+        caller.sendMessage(Text.of(helpAccentColor, "/economy playertransfer ", TextColors.WHITE, "Transfers money to a player. (The player must be online)"));
+
 
     }
 

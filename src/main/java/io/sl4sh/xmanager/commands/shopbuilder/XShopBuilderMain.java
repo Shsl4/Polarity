@@ -1,6 +1,5 @@
 package io.sl4sh.xmanager.commands.shopbuilder;
 
-import io.sl4sh.xmanager.commands.economy.XEconomyShowBalance;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -17,7 +16,12 @@ public class XShopBuilderMain implements CommandExecutor {
                 .description(Text.of("The main ShopBuilder command"))
                 .permission("xmanager.shopbuilder")
                 .child(XShopBuilderSummon.getCommandSpec(), "summon")
+                .child(XShopBuilderSummonBuyer.getCommandSpec(), "summonbuyer")
                 .child(XShopBuilderList.getCommandSpec(), "list")
+                .child(XShopBuilderNew.getCommandSpec(), "new")
+                .child(XShopBuilderRemove.getCommandSpec(), "remove")
+                .child(XShopBuilderEditLayout.getCommandSpec(), "editlayout")
+                .child(XShopBuilderEditPrices.getCommandSpec(), "editprices")
                 .executor(new XShopBuilderMain())
                 .build();
 

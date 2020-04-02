@@ -5,39 +5,39 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import io.sl4sh.xmanager.commands.*;
+import io.sl4sh.xmanager.data.registration.XImmutablePlaceholderShopStack;
+import io.sl4sh.xmanager.data.registration.XPlaceholderShopStack;
+import io.sl4sh.xmanager.data.registration.XPlaceholderShopStackManipulatorBuilder;
+import io.sl4sh.xmanager.economy.merchants.XBuyerNPC;
+import io.sl4sh.xmanager.economy.merchants.XShopNPC;
+import noppes.npcs.api.NpcAPI;
 import io.sl4sh.xmanager.commands.economy.XEconomyMainCommand;
+import io.sl4sh.xmanager.commands.factions.XFactionsClaim;
+import io.sl4sh.xmanager.commands.factions.XFactionsMainCommand;
+import io.sl4sh.xmanager.commands.shopbuilder.XShopBuilderMain;
+import io.sl4sh.xmanager.data.XConfigData;
 import io.sl4sh.xmanager.data.XImmutableMerchantData;
 import io.sl4sh.xmanager.data.XMerchantData;
 import io.sl4sh.xmanager.data.XMerchantDataManipulatorBuilder;
-import io.sl4sh.xmanager.data.containers.XShopProfilesContainer;
-import io.sl4sh.xmanager.data.containers.XTradeProfilesContainer;
-import io.sl4sh.xmanager.economy.merchants.XHuman;
-import io.sl4sh.xmanager.commands.shopbuilder.XShopBuilderMain;
-import io.sl4sh.xmanager.economy.*;
-import io.sl4sh.xmanager.commands.factions.XFactionsClaim;
-import io.sl4sh.xmanager.commands.factions.XFactionsMainCommand;
-import io.sl4sh.xmanager.commands.trade.XTradeBuilderMain;
 import io.sl4sh.xmanager.data.containers.XAccountContainer;
-import io.sl4sh.xmanager.data.XConfigData;
 import io.sl4sh.xmanager.data.containers.XFactionContainer;
-import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
-import io.sl4sh.xmanager.economy.merchants.XVillager;
-import io.sl4sh.xmanager.enums.XError;
+import io.sl4sh.xmanager.data.containers.XShopProfilesContainer;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
+import io.sl4sh.xmanager.economy.XEconomyService;
+import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
+import io.sl4sh.xmanager.economy.transactionidentifiers.XPlayRewardIdentifier;
+import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
-import org.spongepowered.api.Game;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.config.ConfigDir;
-import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.DataRegistration;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Key;
-import org.spongepowered.api.data.type.Careers;
 import org.spongepowered.api.data.value.mutable.Value;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
@@ -46,21 +46,21 @@ import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.entity.ConstructEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.game.GameRegistryEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.item.ItemType;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.merchant.TradeOffer;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.generator.dummy.DummyObjectProvider;
@@ -68,11 +68,12 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
-import java.io.*;
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(
 
@@ -99,9 +100,6 @@ public class XManager {
     private final HoconConfigurationLoader mainDataConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/MainData.hocon")).build();
 
     @Nonnull
-    private final HoconConfigurationLoader tradesDataConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/Trades.hocon")).build();
-
-    @Nonnull
     private final HoconConfigurationLoader shopProfilesConfigLoader = HoconConfigurationLoader.builder().setFile(new File("config/XManager/ShopProfiles.hocon")).build();
 
     @Nonnull
@@ -109,9 +107,6 @@ public class XManager {
 
     @Nonnull
     private XConfigData configData = new XConfigData();
-
-    @Nonnull
-    private XTradeProfilesContainer tradesProfiles = new XTradeProfilesContainer();
 
     @Nonnull
     private XShopProfilesContainer shopProfiles = new XShopProfilesContainer();
@@ -122,6 +117,8 @@ public class XManager {
     private XEconomyService economyService;
 
     public static Key<Value<String>> SHOP_DATA_NAME = DummyObjectProvider.createFor(Key.class, "SHOP_DATA_NAME");
+    public static Key<Value<Boolean>> SHOP_STACK = DummyObjectProvider.createFor(Key.class, "SHOP_STACK");
+
 
     public static Optional<XEconomyService> getXEconomyService(){
 
@@ -131,13 +128,6 @@ public class XManager {
 
     @Nonnull
     public static XShopProfilesContainer getShopProfiles() { return getXManager().shopProfiles; }
-
-    @Nonnull
-    public static XTradeProfilesContainer getTradeProfiles(){
-
-        return getXManager().tradesProfiles;
-
-    }
 
     public static List<XPlayerAccount> getPlayerAccounts(){
 
@@ -163,9 +153,16 @@ public class XManager {
 
     }
 
+    static public Optional<NpcAPI> getNPCsAPI(){
+
+        if(NpcAPI.Instance() == null) { return Optional.empty(); }
+
+        return Optional.of(NpcAPI.Instance());
+
+    }
+
     XManager(){
 
-        // Register the plugin's commands.
         PluginContainer plugin = Sponge.getPluginManager().getPlugin("xmanager").get();
 
         Sponge.getServiceManager().setProvider(plugin, XEconomyService.class, new XEconomyService());
@@ -187,16 +184,6 @@ public class XManager {
 
         }
 
-        Sponge.getCommandManager().register(plugin, XTradeBuilderMain.getCommandSpec(), "trade");
-        Sponge.getCommandManager().register(plugin, XFactionsMainCommand.getCommandSpec(), "factions");
-        Sponge.getCommandManager().register(plugin, XManagerProtectChunk.getCommandSpec(), "protectchunk");
-        Sponge.getCommandManager().register(plugin, XManagerUnProtectChunk.getCommandSpec(), "unprotectchunk");
-        Sponge.getCommandManager().register(plugin, XManagerSetHub.getCommandSpec(), "sethub");
-        Sponge.getCommandManager().register(plugin, XManagerHub.getCommandSpec(), "hub");
-        Sponge.getCommandManager().register(plugin, XManagerReloadShops.getCommandSpec(), "reloadshops");
-        Sponge.getCommandManager().register(plugin, XShopBuilderMain.getCommandSpec(), "shopbuilder");
-        Sponge.getCommandManager().register(plugin, XTradeBuilderMain.getCommandSpec(), "tradebuilder");
-
     }
 
     @Listener
@@ -208,7 +195,16 @@ public class XManager {
                 .name("ShopDataName")
                 .id("shopdataname")
                 .build();
+
+        SHOP_STACK = Key.builder()
+                .type(new TypeToken<Value<Boolean>>() {})
+                .query(DataQuery.of("ShopStackIdentifier"))
+                .name("ShopStackIdentifier")
+                .id("shopstackidentifier")
+                .build();
+
         event.register(SHOP_DATA_NAME);
+        event.register(SHOP_STACK);
 
     }
 
@@ -225,17 +221,36 @@ public class XManager {
                 .dataName("XMerchantData Registration")
                 .buildAndRegister(plugin);
 
-        Sponge.getEventManager().registerListeners(plugin, new XHuman());
-        Sponge.getEventManager().registerListeners(plugin, new XVillager());
+        DataRegistration.builder()
+                .dataClass(XPlaceholderShopStack.class)
+                .immutableClass(XImmutablePlaceholderShopStack.class)
+                .builder(new XPlaceholderShopStackManipulatorBuilder())
+                .manipulatorId("xshopstack_dr")
+                .dataName("XShopStack Registration")
+                .buildAndRegister(plugin);
 
+        Sponge.getEventManager().registerListeners(plugin, new XConfigData());
 
     }
-
 
     @Listener
     public void onServerInit(GameInitializationEvent event) {
 
         initLoadConfig();
+
+        Sponge.getCommandManager().register(getXManager(), XFactionsMainCommand.getCommandSpec(), "factions");
+        Sponge.getCommandManager().register(getXManager(), XManagerProtectChunk.getCommandSpec(), "protectchunk");
+        Sponge.getCommandManager().register(getXManager(), XManagerUnProtectChunk.getCommandSpec(), "unprotectchunk");
+        Sponge.getCommandManager().register(getXManager(), XManagerSetHub.getCommandSpec(), "sethub");
+        Sponge.getCommandManager().register(getXManager(), XManagerHub.getCommandSpec(), "hub");
+        Sponge.getCommandManager().register(getXManager(), XManagerReloadShops.getCommandSpec(), "reloadshops");
+        Sponge.getCommandManager().register(getXManager(), XShopBuilderMain.getCommandSpec(), "shopbuilder");
+        Sponge.getCommandManager().register(getXManager(), XManagerReloadMainData.getCommandSpec(), "reloadmaindata");
+        Sponge.getCommandManager().register(getXManager(), XManagerSetInitialSpawnLocation.getCommandSpec(), "setinitialspawnlocation");
+        Sponge.getCommandManager().register(getXManager(), XManagerProtectDimension.getCommandSpec(), "protectdimension");
+        Sponge.getCommandManager().register(getXManager(), XManagerWarp.getCommandSpec(), "warp");
+        Sponge.getCommandManager().register(getXManager(), XManagerWarp.getRemoveCommandSpec(), "removewarp");
+        Sponge.getCommandManager().register(getXManager(), XManagerWarp.getSetCommandSpec(), "setwarp");
 
         xLogger.info("\u00a7a##################################################");
         xLogger.info("\u00a7a#                                                #");
@@ -246,13 +261,42 @@ public class XManager {
     }
 
     @Listener
+    public void onServerStarted(GameStartedServerEvent event){
+
+        if(!getXEconomyService().isPresent()) { return; }
+
+        NpcAPI.Instance().events().register(new XShopNPC());
+        NpcAPI.Instance().events().register(new XBuyerNPC());
+
+        Task.builder().delay(15, TimeUnit.MINUTES).execute(this::giveMoneyRewards).submit(getXManager());
+
+    }
+
+    public void giveMoneyRewards(){
+
+        XEconomyService economyService = getXEconomyService().get();
+
+        for(Player player : Sponge.getServer().getOnlinePlayers()){
+
+            if(economyService.getOrCreateAccount(player.getUniqueId()).isPresent()){
+
+                economyService.getOrCreateAccount(player.getUniqueId()).get().deposit(new XDollar(), BigDecimal.valueOf(50.0), Cause.of(EventContext.empty(), new XPlayRewardIdentifier()));
+
+            }
+
+        }
+
+        Task.builder().delay(15, TimeUnit.MINUTES).execute(this::giveMoneyRewards).submit(getXManager());
+
+    }
+
+    @Listener
     public void onServerStopping(GameStoppingServerEvent event){
 
         writeFactionsConfigurationFile();
         writeMainDataConfigurationFile();
         writeFactionsConfigurationFile();
         writeShopProfiles();
-        writeCustomTrades();
 
     }
 
@@ -279,7 +323,7 @@ public class XManager {
                 String worldName = snap.getFinal().getLocation().get().getExtent().getName();
                 Vector3i chunkPosition = snap.getFinal().getLocation().get().getChunkPosition();
 
-                if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
+                if(XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition).isPresent()){
 
                     if(event.getSource() instanceof Player){
 
@@ -345,7 +389,7 @@ public class XManager {
             String worldName = location.getExtent().getName();
             Vector3i chunkPosition = location.getChunkPosition();
 
-            if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
+            if(XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition).isPresent()){
 
                 if(event.getSource() instanceof Player){
 
@@ -406,7 +450,7 @@ public class XManager {
             String worldName = event.getTargetBlock().getLocation().get().getExtent().getName();
             Vector3i chunkPosition = event.getTargetBlock().getLocation().get().getChunkPosition();
 
-            if(XFactionsClaim.isLocationClaimed(worldName, chunkPosition)){
+            if(XFactionsClaim.getClaimedChunkFaction(worldName, chunkPosition).isPresent()){
 
                 if(event.getSource() instanceof Player){
 
@@ -485,6 +529,13 @@ public class XManager {
     @Listener
     public void onMobSpawn(ConstructEntityEvent.Pre event){
 
+        // Ignore all restrictions if player has * permission (Admin)
+        if(event.getSource() instanceof Player){
+
+            if(((Player)event.getSource()).hasPermission("*")) { return; }
+
+        }
+
         // Prevent mob spawning in protected areas
         if(XUtilities.isLocationProtected(event.getTransform().getLocation())) { event.setCancelled(true); }
 
@@ -492,6 +543,13 @@ public class XManager {
 
     @Listener
     public void onDamageDealt(DamageEntityEvent event){
+
+        // Ignore all restrictions if player has * permission (Admin)
+        if(event.getSource() instanceof Player){
+
+            if(((Player)event.getSource()).hasPermission("*")) { return; }
+
+        }
 
         // Prevent damage in protected areas
         if(XUtilities.isLocationProtected(event.getTargetEntity().getLocation())) { event.setCancelled(true); }
@@ -556,7 +614,6 @@ public class XManager {
         loadFactions();
         loadMainData();
         loadPlayerAccounts();
-        loadCustomTrades();
         loadShopProfiles();
 
     }
@@ -599,20 +656,6 @@ public class XManager {
         }
 
         this.xLogger.warn("[XManager] | Failed to load player accounts config. Using new data.");
-        return false;
-
-    }
-
-    public Boolean loadCustomTrades(){
-
-        try {
-            XTradeProfilesContainer newData = tradesDataConfigLoader.load().getValue(TypeToken.of(XTradeProfilesContainer.class));
-            if(newData != null) {tradesProfiles = newData; return true;}
-        } catch (ObjectMappingException | IOException ignored) {
-
-        }
-
-        this.xLogger.warn("[XManager] | Failed to load trades config. Using new data.");
         return false;
 
     }
@@ -670,21 +713,6 @@ public class XManager {
         try {
 
             accountsConfigLoader.save(accountsConfigLoader.createEmptyNode().setValue(TypeToken.of(XAccountContainer.class), accountContainer));
-            return true;
-
-        } catch (IOException | ObjectMappingException e) {
-
-            return false;
-
-        }
-
-    }
-
-    public boolean writeCustomTrades(){
-
-        try {
-
-            tradesDataConfigLoader.save(tradesDataConfigLoader.createEmptyNode().setValue(TypeToken.of(XTradeProfilesContainer.class), tradesProfiles));
             return true;
 
         } catch (IOException | ObjectMappingException e) {

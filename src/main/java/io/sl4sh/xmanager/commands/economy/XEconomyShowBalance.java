@@ -10,6 +10,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.text.Text;
@@ -53,7 +54,7 @@ public class XEconomyShowBalance implements CommandExecutor {
     private void showBalance(Player caller){
 
         // The economy service will always be present as the command is registered only if the economy service registered
-        XEconomyService economyService = XManager.getXManager().getXEconomyService().get();
+        XEconomyService economyService = XManager.getXEconomyService().get();
 
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
 
@@ -64,6 +65,7 @@ public class XEconomyShowBalance implements CommandExecutor {
         XDollar dollarCurrency = new XDollar();
 
         caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | Your current balance is ", dollarCurrency.format(callerAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
+        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), 0.75);
 
     }
 

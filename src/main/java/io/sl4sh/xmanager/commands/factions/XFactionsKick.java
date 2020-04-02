@@ -14,6 +14,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -63,31 +64,31 @@ public class XFactionsKick implements CommandExecutor {
 
     }
 
-    private void kickPlayer(Player Caller, Player TargetPlayer){
+    private void kickPlayer(Player caller, Player targetPlayer){
 
-        Optional<XFaction> optCallerFaction = XUtilities.getPlayerFaction(Caller);
+        Optional<XFaction> optCallerFaction = XUtilities.getPlayerFaction(caller);
 
-        if(!optCallerFaction.isPresent()) { Caller.sendMessage(XError.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(XError.XERROR_NOXF.getDesc()); return; }
 
         XFaction callerFaction = optCallerFaction.get();
 
-        if(!XUtilities.getPlayerFactionPermissions(Caller).isPresent() || !XUtilities.getPlayerFactionPermissions(Caller).get().getManage()) { Caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-        if(Caller.equals(TargetPlayer)) { Caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot kick yourself, use /factions leave instead.")); return; }
+        if(caller.equals(targetPlayer)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot kick yourself, use /factions leave instead.")); return; }
 
-        Optional<XFaction> optTargetPlayerFaction = XUtilities.getPlayerFaction(TargetPlayer);
+        Optional<XFaction> optTargetPlayerFaction = XUtilities.getPlayerFaction(targetPlayer);
 
-        if(!optTargetPlayerFaction.isPresent()) { Caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
+        if(!optTargetPlayerFaction.isPresent()) { caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
 
         XFaction targetPlayerFaction = optTargetPlayerFaction.get();
 
-        if(targetPlayerFaction != callerFaction) { Caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
+        if(targetPlayerFaction != callerFaction) { caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
 
-        if(callerFaction.getFactionOwner().equals(TargetPlayer.getName())) { Caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(callerFaction.getFactionOwner().equals(targetPlayer.getName())) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
-        if(!XUtilities.getMemberDataForPlayer(TargetPlayer).isPresent()) { Caller.sendMessage(XError.XERROR_UNKNOWN.getDesc()); return;}
+        if(!XUtilities.getMemberDataForPlayer(targetPlayer).isPresent()) { caller.sendMessage(XError.XERROR_UNKNOWN.getDesc()); return;}
 
-        callerFaction.getFactionMembers().remove(XUtilities.getMemberDataForPlayer(TargetPlayer).get());
+        callerFaction.getFactionMembers().remove(XUtilities.getMemberDataForPlayer(targetPlayer).get());
 
         XManager.getXManager().writeFactionsConfigurationFile();
         XTabListManager.refreshTabLists();
@@ -95,11 +96,18 @@ public class XFactionsKick implements CommandExecutor {
         for(XFactionMemberData mbData : callerFaction.getFactionMembers()){
 
             Optional<Player> optPly = XUtilities.getPlayerByName(mbData.playerName);
-            optPly.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | " , TargetPlayer.getName() , " has been kicked from the faction by " , Caller.getName())));
+
+            if(optPly.isPresent()){
+
+                optPly.get().playSound(SoundTypes.AMBIENT_CAVE, optPly.get().getPosition(), 0.75);
+                optPly.get().sendMessage(Text.of(TextColors.RED, "[Factions] | " , targetPlayer.getName() , " has been kicked from the faction by " , caller.getName()));
+
+            }
 
         }
 
-        TargetPlayer.sendMessage(Text.of(TextColors.RED, "[Factions] | You've been kicked from your faction by ", Caller.getName()));
+        targetPlayer.sendMessage(Text.of(TextColors.RED, "[Factions] | You've been kicked from your faction by ", caller.getName()));
+        targetPlayer.playSound(SoundTypes.AMBIENT_CAVE, caller.getPosition(), 0.75);
         XManager.getXManager().writeFactionsConfigurationFile();
 
     }

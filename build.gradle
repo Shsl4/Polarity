@@ -13,6 +13,7 @@ repositories {
     maven {
         name = 'sponge'
         url = 'https://repo.spongepowered.org/maven'
+        url = 'https://files.minecraftforge.net/maven'
     }
     maven { url "https://jitpack.io" }
 }
@@ -21,7 +22,10 @@ dependencies {
     compileOnly 'org.spongepowered:spongeapi:7.1.0'
     annotationProcessor 'org.spongepowered:spongeapi:7.1.0'
     compile 'org.spongepowered:configurate-hocon:3.6'
-    compile 'com.github.DosMike:MegaMenus:master-SNAPSHOT'
+    implementation files('libs/NPCs-API-1.0-SNAPSHOT.jar')
+    implementation files('libs/forgeSrc-1.12.2-14.23.5.2847.jar')
+
 }
+
 
 sponge.plugin.id = pluginId

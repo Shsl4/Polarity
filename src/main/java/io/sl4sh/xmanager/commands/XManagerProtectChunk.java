@@ -53,7 +53,7 @@ public class XManagerProtectChunk implements CommandExecutor {
         if(!XUtilities.isLocationProtected(caller.getLocation())){
 
             // If not set the hub's location and write the configuration file.
-            XManager.getXManager().getConfigData().getServerProtectedChunks().add(new XManagerLocationData(caller.getWorld().getName(), caller.getLocation().getChunkPosition().toString()));
+            XManager.getConfigData().getServerProtectedChunks().add(new XManagerLocationData(caller.getWorld().getName(), caller.getLocation().getChunkPosition().toString()));
             XManager.getXManager().writeMainDataConfigurationFile();
             caller.sendMessage(Text.of(TextColors.GREEN, "[XManager] | Added a protected chunk: " , caller.getLocation().getChunkPosition().toString()));
 

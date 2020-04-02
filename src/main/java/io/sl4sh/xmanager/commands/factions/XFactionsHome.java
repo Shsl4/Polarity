@@ -12,6 +12,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -71,7 +72,7 @@ public class XFactionsHome implements CommandExecutor {
         if(safeLoc.isPresent()){
 
             caller.setLocation(safeLoc.get());
-            caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully teleported at your faction's home!"));
+            caller.playSound(SoundTypes.ENTITY_ENDERMEN_TELEPORT, caller.getPosition(), 0.75);
 
         }
         else{

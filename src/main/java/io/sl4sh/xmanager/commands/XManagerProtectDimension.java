@@ -1,30 +1,37 @@
-package io.sl4sh.xmanager.commands.shopbuilder;
+package io.sl4sh.xmanager.commands;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.commands.elements.XShopCommandElement;
+import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.data.XMerchantData;
 import io.sl4sh.xmanager.economy.XShopProfile;
-import io.sl4sh.xmanager.economy.merchants.XShopNPC;
+import net.minecraft.entity.INpc;
+import net.minecraft.world.WorldServer;
+import noppes.npcs.api.NpcAPI;
+import noppes.npcs.api.entity.ICustomNpc;
+import noppes.npcs.api.entity.IEntity;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
-public class XShopBuilderSummon implements CommandExecutor {
+public class XManagerProtectDimension implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
-                .description(Text.of("Summons a merchant with the specified parameters."))
-                .arguments(new XShopCommandElement(Text.of("profileName")))
-                .permission("xmanager.shopbuilder.summon")
-                .executor(new XShopBuilderSummon())
+                .description(Text.of("Protects a dimension."))
+                .permission("xmanager.protectdimension")
+                .executor(new XManagerProtectDimension())
                 .build();
 
     }
@@ -36,13 +43,10 @@ public class XShopBuilderSummon implements CommandExecutor {
 
             Player caller = (Player)src;
 
-            String profileName = (String)args.getOne("profileName").get();
+            XManager.getConfigData().addProtectedDimension(caller.getWorld());
+            caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | New dimension protected!"));
 
-            Optional<XShopProfile> optionalXShopProfile = XManager.getShopProfiles().getShopProfileByName(profileName);
-
-            if(!optionalXShopProfile.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[ShopBuilder] | This profile name does not exist.")); return CommandResult.success(); }
-
-            XShopNPC.summonNPC(caller.getWorld(), caller, profileName);
+            XManager.getXManager().writeMainDataConfigurationFile();
 
         }
 

@@ -9,6 +9,7 @@ import org.spongepowered.api.data.value.mutable.Value;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static io.sl4sh.xmanager.XManager.SHOP_DATA_NAME;
 

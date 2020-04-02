@@ -2,6 +2,8 @@ package io.sl4sh.xmanager.commands.factions;
 
 import com.flowpowered.math.vector.Vector3i;
 import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.economy.XEconomyService;
+import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XManager;
@@ -15,12 +17,17 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.service.economy.transaction.TransactionResult;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -64,7 +71,7 @@ public class XFactionsClaim implements CommandExecutor {
         String worldName = ply.getWorld().getName();
         Vector3i chunkPosition = ply.getLocation().getChunkPosition();
 
-        if (!isLocationClaimed(worldName, chunkPosition)) {
+        if (!getClaimedChunkFaction(worldName, chunkPosition).isPresent()) {
 
             Optional<XFaction> optionalXFaction = XUtilities.getPlayerFaction(ply);
 
@@ -78,25 +85,42 @@ public class XFactionsClaim implements CommandExecutor {
 
                 if (optPermData.get().getClaim()) {
 
-                    if (playerFaction.getFactionClaims() != null) {
+                    if(isChunkAdjacentToClaimedChunks(worldName, chunkPosition, ply)){
 
-                        if(isChunkAdjacentToClaimedChunks(worldName, chunkPosition, ply)){
+                        if(!XManager.getXEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-                            playerFaction.getFactionClaims().add(new XManagerLocationData(ply.getWorld().getName(), ply.getLocation().getChunkPosition().toString()));
+                        XEconomyService economyService = XManager.getXEconomyService().get();
 
-                            if (XManager.getXManager().writeFactionsConfigurationFile()) {
+                        if(!economyService.getOrCreateAccount(playerFaction.getFactionName()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-                                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Chunk successfully claimed! " , ply.getLocation().getChunkPosition().toString()));
+                        XDollar dollarCurrency = new XDollar();
 
-                            }
+                        TransactionResult result = economyService.getOrCreateAccount(playerFaction.getFactionName()).get().withdraw(dollarCurrency, BigDecimal.valueOf(125.0), Cause.of(EventContext.empty(), ply));
+
+                        switch (result.getResult()){
+
+                            case SUCCESS:
+
+                                playerFaction.getFactionClaims().add(new XManagerLocationData(ply.getWorld().getName(), ply.getLocation().getChunkPosition().toString()));
+                                ply.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, ply.getPosition(), 0.75);
+                                ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Chunk successfully claimed! " , ply.getLocation().getChunkPosition().toString(), " | Paid ", dollarCurrency.format(BigDecimal.valueOf(125.0f), 2), TextColors.GREEN, "."));
+                                XManager.getXManager().writeFactionsConfigurationFile();
+                                return;
+
+                            case ACCOUNT_NO_FUNDS:
+
+                                ply.sendMessage(Text.of(TextColors.RED, "[Economy] | You faction does not have enough money to do that!"));
+                                return;
 
                         }
 
-                        else{
+                        ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
 
-                            ply.sendMessage(XError.XERROR_NONADJCHUNK.getDesc());
+                    }
 
-                        }
+                    else{
+
+                        ply.sendMessage(XError.XERROR_NONADJCHUNK.getDesc());
 
                     }
 
@@ -114,32 +138,29 @@ public class XFactionsClaim implements CommandExecutor {
 
         } else {
 
-            ply.sendMessage(XInfo.XERROR_CHUNKCLAIMED.getDesc());
+            XFaction optFaction = getClaimedChunkFaction(worldName, chunkPosition).get();
+
+            ply.sendMessage(Text.of(TextColors.AQUA, "[Factions] | This chunk is already claimed. Owned by ", optFaction.getFactionDisplayName(), TextColors.AQUA, "."));
 
         }
 
     }
 
+    static public Optional<XFaction> getClaimedChunkFaction(String worldName, Vector3i location) {
 
-    static public Boolean isLocationClaimed(String worldName, Vector3i location) {
+        List<XFaction> factionsContainer = XManager.getFactions();
 
-        List<XFaction> factionContainer = XManager.getXManager().getFactions();
+        for (XFaction faction : factionsContainer) {
 
-        if (!factionContainer.isEmpty()) {
+            if(faction.isClaimed(worldName, location)){
 
-            for (XFaction faction : factionContainer) {
-
-                if (faction.isClaimed(worldName, location)) {
-
-                    return true;
-
-                }
+                return Optional.of(faction);
 
             }
 
         }
 
-        return false;
+        return Optional.empty();
 
     }
 
@@ -159,8 +180,6 @@ public class XFactionsClaim implements CommandExecutor {
         else {
 
             for(Vector3i adjCh : getAdjacentChunks(location)){
-
-                System.out.println(adjCh);
 
                 Optional<XFaction> optOwningFaction = getClaimedChunkFaction(worldName, adjCh);
 
@@ -196,23 +215,7 @@ public class XFactionsClaim implements CommandExecutor {
 
 
 
-    static public Optional<XFaction> getClaimedChunkFaction(String worldName, Vector3i location) {
 
-        List<XFaction> factionsContainer = XManager.getXManager().getFactions();
-
-        for (XFaction faction : factionsContainer) {
-
-            if(faction.isClaimed(worldName, location)){
-
-                return Optional.of(faction);
-
-            }
-
-        }
-
-        return Optional.empty();
-
-    }
 
 }
 

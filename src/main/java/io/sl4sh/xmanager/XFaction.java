@@ -309,20 +309,18 @@ public class XFaction {
     }
 
 
-    public boolean removeClaim(String worldName, Vector3i location){
+    public void removeClaim(String worldName, Vector3i location){
 
         for(XManagerLocationData locationData : getFactionClaims()){
 
             if(locationData.getDimensionName().equals(worldName) && locationData.getLocation().equals(location.toString())){
 
                 getFactionClaims().remove(locationData);
-                return true;
+                return;
 
             }
 
         }
-
-        return false;
 
     }
 
