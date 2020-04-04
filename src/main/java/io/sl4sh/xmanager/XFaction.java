@@ -1,244 +1,205 @@
 package io.sl4sh.xmanager;
 
-import com.flowpowered.math.vector.Vector3i;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import com.flowpowered.math.vector.Vector3d;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
-import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Identifiable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @ConfigSerializable
-public class XFaction {
+public class XFaction implements Identifiable {
 
     @Nonnull
-    @Setting(value = "factionName")
-    private String factionName = "name";
+    @Setting(value = "uniqueID")
+    private UUID uniqueID = UUID.randomUUID();
 
     @Nonnull
-    @Setting(value = "factionDisplayName")
-    private String factionDisplayName = "";
+    @Setting(value = "name")
+    private String name = "name";
 
     @Nonnull
-    @Setting(value = "factionPrefix")
-    private String factionPrefix = "";
+    @Setting(value = "displayName")
+    private String displayName = "";
+
+    @Nonnull
+    @Setting(value = "prefix")
+    private String prefix = "";
 
     //Faction's owner player name
     @Nonnull
-    @Setting(value = "factionOwner")
-    private String factionOwner = "owner";
+    @Setting(value = "owner")
+    private UUID owner = UUID.randomUUID();
 
     //Contains faction's members data
     @Nonnull
-    @Setting(value = "factionMembers")
-    private List<XFactionMemberData> factionMembers = new ArrayList<>();
-
-    //Contains factions's claimed chunks locations
-    @Nonnull
-    @Setting(value = "factionClaims")
-    private List<XManagerLocationData> factionClaims = new ArrayList<>();
-
-    //Contains faction's homes data
-    @Nonnull
-    @Setting(value = "factionHome")
-    private XManagerLocationData factionHome = new XManagerLocationData();
+    @Setting(value = "memberDataList")
+    private List<XFactionMemberData> memberDataList = new ArrayList<>();
 
     //Contains allied factions names
     @Nonnull
-    @Setting(value = "factionAllies")
-    private List<String> factionAllies = new ArrayList<>();
+    @Setting(value = "allies")
+    private List<UUID> allies = new ArrayList<>();
 
-    //Contains enemy factions names
+    //Contains enemy factions UUIDs
     @Nonnull
-    @Setting(value = "factionEnemies")
-    private List<String> factionEnemies = new ArrayList<>();
+    @Setting(value = "enemies")
+    private List<UUID> enemies = new ArrayList<>();
 
-    //Contains invited player names
+    //Contains invited player UUIDs
     @Nonnull
-    @Setting(value = "factionInvites")
-    private List<String> factionInvites = new ArrayList<>();
+    @Setting(value = "playerInvites")
+    private List<UUID> playerInvites = new ArrayList<>();
 
-    //Contains invited player names
+    //Contains allied factions UUIDs
     @Nonnull
-    @Setting(value = "factionAllyInvites")
-    private List<String> factionAllyInvites = new ArrayList<>();
-
-    @Setting(value = "factionAccount")
-    private XFactionAccount factionAccount;
+    @Setting(value = "allyInvites")
+    private List<UUID> allyInvites = new ArrayList<>();
 
     public XFaction() {}
 
-    public void setFactionName(@Nonnull String factionName){
+    public void setName(@Nonnull String name){
 
-        this.factionName = factionName;
-
-    }
-
-    public void setFactionOwner(@Nonnull String factionOwner){
-
-        this.factionOwner = factionOwner;
+        this.name = name;
 
     }
 
-    public void setFactionMembers(@Nonnull List<XFactionMemberData> factionMembers){
+    public void setOwner(@Nonnull UUID owner){
 
-        this.factionMembers = factionMembers;
-
-    }
-
-    public void setFactionClaims(@Nonnull List<XManagerLocationData> factionClaims){
-
-        this.factionClaims = factionClaims;
+        this.owner = owner;
 
     }
 
-    public void setFactionHome(@Nonnull XManagerLocationData factionHome){
+    public void setMemberDataList(@Nonnull List<XFactionMemberData> memberDataList){
 
-        this.factionHome = factionHome;
-
-    }
-
-    public void setFactionAllies(@Nonnull List<String> factionAllies){
-
-        this.factionAllies = factionAllies;
+        this.memberDataList = memberDataList;
 
     }
 
-    public void setFactionEnemies(@Nonnull List<String> factionEnemies){
+    public void setAllies(@Nonnull List<UUID> allies){
 
-        this.factionEnemies = factionEnemies;
+        this.allies = allies;
 
     }
 
-    public void setFactionInvites(@Nonnull List<String> factionInvites){
+    public void setEnemies(@Nonnull List<UUID> enemies){
 
-        this.factionInvites = factionInvites;
+        this.enemies = enemies;
+
+    }
+
+    public void setPlayerInvites(@Nonnull List<UUID> playerInvites){
+
+        this.playerInvites = playerInvites;
 
     }
 
     @Nonnull
-    public String getFactionName(){
+    public String getName(){
 
-        return this.factionName;
-
-    }
-
-    @Nonnull
-    public String getFactionOwner(){
-
-        return this.factionOwner;
+        return this.name;
 
     }
 
     @Nonnull
-    public List<XFactionMemberData> getFactionMembers(){
+    public UUID getOwner(){
 
-        return this.factionMembers;
-
-    }
-
-    @Nonnull
-    public List<XManagerLocationData> getFactionClaims(){
-
-        return this.factionClaims;
+        return this.owner;
 
     }
 
     @Nonnull
-    public XManagerLocationData getFactionHome(){
+    public List<XFactionMemberData> getMemberDataList(){
 
-        return this.factionHome;
-
-    }
-
-    @Nonnull
-    public List<String> getFactionAllies(){
-
-        return this.factionAllies;
+        return this.memberDataList;
 
     }
 
     @Nonnull
-    public List<String> getFactionEnemies(){
+    public List<UUID> getAllies(){
 
-        return this.factionEnemies;
+        return this.allies;
 
     }
 
     @Nonnull
-    public List<String> getFactionInvites(){
+    public List<UUID> getEnemies(){
 
-        return this.factionInvites;
-
-    }
-
-    public XFaction getValue(){
-
-        return this;
+        return this.enemies;
 
     }
 
-    public XFaction(@Nonnull String factionName, @Nonnull Player factionOwner){
+    @Nonnull
+    public List<UUID> getPlayerInvites(){
 
-        this.factionName = factionName;
-        this.factionOwner = factionOwner.getName();
-        this.factionPrefix = "";
-        this.factionDisplayName = "";
-        this.factionMembers = new ArrayList<>();
-        this.factionClaims = new ArrayList<>();
-        this.factionHome = new XManagerLocationData();
-        this.factionAllies = new ArrayList<>();
-        this.factionEnemies = new ArrayList<>();
-        this.factionInvites = new ArrayList<>();
-        this.factionAllyInvites = new ArrayList<>();
-        this.factionAccount = null;
+        return this.playerInvites;
 
-        this.factionMembers.add(new XFactionMemberData(factionOwner.getName(), new XFactionPermissionData(true, true, true)));
+    }
+
+
+    public XFaction(@Nonnull String name, @Nonnull Player owner){
+
+        this.name = name;
+        this.owner = owner.getUniqueId();
+        this.prefix = "";
+        this.displayName = "";
+        this.memberDataList = new ArrayList<>();
+        this.allies = new ArrayList<>();
+        this.enemies = new ArrayList<>();
+        this.playerInvites = new ArrayList<>();
+        this.allyInvites = new ArrayList<>();
+
+        this.memberDataList.add(new XFactionMemberData(owner.getUniqueId(), new XFactionPermissionData(true, true, true)));
 
         XTabListManager.refreshTabLists();
 
     }
 
-    public boolean isOwner(String playerName){
+    public boolean isOwner(Player player){
 
-        return getFactionOwner().equals(playerName);
+        return getOwner().equals(player.getUniqueId());
 
     }
 
     public boolean isFactionAllied(@Nonnull XFaction targetFaction){
 
-        return factionAllies.contains(targetFaction.getFactionName());
+        return allies.contains(targetFaction.getUniqueId());
 
     }
 
     public void listMembers(CommandSource src){
 
-        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getFactionDisplayName() , TextColors.RESET, TextColors.DARK_GREEN, " Members ============"));
+        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getDisplayName() , TextColors.RESET, TextColors.DARK_GREEN, " Members ============"));
 
-        List<XFactionMemberData> glData = this.getFactionMembers();
+        List<XFactionMemberData> glData = this.getMemberDataList();
         int it = 1;
 
         for(XFactionMemberData mbData : glData){
 
-            if (mbData.getPlayerName().equals(getFactionOwner())){
+            if(Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).isPresent()){
 
-                src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , mbData.playerName , TextColors.GREEN , " | " , TextColors.GOLD , "(Owner)"));
+                if (mbData.getPlayerUniqueID().equals(getOwner())){
 
-            }
-            else{
+                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.GOLD , "(Owner)"));
 
-                src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , mbData.playerName , TextColors.GREEN , " | " , TextColors.WHITE , "(Member)"));
+                }
+                else{
+
+                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.WHITE , "(Member)"));
+
+                }
 
             }
 
@@ -250,9 +211,9 @@ public class XFaction {
 
     public void listAllies(@Nonnull CommandSource src){
 
-        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getFactionDisplayName(), TextColors.RESET, TextColors.DARK_GREEN, " Allies ============"));
+        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ " , getDisplayName(), TextColors.RESET, TextColors.DARK_GREEN, " Allies ============"));
 
-        if(getFactionAllies().size() <= 0){
+        if(getAllies().size() <= 0){
 
             src.sendMessage(Text.of(TextColors.GREEN, "Nothing to see here... Yet!"));
             return;
@@ -261,13 +222,13 @@ public class XFaction {
 
         int it = 1;
 
-        for(String alliedFactionName : getFactionAllies()){
+        for(UUID alliedFactionName : getAllies()){
 
-            Optional<XFaction> optAlliedFaction = XUtilities.getFactionByName(alliedFactionName);
+            Optional<XFaction> optAlliedFaction = XUtilities.getFactionByUniqueID(alliedFactionName);
 
             if(!optAlliedFaction.isPresent()) { continue; }
 
-            src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , optAlliedFaction.get().getFactionDisplayName() , TextColors.RESET , TextColors.GREEN ," | Raw Name: " , TextColors.WHITE , optAlliedFaction.get().getFactionName()));
+            src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , optAlliedFaction.get().getDisplayName() , TextColors.RESET , TextColors.GREEN ," | Raw Name: " , TextColors.WHITE , optAlliedFaction.get().getName()));
 
             it++;
 
@@ -277,9 +238,9 @@ public class XFaction {
 
     public boolean setPermissionDataForPlayer(Player targetPlayer, XFactionPermissionData permData){
 
-        for(XFactionMemberData mbData : getFactionMembers()){
+        for(XFactionMemberData mbData : getMemberDataList()){
 
-            if(mbData.getPlayerName().equals(targetPlayer.getName())){
+            if(mbData.getPlayerUniqueID().equals(targetPlayer.getUniqueId())){
 
                 mbData.permissions = permData;
                 return true;
@@ -292,71 +253,39 @@ public class XFaction {
 
     }
 
-    public boolean isClaimed(String worldName, Vector3i location){
+    @Nonnull
+    public String getPrefix() {
+        return prefix;
+    }
 
-        for(XManagerLocationData locationData : getFactionClaims()){
+    public void setPrefix(@Nonnull String prefix) {
 
-            if(locationData.getDimensionName().equals(worldName) && locationData.getLocation().equals(location.toString())){
-
-                return true;
-
-            }
-
-        }
-
-        return false;
+        this.prefix = prefix;
 
     }
 
-
-    public void removeClaim(String worldName, Vector3i location){
-
-        for(XManagerLocationData locationData : getFactionClaims()){
-
-            if(locationData.getDimensionName().equals(worldName) && locationData.getLocation().equals(location.toString())){
-
-                getFactionClaims().remove(locationData);
-                return;
-
-            }
-
-        }
-
+    @Nonnull
+    public String getDisplayName() {
+        return displayName.equals("") ? getName() : displayName;
     }
 
-    public String getFactionPrefix() {
-        return factionPrefix;
+    public void setDisplayName(@Nonnull String displayName) {
+
+        this.displayName = displayName;
     }
 
-    public void setFactionPrefix(String factionPrefix) {
-
-        this.factionPrefix = factionPrefix;
-
+    @Nonnull
+    public List<UUID> getAllyInvites() {
+        return allyInvites;
     }
 
-    public String getFactionDisplayName() {
-        return factionDisplayName.equals("") ? getFactionName() : factionDisplayName;
+    public void setAllyInvites(@Nonnull List<UUID> allyInvites) {
+        this.allyInvites = allyInvites;
     }
 
-    public void setFactionDisplayName(String factionDisplayName) {
-
-        this.factionDisplayName = factionDisplayName;
-    }
-
-    public List<String> getFactionAllyInvites() {
-        return factionAllyInvites;
-    }
-
-    public void setFactionAllyInvites(List<String> factionAllyInvites) {
-        this.factionAllyInvites = factionAllyInvites;
-    }
-
-
-    public Optional<Account> getFactionAccount() {
-        return factionAccount == null ? Optional.empty() : Optional.of(factionAccount);
-    }
-
-    public void setFactionAccount(XFactionAccount factionAccount) {
-        this.factionAccount = factionAccount;
+    @Nonnull
+    @Override
+    public UUID getUniqueId() {
+        return this.uniqueID;
     }
 }

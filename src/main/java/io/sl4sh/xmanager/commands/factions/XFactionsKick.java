@@ -84,18 +84,18 @@ public class XFactionsKick implements CommandExecutor {
 
         if(targetPlayerFaction != callerFaction) { caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
 
-        if(callerFaction.getFactionOwner().equals(targetPlayer.getName())) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(callerFaction.getOwner().equals(targetPlayer.getUniqueId())) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
         if(!XUtilities.getMemberDataForPlayer(targetPlayer).isPresent()) { caller.sendMessage(XError.XERROR_UNKNOWN.getDesc()); return;}
 
-        callerFaction.getFactionMembers().remove(XUtilities.getMemberDataForPlayer(targetPlayer).get());
+        callerFaction.getMemberDataList().remove(XUtilities.getMemberDataForPlayer(targetPlayer).get());
 
         XManager.getXManager().writeFactionsConfigurationFile();
         XTabListManager.refreshTabLists();
 
-        for(XFactionMemberData mbData : callerFaction.getFactionMembers()){
+        for(XFactionMemberData mbData : callerFaction.getMemberDataList()){
 
-            Optional<Player> optPly = XUtilities.getPlayerByName(mbData.playerName);
+            Optional<Player> optPly = XUtilities.getPlayerByUniqueID(mbData.getPlayerUniqueID());
 
             if(optPly.isPresent()){
 

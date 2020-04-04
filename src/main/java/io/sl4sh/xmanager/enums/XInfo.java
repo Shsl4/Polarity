@@ -8,8 +8,6 @@ public enum XInfo {
     XERROR_XFMEMBER("[Factions] | You are already a member of a faction."),
     XERROR_XFEMEMBER("[Factions] | This player is already a member of a faction."),
     XERROR_ALREADYALLIED("[Factions] | This faction is already allied with you."),
-    XERROR_NOCLAIMS("[Factions] | Your faction does not have any claims."),
-    XERROR_CHUNKCLAIMED("[Factions] | This chunk is already claimed."),
     XERROR_UNCLAIMEDCHUNK("[Factions] | This chunk is not claimed."),
     XERROR_NOTALLIED("[Factions] | This faction is not your ally.");
 

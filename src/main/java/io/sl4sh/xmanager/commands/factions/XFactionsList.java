@@ -1,7 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
@@ -47,7 +46,7 @@ public class XFactionsList implements CommandExecutor {
 
         src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ Factions list ============"));
 
-        List<XFaction> factionList = XManager.getXManager().getFactions();
+        List<XFaction> factionList = XManager.getFactions();
 
         if(factionList.size() <= 0){
 
@@ -60,7 +59,7 @@ public class XFactionsList implements CommandExecutor {
 
             for(XFaction faction : factionList){
 
-                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getFactionDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getFactionOwner() , listTintColor , " | Real name: " , TextColors.WHITE , faction.getFactionName()));
+                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getOwner() , listTintColor , " | Real name: " , TextColors.WHITE , faction.getName()));
                 it++;
 
             }

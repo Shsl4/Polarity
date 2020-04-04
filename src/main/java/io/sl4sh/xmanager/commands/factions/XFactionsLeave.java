@@ -63,7 +63,7 @@ public class XFactionsLeave implements CommandExecutor {
 
             XFaction targetFaction = optTargetFaction.get();
 
-            if(targetFaction.getFactionOwner().equals(caller.getName())){
+            if(targetFaction.getOwner().equals(caller.getUniqueId())){
 
                 caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You can't leave the faction you own. Use /factions disband instead, or /factions setowner to set a new owner."));
 
@@ -74,16 +74,16 @@ public class XFactionsLeave implements CommandExecutor {
 
                 if(optMemberData.isPresent()){
 
-                    if(targetFaction.getFactionMembers().remove(optMemberData.get())){
+                    if(targetFaction.getMemberDataList().remove(optMemberData.get())){
 
-                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully left faction " , targetFaction.getDisplayName(), TextColors.GREEN, "!"));
                         caller.playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, caller.getPosition(), 0.75);
 
-                        for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
+                        for(XFactionMemberData mbData : targetFaction.getMemberDataList()){
 
-                            if(mbData.getPlayerName().equals(caller.getName())) { continue; }
+                            if(mbData.getPlayerUniqueID().equals(caller.getUniqueId())) { continue; }
 
-                            Optional<Player> optPlayer = XUtilities.getPlayerByName(mbData.getPlayerName());
+                            Optional<Player> optPlayer = XUtilities.getPlayerByUniqueID(mbData.getPlayerUniqueID());
 
                             if(optPlayer.isPresent()){
 

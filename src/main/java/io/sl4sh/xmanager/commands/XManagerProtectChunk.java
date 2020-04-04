@@ -1,8 +1,8 @@
 package io.sl4sh.xmanager.commands;
 
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.XUtilities;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
@@ -49,12 +49,14 @@ public class XManagerProtectChunk implements CommandExecutor {
 
     private void protectChunk(Player caller){
 
+        XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(caller.getWorld());
+
         // Check if the target chunk is already protected
-        if(!XUtilities.isLocationProtected(caller.getLocation())){
+        if(!worldInfo.isWorldProtected() || !worldInfo.getWorldProtectedChunks().contains(caller.getLocation().getChunkPosition())){
 
             // If not set the hub's location and write the configuration file.
-            XManager.getConfigData().getServerProtectedChunks().add(new XManagerLocationData(caller.getWorld().getName(), caller.getLocation().getChunkPosition().toString()));
-            XManager.getXManager().writeMainDataConfigurationFile();
+            worldInfo.getWorldProtectedChunks().add(caller.getLocation().getChunkPosition());
+            XManager.getXManager().writeWorldsInfoData();
             caller.sendMessage(Text.of(TextColors.GREEN, "[XManager] | Added a protected chunk: " , caller.getLocation().getChunkPosition().toString()));
 
         }

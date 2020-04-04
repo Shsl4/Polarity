@@ -1,8 +1,8 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.data.XManagerLocationData;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -67,7 +67,8 @@ public class XFactionsSetHome implements CommandExecutor {
 
         if(safeLoc.isPresent()){
 
-            callerFaction.setFactionHome(new XManagerLocationData(caller.getWorld().getName(), caller.getPosition().toString()));
+            XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(caller.getWorld());
+            worldInfo.setFactionHome(callerFaction.getUniqueId(), safeLoc.get().getPosition());
             XManager.getXManager().writeFactionsConfigurationFile();
             caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully set your faction's home!"));
 

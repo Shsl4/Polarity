@@ -18,6 +18,7 @@ import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 public class XFactionsShowBalance implements CommandExecutor {
@@ -32,6 +33,7 @@ public class XFactionsShowBalance implements CommandExecutor {
 
     }
 
+    @Nonnull
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 
@@ -53,15 +55,15 @@ public class XFactionsShowBalance implements CommandExecutor {
 
         if(!XUtilities.getPlayerFactionPermissions(caller).isPresent() || !XUtilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(Text.of(XError.XERROR_NOTAUTHORIZED.getDesc())); return; }
 
-        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!XManager.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-        XEconomyService economyService = XManager.getXEconomyService().get();
+        XEconomyService economyService = XManager.getEconomyService().get();
 
         XFaction callerFaction = optCallerFaction.get();
 
-        if(!economyService.getOrCreateAccount(callerFaction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!economyService.getOrCreateAccount(callerFaction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-        Account factionAccount = economyService.getOrCreateAccount(callerFaction.getFactionName()).get();
+        Account factionAccount = economyService.getOrCreateAccount(callerFaction.getName()).get();
 
         XDollar dollarCurrency = new XDollar();
 

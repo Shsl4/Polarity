@@ -81,7 +81,7 @@ public class XFactionsSetPrefix implements CommandExecutor {
 
                 if(factionPrefix.equals("")){
 
-                    xFac.setFactionPrefix("");
+                    xFac.setPrefix("");
                     caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully removed your faction's prefix."));
 
                 }
@@ -94,7 +94,7 @@ public class XFactionsSetPrefix implements CommandExecutor {
 
                     }
 
-                    xFac.setFactionPrefix(color.getStringColor() + ("[" + XUtilities.getStringWithoutModifiers(factionPrefix) + "]"));
+                    xFac.setPrefix(color.getStringColor() + ("[" + XUtilities.getStringWithoutModifiers(factionPrefix) + "]"));
                     caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully updated your faction's prefix."));
 
                 }

@@ -3,7 +3,7 @@ package io.sl4sh.xmanager.commands.shopbuilder;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.commands.elements.XShopCommandElement;
 import io.sl4sh.xmanager.economy.XShopProfile;
-import io.sl4sh.xmanager.economy.merchants.XShopNPC;
+import io.sl4sh.xmanager.economy.shops.merchants.XShopNPC;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;

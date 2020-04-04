@@ -53,7 +53,7 @@ public class XEconomyAdminTransfer implements CommandExecutor {
     private void depositToPlayer(CommandSource caller, BigDecimal amount, Player player){
 
         // The economy service will always be present as the command is registered only if the economy service registered
-        Optional<UniqueAccount> optPlayerAccount = XManager.getXManager().getXEconomyService().get().getOrCreateAccount(player.getUniqueId());
+        Optional<UniqueAccount> optPlayerAccount = XManager.getXManager().getEconomyService().get().getOrCreateAccount(player.getUniqueId());
 
         if(!optPlayerAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to find player account.")); return; }
 

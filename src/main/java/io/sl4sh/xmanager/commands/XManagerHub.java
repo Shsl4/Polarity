@@ -39,8 +39,8 @@ public class XManagerHub implements CommandExecutor {
         // Allow the command execution only if the caller is a player.
         if (src instanceof Player) {
 
-            Player ply = (Player) src;
-            teleportToHub(ply);
+            Player caller = (Player) src;
+            XManagerWarp.warp(caller, "Hub");
 
         } else {
 
@@ -49,27 +49,6 @@ public class XManagerHub implements CommandExecutor {
         }
 
         return CommandResult.success();
-    }
-
-    private void teleportToHub(Player caller){
-
-        // Try and get the hub's location
-        Vector3d hubLocation = XUtilities.getStringAsVector3d(XManager.getConfigData().getHubData().getLocation());
-        Optional<World> optWorld = Sponge.getServer().getWorld(XManager.getConfigData().getHubData().getDimensionName());
-
-        // If the hub's world and location are valid
-        if(optWorld.isPresent() && hubLocation != Vector3d.ZERO){
-
-            // Teleport the player to the new world (Changes dimension if necessary)
-            caller.setLocation(new Location<>(optWorld.get(), hubLocation));
-            caller.playSound(SoundTypes.ENTITY_ENDERMEN_TELEPORT, caller.getPosition(), 0.75);
-            return;
-
-        }
-
-        // Else print a generic error message
-        caller.sendMessage(XError.XERROR_NOHUB.getDesc());
-        caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
 
     }
 

@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
@@ -7,7 +8,6 @@ import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -32,7 +32,7 @@ public class XFactionsForceDisband implements CommandExecutor {
         return CommandSpec.builder()
                 .description(Text.of("Force disband a faction."))
                 .permission("xmanager.factions.forcedisband")
-                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("factionName"))))
+                .arguments(GenericArguments.onlyOne(new XFactionCommandElement(Text.of("factionName"))))
                 .executor(new XFactionsForceDisband())
                 .build();
 
@@ -81,11 +81,11 @@ public class XFactionsForceDisband implements CommandExecutor {
             XFaction pendingDeleteFaction = optPendingDeleteFaction.get();
             List<Player> players = new ArrayList<>();
 
-            for(XFactionMemberData memberData : pendingDeleteFaction.getFactionMembers()){
+            for(XFactionMemberData memberData : pendingDeleteFaction.getMemberDataList()){
 
-                if(Sponge.getServer().getPlayer(memberData.getPlayerName()).isPresent()){
+                if(XUtilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).isPresent()){
 
-                    players.add(Sponge.getServer().getPlayer(memberData.getPlayerName()).get());
+                    players.add(XUtilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).get());
 
                 }
 

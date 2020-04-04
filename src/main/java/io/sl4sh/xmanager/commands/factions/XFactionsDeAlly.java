@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XUtilities;
@@ -25,7 +26,7 @@ public class XFactionsDeAlly implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Destroy an alliance with another faction."))
-                .arguments(GenericArguments.string(Text.of("factionName")))
+                .arguments(new XFactionCommandElement(Text.of("factionName")))
                 .permission("xmanager.factions.deally")
                 .executor(new XFactionsDeAlly())
                 .build();
@@ -86,28 +87,28 @@ public class XFactionsDeAlly implements CommandExecutor {
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
         if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-        targetFaction.getFactionAllies().remove(callerFaction.getFactionName());
-        callerFaction.getFactionAllies().remove(targetFactionName);
+        targetFaction.getAllies().remove(callerFaction.getUniqueId());
+        callerFaction.getAllies().remove(targetFaction.getUniqueId());
 
         // For each TARGET's faction member
-        for(XFactionMemberData targetFactionMbData : targetFaction.getFactionMembers()){
+        for(XFactionMemberData targetFactionMbData : targetFaction.getMemberDataList()){
 
-            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(targetFactionMbData.playerName);
+            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByUniqueID(targetFactionMbData.getPlayerUniqueID());
 
             // Check if the player exists / is online
             // Notify the player of the alliance destruction
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | " , callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.RED, " are no longer your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | " , callerFaction.getDisplayName(), TextColors.RESET, TextColors.RED, " are no longer your allies!")));
 
         }
 
         // For each CALLER's faction member
-        for(XFactionMemberData callerFactionMbData : callerFaction.getFactionMembers()){
+        for(XFactionMemberData callerFactionMbData : callerFaction.getMemberDataList()){
 
-            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(callerFactionMbData.playerName);
+            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByUniqueID(callerFactionMbData.getPlayerUniqueID());
 
             // Check if the player exists / is online
             // Notify the player of the alliance destruction
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | ", targetFaction.getFactionDisplayName(), TextColors.RED, " are no longer your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | ", targetFaction.getDisplayName(), TextColors.RED, " are no longer your allies!")));
 
         }
 

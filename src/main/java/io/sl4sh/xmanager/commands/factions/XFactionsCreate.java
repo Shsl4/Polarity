@@ -1,7 +1,5 @@
 package io.sl4sh.xmanager.commands.factions;
 
-import io.sl4sh.xmanager.economy.XEconomyService;
-import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.enums.XInfo;
 import io.sl4sh.xmanager.XManager;
@@ -77,15 +75,13 @@ public class XFactionsCreate implements CommandExecutor {
 
         if(!XUtilities.getPlayerFaction(caller).isPresent()){
 
-            if(!XUtilities.doesFactionExist(factionName)){
+            if(!XUtilities.doesFactionExistByName(factionName)){
 
                 XFaction faction = new XFaction(factionName, caller);
 
                 @Nonnull List<XFaction> factions = XManager.getFactions();
 
                 factions.add(faction);
-                XEconomyService economyService = XManager.getXEconomyService().get();
-                faction.setFactionAccount((XFactionAccount) economyService.getOrCreateAccount(factionName).get());
                 caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
                 caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), 0.75);
                 XManager.getXManager().writeFactionsConfigurationFile();

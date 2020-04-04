@@ -2,8 +2,7 @@ package io.sl4sh.xmanager.economy;
 
 import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.economy.accounts.XFactionAccount;
-import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
+import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.economy.currencies.XDollar;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
@@ -20,24 +19,26 @@ public class XEconomyService implements EconomyService {
 
     private final Currency defaultCurrency = new XDollar();
 
+    @Nonnull
     @Override
     public Currency getDefaultCurrency() {
         return defaultCurrency;
     }
 
+    @Nonnull
     @Override
     public Set<Currency> getCurrencies() {
 
-        Set<Currency> setVal = new HashSet<Currency>();
+        Set<Currency> setVal = new HashSet<>();
         setVal.add(getDefaultCurrency());
         return setVal;
 
     }
 
     @Override
-    public boolean hasAccount(UUID uuid) {
+    public boolean hasAccount(@Nonnull UUID uuid) {
 
-        for(XPlayerAccount account : XManager.getPlayerAccounts()){
+        for(XAccount account : XManager.getAccounts()){
 
             if(account.getUniqueId().equals(uuid)){
 
@@ -54,36 +55,18 @@ public class XEconomyService implements EconomyService {
     @Override
     public boolean hasAccount(@Nonnull String identifier) {
 
-        for(XPlayerAccount account : XManager.getPlayerAccounts()){
-
-            if(account.getTargetPlayerName().equals(identifier)){
-
-                return true;
-
-            }
-
-        }
-
-        for(XFaction faction : XManager.getFactions()){
-
-            if(faction.getFactionName().equals(identifier)){
-
-                return faction.getFactionAccount().isPresent();
-
-            }
-
-        }
-
+        // Use the UUID function.
         return false;
 
     }
 
+    @Nonnull
     @Override
-    public Optional<UniqueAccount> getOrCreateAccount(UUID uuid) {
+    public Optional<UniqueAccount> getOrCreateAccount(@Nonnull UUID uuid) {
 
-        if(XManager.getPlayerAccounts() == null) { return Optional.empty(); }
+        if(XManager.getAccounts() == null) { return Optional.empty(); }
 
-        for(XPlayerAccount account : XManager.getPlayerAccounts()){
+        for(XAccount account : XManager.getAccounts()){
 
             if(account.getUniqueId().equals(uuid)){
 
@@ -95,39 +78,41 @@ public class XEconomyService implements EconomyService {
 
         Optional<Player> optTargetPlayer = Sponge.getServer().getPlayer(uuid);
 
-        if(!optTargetPlayer.isPresent()) { return Optional.empty(); }
+        XAccount newAccount;
 
-        Player targetPlayer = optTargetPlayer.get();
+        if(!optTargetPlayer.isPresent()) {
 
-        XPlayerAccount newAccount = new XPlayerAccount(targetPlayer);
+            Optional<XFaction> optFaction = XUtilities.getFactionByUniqueID(uuid);
 
-        XManager.getPlayerAccounts().add(newAccount);
+            if(!optFaction.isPresent()) { return Optional.empty(); }
 
+            newAccount = new XAccount(optFaction.get());
+
+        }
+        else{
+
+            newAccount = new XAccount(optTargetPlayer.get());
+
+        }
+
+        XManager.getAccounts().add(newAccount);
         XManager.getXManager().writeAccountsConfigurationFile();
 
         return Optional.of(newAccount);
 
     }
 
+    @Nonnull
     @Override
-    public Optional<Account> getOrCreateAccount(String identifier) {
+    public Optional<Account> getOrCreateAccount(@Nonnull String identifier) {
 
-        for(XFaction faction : XManager.getFactions()){
-
-            if(faction.getFactionName().equals(identifier)){
-
-                return faction.getFactionAccount().isPresent() ? faction.getFactionAccount() : Optional.of(new XFactionAccount(identifier, 500));
-
-            }
-
-        }
-
+        // Use UUIDs to create accounts as I want all of them to be identifiable.
         return Optional.empty();
 
     }
 
     @Override
-    public void registerContextCalculator(ContextCalculator<Account> calculator) {
+    public void registerContextCalculator(@Nonnull ContextCalculator<Account> calculator) {
 
     }
 

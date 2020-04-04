@@ -65,14 +65,14 @@ public class XEconomyFactionTransfer implements CommandExecutor {
 
         XFaction targetFaction = optTargetFaction.get();
 
-        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!XManager.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
-        XEconomyService economyService = XManager.getXEconomyService().get();
+        XEconomyService economyService = XManager.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(targetFaction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(targetFaction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
         Account playerAccount = economyService.getOrCreateAccount(caller.getUniqueId()).get();
-        Account factionAccount = economyService.getOrCreateAccount(targetFaction.getFactionName()).get();
+        Account factionAccount = economyService.getOrCreateAccount(targetFaction.getName()).get();
 
         XDollar dollarCurrency = new XDollar();
 

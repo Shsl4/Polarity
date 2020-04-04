@@ -7,7 +7,6 @@ import io.sl4sh.xmanager.XFaction;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.tablist.XTabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -65,13 +64,13 @@ public class XFactionsDisband implements CommandExecutor {
 
             XFaction pendingDeleteFaction = optPendingDeleteFaction.get();
 
-            if(pendingDeleteFaction.getFactionOwner().equals(caller.getName())){
+            if(pendingDeleteFaction.getOwner().equals(caller.getUniqueId())){
 
-                for(XFactionMemberData memberData : pendingDeleteFaction.getFactionMembers()){
+                for(XFactionMemberData memberData : pendingDeleteFaction.getMemberDataList()){
 
-                    if(Sponge.getServer().getPlayer(memberData.getPlayerName()).isPresent()){
+                    if(XUtilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).isPresent()){
 
-                        Player factionPlayer = Sponge.getServer().getPlayer(memberData.getPlayerName()).get();
+                        Player factionPlayer = XUtilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).get();
                         factionPlayer.sendMessage(Text.of(TextColors.RED, "[Factions] | Your faction has been disbanded by the owner. (", caller.getName(), ")"));
                         factionPlayer.playSound(SoundTypes.AMBIENT_CAVE, factionPlayer.getPosition(), 0.75);
 

@@ -74,13 +74,13 @@ public class XFactionsSetDisplayName implements CommandExecutor {
 
                 if(displayName.equals("")){
 
-                    optXFac.get().setFactionDisplayName(optXFac.get().getFactionName());
+                    optXFac.get().setDisplayName(optXFac.get().getName());
                     ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully removed your faction's display name."));
 
                 }
                 else{
 
-                    optXFac.get().setFactionDisplayName(color.getStringColor() + XUtilities.getStringWithoutModifiers(displayName));
+                    optXFac.get().setDisplayName(color.getStringColor() + XUtilities.getStringWithoutModifiers(displayName));
                     ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully updated your faction's display name."));
 
                 }

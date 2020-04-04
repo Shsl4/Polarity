@@ -1,6 +1,5 @@
 package io.sl4sh.xmanager.enums;
 
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -25,7 +24,6 @@ public enum XColor {
 
     private TextColor textColor;
     private String stringColor;
-
 
     XColor(TextColor textColor, String stringColor) {
 

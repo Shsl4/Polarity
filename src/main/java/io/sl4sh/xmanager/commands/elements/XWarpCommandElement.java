@@ -1,14 +1,13 @@
 package io.sl4sh.xmanager.commands.elements;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -32,7 +31,13 @@ public class XWarpCommandElement extends CommandElement {
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
 
         List<String> returnList = new ArrayList<>();
-        List<String> existingNames = XManager.getConfigData().getWarpNames();
+        List<String> existingNames = new ArrayList<>();
+
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
+
+            existingNames.addAll(worldInfo.getWarpNames());
+
+        }
 
         if(args.hasNext()){
 

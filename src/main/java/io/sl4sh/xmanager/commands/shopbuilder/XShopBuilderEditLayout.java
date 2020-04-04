@@ -1,11 +1,10 @@
 package io.sl4sh.xmanager.commands.shopbuilder;
 
 import io.sl4sh.xmanager.commands.elements.XShopCommandElement;
-import io.sl4sh.xmanager.economy.XShopBuilderEditLayoutUI;
+import io.sl4sh.xmanager.economy.shops.UI.XShopBuilderEditLayoutUI;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandArgs;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;

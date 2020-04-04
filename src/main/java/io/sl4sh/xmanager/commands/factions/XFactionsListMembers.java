@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -19,7 +20,7 @@ public class XFactionsListMembers implements CommandExecutor {
 
        return CommandSpec.builder()
                 .description(Text.of("Lists the members of a faction."))
-                .arguments(GenericArguments.optional(GenericArguments.string(Text.of("factionName"))))
+                .arguments(GenericArguments.optional(new XFactionCommandElement(Text.of("factionName"))))
                 .permission("xmanager.factions.list.members")
                 .executor(new XFactionsListMembers())
                 .build();

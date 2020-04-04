@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
@@ -24,7 +25,7 @@ public class XFactionsAllyDecline implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Decline an alliance from another faction."))
-                .arguments(GenericArguments.string(Text.of("factionName")))
+                .arguments(new XFactionCommandElement(Text.of("factionName")))
                 .permission("xmanager.factions.ally.decline")
                 .executor(new XFactionsAllyDecline())
                 .build();
@@ -86,24 +87,24 @@ public class XFactionsAllyDecline implements CommandExecutor {
         if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         // Return if no alliance request was sent by the provided faction
-        if(!targetFaction.getFactionAllyInvites().contains(callerFaction.getFactionName())) { caller.sendMessage(XError.XERROR_NOALLYRQ.getDesc()); return; }
+        if(!targetFaction.getAllyInvites().contains(callerFaction.getUniqueId())) { caller.sendMessage(XError.XERROR_NOALLYRQ.getDesc()); return; }
 
         // Remove the alliance request from the caller's faction
-        targetFaction.getFactionAllyInvites().remove(callerFaction.getFactionName());
+        targetFaction.getAllyInvites().remove(callerFaction.getUniqueId());
 
         // Send info message
-        caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You declined ", targetFaction.getFactionDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, "'s alliance request."));
+        caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You declined ", targetFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, "'s alliance request."));
 
         // For each TARGET faction's member
-        for(XFactionMemberData playerData : targetFaction.getFactionMembers()){
+        for(XFactionMemberData playerData : targetFaction.getMemberDataList()){
 
             // If the player is allowed to configure the faction
             if(playerData.permissions.getManage()){
 
-                Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(playerData.playerName);
+                Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByUniqueID(playerData.getPlayerUniqueID());
 
                 // Check if the player exists / is online, Notify the player that their alliance request has been declined
-                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "[Factions] | ", callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
+                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "[Factions] | ", callerFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
 
             }
 

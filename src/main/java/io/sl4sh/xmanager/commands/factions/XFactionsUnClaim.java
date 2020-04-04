@@ -2,7 +2,7 @@ package io.sl4sh.xmanager.commands.factions;
 
 import com.flowpowered.math.vector.Vector3i;
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.economy.XEconomyService;
 import io.sl4sh.xmanager.economy.currencies.XDollar;
 import io.sl4sh.xmanager.enums.XError;
@@ -21,10 +21,8 @@ import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
-import org.spongepowered.api.service.economy.transaction.TransactionResult;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.math.BigDecimal;
@@ -65,6 +63,8 @@ public class XFactionsUnClaim implements CommandExecutor {
     void unClaimChunk(Player ply){
 
         Optional<XFaction> optPlyFac = XUtilities.getPlayerFaction(ply);
+        World world = ply.getWorld();
+        XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(world);
 
         if(optPlyFac.isPresent()){
 
@@ -78,22 +78,21 @@ public class XFactionsUnClaim implements CommandExecutor {
 
             if(permData.getClaim()){
 
-                String worldName = ply.getWorld().getName();
                 Vector3i chunkPosition = ply.getLocation().getChunkPosition();
 
-                if(playerFaction.isClaimed(worldName, chunkPosition)){
+                if(worldInfo.isClaimed(chunkPosition)){
 
-                    if(!XManager.getXEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+                    if(!XManager.getEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-                    XEconomyService economyService = XManager.getXEconomyService().get();
+                    XEconomyService economyService = XManager.getEconomyService().get();
 
-                    if(!economyService.getOrCreateAccount(playerFaction.getFactionName()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+                    if(!economyService.getOrCreateAccount(playerFaction.getName()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
                     XDollar dollarCurrency = new XDollar();
 
-                    economyService.getOrCreateAccount(playerFaction.getFactionName()).get().deposit(dollarCurrency, BigDecimal.valueOf(75.0), Cause.of(EventContext.empty(), ply));
+                    economyService.getOrCreateAccount(playerFaction.getName()).get().deposit(dollarCurrency, BigDecimal.valueOf(75.0), Cause.of(EventContext.empty(), ply));
 
-                    playerFaction.removeClaim(worldName, chunkPosition);
+                    if(!worldInfo.removeClaim(chunkPosition, playerFaction.getUniqueId())) { ply.sendMessage(XError.XERROR_UNKNOWN.getDesc()); return; }
 
                     ply.playSound(SoundTypes.BLOCK_NOTE_CHIME, ply.getPosition(), 0.75);
 

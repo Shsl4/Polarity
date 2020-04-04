@@ -65,14 +65,14 @@ public class XFactionsWithdraw implements CommandExecutor {
 
         if(!memberData.getPermissions().getManage()) { caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
-        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!XManager.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
-        XEconomyService economyService = XManager.getXEconomyService().get();
+        XEconomyService economyService = XManager.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(callerFaction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(callerFaction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
 
         Account playerAccount = economyService.getOrCreateAccount(caller.getUniqueId()).get();
-        Account factionAccount = economyService.getOrCreateAccount(callerFaction.getFactionName()).get();
+        Account factionAccount = economyService.getOrCreateAccount(callerFaction.getName()).get();
 
         XDollar dollarCurrency = new XDollar();
 

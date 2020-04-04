@@ -1,7 +1,7 @@
 package io.sl4sh.xmanager.commands;
 
 import io.sl4sh.xmanager.XManager;
-import io.sl4sh.xmanager.data.XMerchantData;
+import io.sl4sh.xmanager.data.registration.merchantdata.XMerchantData;
 import io.sl4sh.xmanager.economy.XShopProfile;
 import noppes.npcs.api.NpcAPI;
 import noppes.npcs.api.entity.ICustomNpc;

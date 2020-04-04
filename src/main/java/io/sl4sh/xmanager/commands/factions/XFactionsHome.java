@@ -1,6 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
-import com.flowpowered.math.vector.Vector3d;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
@@ -59,15 +59,17 @@ public class XFactionsHome implements CommandExecutor {
 
         if(!OptCallerFaction.isPresent()) { caller.sendMessage(XError.XERROR_NOXF.getDesc()); return; }
 
-        XFaction CallerFaction = OptCallerFaction.get();
+        XFaction callerFaction = OptCallerFaction.get();
 
-        if(CallerFaction.getFactionHome().getLocation().equals("")) { caller.sendMessage(XError.XERROR_NOHOME.getDesc()); return;  }
+        XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(caller.getWorld());
 
-        Optional<World> optHomeWorld = Sponge.getServer().getWorld(CallerFaction.getFactionHome().getDimensionName());
+        if(!XUtilities.getFactionHomeWorld(callerFaction.getUniqueId()).isPresent()) { caller.sendMessage(XError.XERROR_NOHOME.getDesc()); return;  }
+
+        Optional<World> optHomeWorld = XUtilities.getFactionHomeWorld(callerFaction.getUniqueId());
 
         if(!optHomeWorld.isPresent()) {  caller.sendMessage(Text.of(TextColors.RED, "This home can't be accessed right now.")); return; }
 
-        Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<World>(optHomeWorld.get(), XUtilities.getStringAsVector3d(CallerFaction.getFactionHome().getLocation())));
+        Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<>(optHomeWorld.get(), XUtilities.getOrCreateWorldInfo(optHomeWorld.get()).getFactionHome(callerFaction.getUniqueId()).get()));
 
         if(safeLoc.isPresent()){
 

@@ -54,7 +54,7 @@ public class XEconomyShowBalance implements CommandExecutor {
     private void showBalance(Player caller){
 
         // The economy service will always be present as the command is registered only if the economy service registered
-        XEconomyService economyService = XManager.getXEconomyService().get();
+        XEconomyService economyService = XManager.getEconomyService().get();
 
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
 

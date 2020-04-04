@@ -1,6 +1,6 @@
 package io.sl4sh.xmanager.commands.shopbuilder;
 
-import io.sl4sh.xmanager.economy.XShopBuilderNewUI;
+import io.sl4sh.xmanager.economy.shops.UI.XShopBuilderNewUI;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;

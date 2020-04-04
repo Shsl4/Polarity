@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
@@ -28,7 +29,7 @@ public class XFactionsJoin implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Joins a faction."))
-                .arguments(GenericArguments.string(Text.of("factionName")))
+                .arguments(new XFactionCommandElement(Text.of("factionName")))
                 .permission("xmanager.factions.join")
                 .executor(new XFactionsJoin())
                 .build();
@@ -70,7 +71,7 @@ public class XFactionsJoin implements CommandExecutor {
 
     private void joinFaction(Player caller, String factionName){
 
-        if(XUtilities.doesFactionExist(factionName)){
+        if(XUtilities.doesFactionExistByName(factionName)){
 
             Optional<XFaction> optFac = XUtilities.getFactionByName(factionName);
 
@@ -78,20 +79,20 @@ public class XFactionsJoin implements CommandExecutor {
 
             XFaction targetFaction = optFac.get();
 
-            if(targetFaction.getFactionInvites().contains(caller.getName())){
+            if(targetFaction.getPlayerInvites().contains(caller.getUniqueId())){
 
-                targetFaction.getFactionMembers().add(new XFactionMemberData(caller.getName(), new XFactionPermissionData(false, true, false)));
+                targetFaction.getMemberDataList().add(new XFactionMemberData(caller.getUniqueId(), new XFactionPermissionData(false, true, false)));
 
-                targetFaction.getFactionInvites().remove(caller.getName());
+                targetFaction.getPlayerInvites().remove(caller.getUniqueId());
 
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  targetFaction.getFactionDisplayName(), TextColors.GREEN, "!"));
+                caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully joined the faction ",  targetFaction.getDisplayName(), TextColors.GREEN, "!"));
                 caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), 0.75);
 
-                for(XFactionMemberData mbData : targetFaction.getFactionMembers()){
+                for(XFactionMemberData mbData : targetFaction.getMemberDataList()){
 
-                    if(mbData.getPlayerName().equals(caller.getName())) { continue; }
+                    if(mbData.getPlayerUniqueID().equals(caller.getUniqueId())) { continue; }
 
-                    Optional<Player> optPlayer = XUtilities.getPlayerByName(mbData.getPlayerName());
+                    Optional<Player> optPlayer = XUtilities.getPlayerByUniqueID(mbData.getPlayerUniqueID());
 
                     if(optPlayer.isPresent()){
 

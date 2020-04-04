@@ -77,11 +77,11 @@ public class XFactionsSetOwner implements CommandExecutor {
 
         if(optTargetFaction.get() != callerFaction) { caller.sendMessage(XError.XERROR_NOTAMEMBER.getDesc()); return; }
 
-        if(callerFaction.isOwner(caller.getName())){
+        if(callerFaction.isOwner(caller)){
 
             if(callerFaction.setPermissionDataForPlayer(newOwner, new XFactionPermissionData(true, true, true))){
 
-                callerFaction.setFactionOwner(newOwner.getName());
+                callerFaction.setOwner(newOwner.getUniqueId());
                 XManager.getXManager().writeFactionsConfigurationFile();
 
                 caller.sendMessage(Text.of(TextColors.GREEN , "[Factions] | Successfully set " , TextColors.LIGHT_PURPLE , newOwner.getName() , TextColors.GREEN , " as the new faction owner!"));

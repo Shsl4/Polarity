@@ -86,7 +86,7 @@ public class XFactionsSetPerm implements CommandExecutor {
 
                 if(XUtilities.getPlayerFaction(targetPlayer).isPresent() && XUtilities.getPlayerFaction(targetPlayer).get() == callerFaction){
 
-                    if(!callerFaction.isOwner(targetPlayer.getName())){
+                    if(!callerFaction.isOwner(targetPlayer)){
 
                         switch (targetPermission){
 

@@ -1,5 +1,7 @@
 package io.sl4sh.xmanager.commands;
 
+import com.flowpowered.math.vector.Vector3i;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
@@ -49,16 +51,16 @@ public class XManagerUnProtectChunk implements CommandExecutor {
 
     private void unProtectChunk(Player caller){
 
-        // The index of the protected chunk in the data array (if present)
-        MutableInt existingIndex = new MutableInt(0);
+        XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(caller.getWorld());
+        Vector3i chunkPos = caller.getLocation().getChunkPosition();
 
         // If the chunk is protected
-        if(XUtilities.isLocationProtected(caller.getLocation(), existingIndex)){
+        if(worldInfo.getWorldProtectedChunks().contains(chunkPos)){
 
             // Remove the protected chunk and save the configuration.
-            XManager.getXManager().getConfigData().getServerProtectedChunks().remove(existingIndex.intValue());
-            XManager.getXManager().writeMainDataConfigurationFile();
-            caller.sendMessage(Text.of(TextColors.GREEN, "[XManager] | Removed a protected chunk: ", caller.getLocation().getChunkPosition().toString()));
+           worldInfo.getWorldProtectedChunks().remove(chunkPos);
+           XManager.getXManager().writeWorldsInfoData();
+           caller.sendMessage(Text.of(TextColors.GREEN, "[XManager] | Removed a protected chunk: ", chunkPos.toString()));
 
         }
         // else print a message

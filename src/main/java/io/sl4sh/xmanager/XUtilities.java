@@ -2,27 +2,95 @@ package io.sl4sh.xmanager;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.data.XWarpData;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import io.sl4sh.xmanager.data.factions.XFactionMemberData;
 import io.sl4sh.xmanager.data.factions.XFactionPermissionData;
 import net.minecraft.world.WorldServer;
 import noppes.npcs.api.IWorld;
 import noppes.npcs.api.NpcAPI;
-import noppes.npcs.api.entity.IPlayer;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.List;
-import java.util.Optional;
+import javax.annotation.Nonnull;
+import java.util.*;
 
 public class XUtilities {
 
-    public static Optional<Player> iPlayerToSpongePlayer(IPlayer player){
+    public static XWorldInfo getOrCreateWorldInfo(World world){
 
-        return Sponge.getServer().getPlayer(player.getName());
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
+
+            if(worldInfo.getTargetWorld().isPresent() && worldInfo.getTargetWorld().get().equals(world)){
+
+                return worldInfo;
+
+            }
+
+        }
+
+        XWorldInfo worldInfo = new XWorldInfo(world);
+        XManager.getWorldsInfo().add(worldInfo);
+
+        return worldInfo;
+
+    }
+
+    public static Optional<XWarpData> getWarpDataByName(String warpName){
+
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
+
+            if(worldInfo.getWarps().get(warpName) != null){
+
+                return Optional.of(worldInfo.getWarps().get(warpName));
+
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
+
+    public static boolean isLocationProtected(Location<World> target){
+
+        XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(target.getExtent());
+
+        return worldInfo.isWorldProtected() || worldInfo.getWorldProtectedChunks().contains(target.getChunkPosition());
+
+    }
+
+    @Nonnull
+    public static List<String> getExistingFactionsNames(){
+
+        List<String> returnList = new ArrayList<>();
+
+        for(XFaction faction : XManager.getFactions()){
+
+            returnList.add(faction.getName());
+
+        }
+
+        return returnList;
+
+    }
+
+
+    public static Optional<XFaction> getFactionByUniqueID(UUID factionID){
+
+        for(XFaction faction : XManager.getFactions()){
+
+            if(faction.getUniqueId().equals(factionID)){
+
+                return Optional.of(faction);
+
+            }
+
+        }
+
+        return Optional.empty();
 
     }
 
@@ -43,81 +111,13 @@ public class XUtilities {
 
     }
 
-    public static boolean isLocationProtected(Location<World> target){
+    public static Optional<World> getFactionHomeWorld(UUID factionID){
 
-       for(XManagerLocationData locationData : XManager.getConfigData().getServerProtectedChunks()){
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
 
-            if(locationData.getLocation().equals(target.getChunkPosition().toString()) && locationData.getDimensionName().equals(target.getExtent().getName())) { return true; }
+            if(worldInfo.getFactionHome(factionID).isPresent()){
 
-        }
-
-       return false;
-
-    }
-
-    public static boolean isLocationProtected(Location<World> target, MutableInt existingIndex){
-
-        World targetWorld = target.getExtent();
-
-        int it = 0;
-
-        for(XManagerLocationData locationData : XManager.getConfigData().getServerProtectedChunks()){
-
-            if(targetWorld.getName().equals(locationData.getDimensionName())){
-
-                if(target.getChunkPosition().toString().equals(locationData.getLocation())){
-
-                    existingIndex.setValue(it);
-                    return true;
-
-                }
-
-            }
-
-            it++;
-
-        }
-
-        return false;
-
-    }
-
-    static public Boolean doesFactionExist(String factionName) {
-
-        List<XFaction> factionsContainer = XManager.getFactions();
-
-        if(factionsContainer != null) {
-
-            for(XFaction faction : factionsContainer){
-
-                if(faction.getFactionName().equals(factionName)){
-
-                    return true;
-
-                }
-
-            }
-
-        }
-
-        return false;
-
-    }
-
-    static public Optional<XFaction> getFactionByName(String factionName){
-
-        List<XFaction> factionsContainer = XManager.getFactions();
-
-
-        if(factionsContainer != null) {
-
-            for(XFaction faction : factionsContainer){
-
-                if(faction.getFactionName().equals(factionName)){
-
-                    return Optional.of(faction);
-
-                }
+                return worldInfo.getTargetWorld();
 
             }
 
@@ -127,14 +127,78 @@ public class XUtilities {
 
     }
 
+    static public Boolean doesFactionExistByUniqueID(UUID factionName) {
+
+        List<XFaction> factionsContainer = XManager.getFactions();
+
+        for(XFaction faction : factionsContainer){
+
+            if(faction.getUniqueId().equals(factionName)){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
+    static public Boolean doesFactionExistByName(String factionName) {
+
+        List<XFaction> factionsContainer = XManager.getFactions();
+
+        for(XFaction faction : factionsContainer){
+
+            if(faction.getName().equals(factionName)){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
+    static public List<Vector3i> getFactionClaimsInWorld(UUID factionUUID, World world){
+
+        XWorldInfo worldInfo = getOrCreateWorldInfo(world);
+        return worldInfo.getFactionClaimedChunks(factionUUID);
+
+    }
+
+    static public Map<Vector3i, World> getAllFactionClaims(UUID factionUUID){
+
+        Map<Vector3i, World> returnMap = new LinkedHashMap<>();
+
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
+
+            if(worldInfo.getTargetWorld().isPresent()){
+
+                for(Vector3i chunkPos : worldInfo.getFactionClaimedChunks(factionUUID)){
+
+                    returnMap.put(chunkPos, worldInfo.getTargetWorld().get());
+
+                }
+
+            }
+
+        }
+
+        return returnMap;
+
+    }
 
     static public Optional<XFactionPermissionData> getPlayerFactionPermissions(Player ply) {
 
         if (getPlayerFaction(ply).isPresent()) {
 
-            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getFactionMembers()) {
+            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getMemberDataList()) {
 
-                if (mbData.getPlayerName().equals(ply.getName())) {
+                if (mbData.getPlayerUniqueID().equals(ply.getUniqueId())) {
 
                     return Optional.ofNullable(mbData.getPermissions());
 
@@ -152,13 +216,29 @@ public class XUtilities {
 
         if (getPlayerFaction(ply).isPresent()) {
 
-            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getFactionMembers()) {
+            for (XFactionMemberData mbData : getPlayerFaction(ply).get().getMemberDataList()) {
 
-                if (mbData.getPlayerName().equals(ply.getName())) {
+                if (mbData.getPlayerUniqueID().equals(ply.getUniqueId())) {
 
                     return Optional.of(mbData);
 
                 }
+
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
+
+    public static Optional<XFaction> getFactionByName(String factionName){
+
+        for(XFaction faction : XManager.getFactions()){
+
+            if(faction.getName().equals(factionName)){
+
+                return Optional.of(faction);
 
             }
 
@@ -175,9 +255,9 @@ public class XUtilities {
 
         for(XFaction faction : factionsContainer){
 
-            for(XFactionMemberData memberData : faction.getFactionMembers()){
+            for(XFactionMemberData memberData : faction.getMemberDataList()){
 
-                if(memberData.getPlayerName().equals(player.getName())){
+                if(memberData.getPlayerUniqueID().equals(player.getUniqueId())){
 
                     return Optional.of(faction);
 
@@ -194,6 +274,12 @@ public class XUtilities {
     public static Optional<Player> getPlayerByName(String PlayerName){
 
         return Sponge.getServer().getPlayer(PlayerName);
+
+    }
+
+    public static Optional<Player> getPlayerByUniqueID(UUID uuid){
+
+        return Sponge.getServer().getPlayer(uuid);
 
     }
 

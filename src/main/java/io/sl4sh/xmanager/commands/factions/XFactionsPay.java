@@ -77,14 +77,14 @@ public class XFactionsPay implements CommandExecutor {
 
         XFaction faction = optCallerFaction.get();
 
-        if(!XManager.getXEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!XManager.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
-        XEconomyService economyService = XManager.getXEconomyService().get();
+        XEconomyService economyService = XManager.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getFactionName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
 
         Account targetAccount = economyService.getOrCreateAccount(target.getUniqueId()).get();
-        Account factionAccount = economyService.getOrCreateAccount(faction.getFactionName()).get();
+        Account factionAccount = economyService.getOrCreateAccount(faction.getName()).get();
 
         XDollar dollarCurrency = new XDollar();
 

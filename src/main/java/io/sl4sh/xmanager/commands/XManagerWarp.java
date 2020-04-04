@@ -1,10 +1,10 @@
 package io.sl4sh.xmanager.commands;
 
-import com.flowpowered.math.vector.Vector3d;
 import io.sl4sh.xmanager.XManager;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.commands.elements.XWarpCommandElement;
-import io.sl4sh.xmanager.data.XManagerLocationData;
+import io.sl4sh.xmanager.data.XWarpData;
+import io.sl4sh.xmanager.data.XWorldInfo;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -19,7 +19,8 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import java.util.Optional;
+import javax.annotation.Nonnull;
+import java.util.Map;
 
 public class XManagerWarp implements CommandExecutor {
 
@@ -56,41 +57,15 @@ public class XManagerWarp implements CommandExecutor {
 
     }
 
+    @Nonnull
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(@Nonnull CommandSource src, @Nonnull CommandContext args) throws CommandException {
 
         if(src instanceof Player) {
 
             Player caller = (Player) src;
 
-            XManagerLocationData data = XManager.getConfigData().getWarpsData().get(args.getOne("warpName").get().toString());
-
-            if(data != null){
-
-                Optional<World> world = Sponge.getServer().getWorld(data.getDimensionName());
-                Vector3d pos = XUtilities.getStringAsVector3d(data.getLocation());
-
-                if(world.isPresent()){
-
-                    Location<World> loc = new Location<World>(world.get(), pos);
-
-                    if(Sponge.getTeleportHelper().getSafeLocation(loc).isPresent()){
-
-                        caller.setLocation(Sponge.getTeleportHelper().getSafeLocation(loc).get());
-                        return CommandResult.success();
-
-
-                    }
-
-
-                }
-
-                src.sendMessage(Text.of(TextColors.RED, "Unable to warp here now."));
-                return CommandResult.success();
-
-            }
-
-            src.sendMessage(Text.of(TextColors.RED, "This warp does not exist."));
+            warp(caller, args.getOne("warpName").get().toString());
 
         }
 
@@ -98,29 +73,67 @@ public class XManagerWarp implements CommandExecutor {
 
     }
 
+    public static void warp(Player caller, String warpName){
+
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
+
+            Map<String, XWarpData> warps = worldInfo.getWarps();
+
+            if(warps.get(warpName) != null){
+
+                if(warps.get(warpName).getTargetWorld().isPresent()){
+
+                    Location<World> loc = new Location<>(warps.get(warpName).getTargetWorld().get(), warps.get(warpName).getPosition());
+
+                    if(Sponge.getTeleportHelper().getSafeLocation(loc).isPresent()){
+
+                        caller.setLocation(Sponge.getTeleportHelper().getSafeLocation(loc).get());
+                        return;
+
+                    }
+
+                }
+
+                caller.sendMessage(Text.of(TextColors.RED, "Unable to warp here now."));
+                return;
+
+            }
+
+        }
+
+        caller.sendMessage(Text.of(TextColors.RED, "This warp does not exist."));
+
+    }
+
 }
 
 class XManagerSetWarp implements CommandExecutor {
 
+    @Nonnull
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(@Nonnull CommandSource src, @Nonnull CommandContext args) throws CommandException {
 
         if(src instanceof Player){
 
             Player caller = (Player)src;
 
-            if(!XManager.getConfigData().getWarpNames().contains(args.getOne("warpName").get().toString())) {
+            String warpName = args.getOne("warpName").get().toString();
 
-                XManager.getConfigData().getWarpsData().put((String)args.getOne("warpName").get(), new XManagerLocationData(caller.getWorld().getName(), caller.getPosition().toString()));
+            for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
 
-                caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Added a new warp named ", (String)args.getOne("warpName").get(), "."));
+                if(worldInfo.getWarps().get(warpName) != null){
+
+                    caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | This warp already exist."));
+                    return CommandResult.success();
+
+                }
 
             }
-            else{
 
-                caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | This warp already exist."));
-
-            }
+            XWorldInfo worldInfo = XUtilities.getOrCreateWorldInfo(caller.getWorld());
+            worldInfo.getWarps().put(warpName, new XWarpData(caller.getPosition(), caller.getWorld().getUniqueId()));
+            caller.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Added a new warp named ", warpName, "."));
+            XManager.getXManager().writeWorldsInfoData();
 
         }
 
@@ -130,22 +143,25 @@ class XManagerSetWarp implements CommandExecutor {
 
 class XManagerRemoveWarp implements CommandExecutor {
 
+    @Nonnull
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(@Nonnull CommandSource src, CommandContext args) throws CommandException {
 
         String warpName = (String)args.getOne(Text.of("warpName")).get();
 
-        if(XManager.getConfigData().getWarpsData().remove(warpName) != null){
+        for(XWorldInfo worldInfo : XManager.getWorldsInfo()){
 
-            src.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Warp ", warpName, " removed."));
+            if(worldInfo.getWarps().get(warpName) != null){
+
+                worldInfo.getWarps().remove(warpName);
+                src.sendMessage(Text.of(TextColors.AQUA, "[XManager] | Warp ", warpName, " removed."));
+                return CommandResult.success();
+
+            }
 
         }
-        else{
 
-            src.sendMessage(Text.of(TextColors.RED, "[XManager] | Failed to remove ", warpName, ". It may not exist"));
-
-        }
-
+        src.sendMessage(Text.of(TextColors.RED, "[XManager] | Failed to remove ", warpName, ". It may not exist"));
         return CommandResult.success();
     }
 }

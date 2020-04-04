@@ -89,7 +89,7 @@ public class XFactionsHelp implements CommandExecutor {
 
         Optional<XFaction> optionalXFaction = XUtilities.getPlayerFaction(caller);
 
-        if(!optionalXFaction.isPresent() || !optionalXFaction.get().isOwner(caller.getName())) { return; }
+        if(!optionalXFaction.isPresent() || !optionalXFaction.get().isOwner(caller)) { return; }
 
         caller.sendMessage(Text.of(helpAccentColor, "/factions setowner ", TextColors.WHITE, "Set someone from your faction as the new owner (irreversible)."));
         caller.sendMessage(Text.of(helpAccentColor, "/factions disband ", TextColors.WHITE, "Disbands your current faction (irreversible). The bank account of your faction will be gone too."));

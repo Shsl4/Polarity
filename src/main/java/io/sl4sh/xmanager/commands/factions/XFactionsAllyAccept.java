@@ -1,5 +1,6 @@
 package io.sl4sh.xmanager.commands.factions;
 
+import io.sl4sh.xmanager.commands.elements.XFactionCommandElement;
 import io.sl4sh.xmanager.enums.XError;
 import io.sl4sh.xmanager.XUtilities;
 import io.sl4sh.xmanager.XFaction;
@@ -24,7 +25,7 @@ public class XFactionsAllyAccept implements CommandExecutor {
 
        return CommandSpec.builder()
                 .description(Text.of("Accept an alliance from another faction."))
-                .arguments(GenericArguments.string(Text.of("factionName")))
+                .arguments(new XFactionCommandElement(Text.of("factionName")))
                 .permission("xmanager.factions.ally.accept")
                 .executor(new XFactionsAllyAccept())
                 .build();
@@ -86,33 +87,33 @@ public class XFactionsAllyAccept implements CommandExecutor {
         if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(XError.XERROR_NOTAUTHORIZED.getDesc()); return; }
 
         // Return if no alliance request was sent by the provided faction
-        if(!targetFaction.getFactionAllyInvites().contains(callerFaction.getFactionName())) { caller.sendMessage(XError.XERROR_NOALLYRQ.getDesc()); return; }
+        if(!targetFaction.getAllyInvites().contains(callerFaction.getUniqueId())) { caller.sendMessage(XError.XERROR_NOALLYRQ.getDesc()); return; }
 
         // Remove the alliance request from the caller's faction data and add each other faction as an ally
-        targetFaction.getFactionAllyInvites().remove(callerFaction.getFactionName());
-        targetFaction.getFactionAllies().add(callerFaction.getFactionName());
-        callerFaction.getFactionAllies().add(targetFactionName);
+        targetFaction.getAllyInvites().remove(callerFaction.getUniqueId());
+        targetFaction.getAllies().add(callerFaction.getUniqueId());
+        callerFaction.getAllies().add(targetFaction.getUniqueId());
 
         // For each TARGET's faction member
-        for(XFactionMemberData targetFactionMbData : targetFaction.getFactionMembers()){
+        for(XFactionMemberData targetFactionMbData : targetFaction.getMemberDataList()){
 
-            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(targetFactionMbData.playerName);
+            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByUniqueID(targetFactionMbData.getPlayerUniqueID());
 
             // Check if the player exists / is online
             // Notify the player of the alliance creation
 
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", callerFaction.getFactionDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", callerFaction.getDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
 
         }
 
         // For each CALLER's faction member
-        for(XFactionMemberData callerFactionMbData : callerFaction.getFactionMembers()){
+        for(XFactionMemberData callerFactionMbData : callerFaction.getMemberDataList()){
 
-            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByName(callerFactionMbData.playerName);
+            Optional<Player> optTargetFactionConfigPlayer = XUtilities.getPlayerByUniqueID(callerFactionMbData.getPlayerUniqueID());
 
             // Check if the player exists / is online
             // Notify the player of the alliance creation
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", targetFaction.getFactionDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", targetFaction.getDisplayName(), TextColors.RESET, TextColors.AQUA, " are now your allies!")));
 
         }
 

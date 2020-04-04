@@ -1,6 +1,6 @@
 package io.sl4sh.xmanager.data.containers;
 
-import io.sl4sh.xmanager.economy.accounts.XPlayerAccount;
+import io.sl4sh.xmanager.economy.XAccount;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
@@ -10,24 +10,24 @@ import java.util.List;
 @ConfigSerializable
 public class XAccountContainer {
 
-    @Setting(value = "playerAccounts")
-    private List<XPlayerAccount> playerAccounts = new ArrayList<>();
+    @Setting(value = "accounts")
+    private List<XAccount> accounts = new ArrayList<>();
 
     public XAccountContainer() {
 
     }
 
-    public List<XPlayerAccount> getPlayerAccounts() {
-        return playerAccounts;
+    public List<XAccount> getAccounts() {
+        return accounts;
     }
 
-    public void setPlayerAccounts(List<XPlayerAccount> playerAccounts) {
-        this.playerAccounts = playerAccounts;
+    public void setAccounts(List<XAccount> accounts) {
+        this.accounts = accounts;
     }
 
-    public void addAccount(XPlayerAccount account){
+    public void addAccount(XAccount account){
 
-        this.playerAccounts.add(account);
+        this.accounts.add(account);
 
     }
 
