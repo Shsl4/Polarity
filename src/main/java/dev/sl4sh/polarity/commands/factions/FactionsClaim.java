@@ -55,7 +55,7 @@ public class FactionsClaim implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -65,7 +65,7 @@ public class FactionsClaim implements CommandExecutor {
 
     void claimChunk(Player ply) {
 
-        if(Utilities.isLocationProtected(ply.getLocation())) { ply.sendMessage(PolarityErrors.XERROR_PROTECTED.getDesc()); return; }
+        if(Utilities.isLocationProtected(ply.getLocation()) || Utilities.getOrCreateWorldInfo(ply.getWorld()).isGameWorld()) { ply.sendMessage(PolarityErrors.PROTECTED.getDesc()); return; }
 
         Vector3i chunkPosition = ply.getLocation().getChunkPosition();
         World world = ply.getWorld();
@@ -75,7 +75,7 @@ public class FactionsClaim implements CommandExecutor {
 
             Optional<Faction> optionalFaction = Utilities.getPlayerFaction(ply);
 
-            if (!optionalFaction.isPresent()) { ply.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+            if (!optionalFaction.isPresent()) { ply.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
             Faction playerFaction = optionalFaction.get();
 
@@ -83,38 +83,40 @@ public class FactionsClaim implements CommandExecutor {
 
             if(!optPermData.isPresent()) { return; }
 
-            if (!optPermData.get().getClaim()) { ply.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+            if (!optPermData.get().getClaim()) { ply.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
-            if(!isChunkAdjacentToClaimedChunks(worldInfo, playerFaction.getUniqueId(), chunkPosition)) { ply.sendMessage(PolarityErrors.XERROR_NONADJCHUNK.getDesc()); return; }
+            if(!isChunkAdjacentToClaimedChunks(worldInfo, playerFaction.getUniqueId(), chunkPosition)) { ply.sendMessage(PolarityErrors.NONADJCHUNK.getDesc()); return; }
 
-            if(!Polarity.getEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+            if(!Polarity.getEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
             PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
-            if(!economyService.getOrCreateAccount(playerFaction.getUniqueId()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+            if(!economyService.getOrCreateAccount(playerFaction.getUniqueId()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
             PolarityCurrency dollarCurrency = new PolarityCurrency();
 
-            TransactionResult result = economyService.getOrCreateAccount(playerFaction.getUniqueId()).get().withdraw(dollarCurrency, BigDecimal.valueOf(125.0), Cause.of(EventContext.empty(), ply));
+            int numClaimedChunks = Utilities.getAllFactionClaims(playerFaction.getUniqueId()).size() + 1;
+
+            TransactionResult result = economyService.getOrCreateAccount(playerFaction.getUniqueId()).get().withdraw(dollarCurrency, BigDecimal.valueOf(2500 * (numClaimedChunks / 10.0)), Cause.of(EventContext.empty(), ply));
 
             switch (result.getResult()){
 
                 case SUCCESS:
 
                     worldInfo.addClaim(chunkPosition, playerFaction.getUniqueId());
-                    ply.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, ply.getPosition(), 0.75);
-                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Chunk successfully claimed! " , ply.getLocation().getChunkPosition().toString(), " | Paid ", dollarCurrency.format(BigDecimal.valueOf(125.0f), 2), TextColors.GREEN, "."));
+                    ply.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, ply.getPosition(), .25);
+                    ply.sendMessage(Text.of(TextColors.GREEN, "Chunk successfully claimed! " , ply.getLocation().getChunkPosition().toString(), " | Paid ", dollarCurrency.format(BigDecimal.valueOf(2500 * (numClaimedChunks / 10.0)), 2), TextColors.GREEN, "."));
                     Polarity.getPolarity().writeAllConfig();
                     return;
 
                     case ACCOUNT_NO_FUNDS:
 
-                        ply.sendMessage(Text.of(TextColors.RED, "[Economy] | You faction does not have enough money to do that!"));
+                        ply.sendMessage(Text.of(TextColors.RED, "You faction does not have enough money to do that!"));
                         return;
 
             }
 
-            ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+            ply.sendMessage(Text.of(TextColors.RED, "Transaction Failed!"));
 
 
         } else {
@@ -123,12 +125,12 @@ public class FactionsClaim implements CommandExecutor {
 
             if(optFaction.isPresent()){
 
-                ply.sendMessage(Text.of(TextColors.AQUA, "[Factions] | This chunk is already claimed. Owned by ", optFaction.get().getDisplayName(), TextColors.AQUA, "."));
+                ply.sendMessage(Text.of(TextColors.AQUA, "This chunk is already claimed. Owned by ", optFaction.get().getDisplayName(), TextColors.AQUA, "."));
 
             }
             else{
 
-                ply.sendMessage(Text.of(TextColors.AQUA, "[Factions] | This chunk is already claimed."));
+                ply.sendMessage(Text.of(TextColors.AQUA, "This chunk is already claimed."));
 
             }
 

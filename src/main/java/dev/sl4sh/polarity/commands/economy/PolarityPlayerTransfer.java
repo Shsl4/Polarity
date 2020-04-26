@@ -30,7 +30,7 @@ public class PolarityPlayerTransfer implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Transfer money to another player's account."))
-                .permission("polarity.playertransfer")
+                .permission("polarity.transfer.player")
                 .arguments(GenericArguments.player(Text.of("targetPlayer")), GenericArguments.bigDecimal(Text.of("amount")))
                 .executor(new PolarityPlayerTransfer())
                 .build();
@@ -54,7 +54,7 @@ public class PolarityPlayerTransfer implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -64,7 +64,7 @@ public class PolarityPlayerTransfer implements CommandExecutor {
 
     private void depositToPlayer(Player caller, Player target, BigDecimal amount){
 
-        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | You can't transfer money to yourself.")); return; }
+        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "You can't transfer money to yourself.")); return; }
 
         // The economy service will always be present as the command is registered only if the economy service registered
         PolarityEconomyService economyService = Polarity.getEconomyService().get();
@@ -72,9 +72,9 @@ public class PolarityPlayerTransfer implements CommandExecutor {
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
         Optional<UniqueAccount> optTargetAccount = economyService.getOrCreateAccount(target.getUniqueId());
 
-        if(!optCallerAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access your account. Please try again later.")); return; }
+        if(!optCallerAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access your account. Please try again later.")); return; }
 
-        if(!optTargetAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access your target's account. Please try again later.")); return; }
+        if(!optTargetAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access your target's account. Please try again later.")); return; }
 
         UniqueAccount callerAccount = optCallerAccount.get();
         UniqueAccount targetAccount = optTargetAccount.get();
@@ -87,18 +87,18 @@ public class PolarityPlayerTransfer implements CommandExecutor {
 
             case SUCCESS:
 
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Economy] | Successfully deposited ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", targetAccount.getDisplayName(), TextColors.GREEN, "!"));
-                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), 0.75);
+                caller.sendMessage(Text.of(TextColors.GREEN, "Successfully deposited ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", targetAccount.getDisplayName(), TextColors.GREEN, "!"));
+                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), .25);
                 return;
 
             case ACCOUNT_NO_FUNDS:
 
-                caller.sendMessage(Text.of(TextColors.RED, "[Economy] | You do not have enough money to do that!"));
+                caller.sendMessage(Text.of(TextColors.RED, "You do not have enough money to do that!"));
                 return;
 
         }
 
-        caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+        caller.sendMessage(Text.of(TextColors.RED, "Transaction Failed!"));
 
     }
 

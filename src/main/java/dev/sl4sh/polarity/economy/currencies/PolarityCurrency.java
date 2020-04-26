@@ -40,7 +40,7 @@ public class PolarityCurrency implements Currency {
 
     @Override
     public String getId() {
-        return "xdollar";
+        return "polaritycurrency";
     }
 
     @Override

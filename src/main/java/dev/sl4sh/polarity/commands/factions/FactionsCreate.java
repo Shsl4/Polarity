@@ -5,7 +5,7 @@ import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.enums.PolarityInfo;
-import dev.sl4sh.polarity.tablist.TabListManager;
+import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -47,21 +47,21 @@ public class FactionsCreate implements CommandExecutor {
 
                 if(!createFaction(caller, args.getOne("factionName").get().toString().toLowerCase())){
 
-                    caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+                    caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), .25);
 
                 }
 
             }
             else{
 
-                caller.sendMessage(PolarityErrors.XERROR_UNKNOWN.getDesc());
+                caller.sendMessage(PolarityErrors.UNKNOWN.getDesc());
 
             }
 
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -78,12 +78,13 @@ public class FactionsCreate implements CommandExecutor {
             if(!Utilities.doesFactionExistByName(factionName)){
 
                 Faction faction = new Faction(factionName, caller);
+                faction.getFactionChannel().addMember(caller);
 
                 @Nonnull List<Faction> factions = Polarity.getFactions().getList();
 
                 factions.add(faction);
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully created your faction named " , factionName , "!"));
-                caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), 0.75);
+                caller.sendMessage(Text.of(TextColors.GREEN, "Successfully created your faction named " , factionName , "!"));
+                caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), .25);
                 Polarity.getPolarity().writeAllConfig();
                 TabListManager.refreshTabLists();
                 return true;
@@ -91,7 +92,7 @@ public class FactionsCreate implements CommandExecutor {
             }
             else{
 
-                caller.sendMessage(Text.of(TextColors.RED, "[Factions] | A faction named " , factionName , " already exists!"));
+                caller.sendMessage(Text.of(TextColors.RED, "A faction named " , factionName , " already exists!"));
 
             }
 

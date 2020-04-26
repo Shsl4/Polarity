@@ -3,11 +3,16 @@ package dev.sl4sh.polarity.data;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.chat.WorldChannel;
+import dev.sl4sh.polarity.games.PositionSnapshot;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.text.channel.MessageChannel;
+import org.spongepowered.api.text.channel.MessageReceiver;
+import org.spongepowered.api.text.channel.type.WorldMessageChannel;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -23,18 +28,18 @@ public class WorldInfo implements Serializable {
 
     @Nonnull
     @Setting(value = "warps")
-    private Map<String, Vector3d> warps = new LinkedHashMap<>();
+    private final Map<String, Vector3d> warps = new LinkedHashMap<>();
 
     @Setting(value = "isDimensionProtected")
-    private Boolean isDimensionProtected = false;
+    private Boolean isWorldProtected = false;
 
     @Nonnull
     @Setting(value = "worldFactionHomes")
-    private Map<UUID, Vector3d> worldFactionHomes = new LinkedHashMap<>();
+    private final Map<UUID, Vector3d> worldFactionHomes = new LinkedHashMap<>();
 
     @Nonnull
     @Setting(value = "worldFactionClaims")
-    private Map<UUID, List<Vector3i>> worldFactionClaims = new LinkedHashMap<>();
+    private final Map<UUID, List<Vector3i>> worldFactionClaims = new LinkedHashMap<>();
 
     @Setting(value = "targetWorld")
     private UUID worldUniqueID;
@@ -42,13 +47,28 @@ public class WorldInfo implements Serializable {
     @Setting(value = "isGameWorld")
     private boolean isGameWorld;
 
-    // This list contains players who must take damage, even if they are in a protected area
-    // An example of usage case could be when players are playing a MiniGame in the hub.
     @Nonnull
-    private List<Player> forcedDamageTakers = new ArrayList<>();
+    private final Map<Player, Task> recentDamageMap = new LinkedHashMap<>();
 
     @Nonnull
-    private Map<Player, Task> recentDamageMap = new LinkedHashMap<>();
+    @Setting(value = "positionSnapshots")
+    private List<PositionSnapshot> positionSnapshots = new ArrayList<>();
+
+    @Nonnull
+    public List<PositionSnapshot> getPositionSnapshots() {
+        return positionSnapshots;
+    }
+
+    @Nonnull
+    public Map<UUID, List<Vector3i>> getWorldFactionClaims() {
+        return worldFactionClaims;
+    }
+
+    @Nonnull
+    private final WorldChannel messageChannel = new WorldChannel(new ArrayList<>(getTargetWorld().isPresent() ? getTargetWorld().get().getPlayers() : new ArrayList<>()));
+
+    @Nonnull
+    public WorldChannel getMessageChannel() { return this.messageChannel; }
 
     public boolean isClaimed(Vector3i chunkLocation){
 
@@ -106,10 +126,9 @@ public class WorldInfo implements Serializable {
 
     }
 
-    @Nonnull
-    public UUID addClaim(@Nonnull Vector3i chunkPos, @Nonnull UUID factionID){
+    public void addClaim(@Nonnull Vector3i chunkPos, @Nonnull UUID factionID){
 
-        if(isClaimed(chunkPos)) { return getClaimedChunkFaction(chunkPos).get(); }
+        if(isClaimed(chunkPos)) { return; }
 
         List<Vector3i> claims;
 
@@ -125,8 +144,6 @@ public class WorldInfo implements Serializable {
 
         claims.add(chunkPos);
         worldFactionClaims.put(factionID, claims);
-
-        return factionID;
 
     }
 
@@ -152,7 +169,14 @@ public class WorldInfo implements Serializable {
 
     }
 
+    @Deprecated
     public WorldInfo() {}
+
+    public void addPositionSnapshot(Vector3d location, Vector3d rotation, String tag){
+
+        positionSnapshots.add(new PositionSnapshot(location, rotation, tag));
+
+    }
 
     public WorldInfo(World targetWorld) {
 
@@ -160,12 +184,12 @@ public class WorldInfo implements Serializable {
 
     }
 
-    public WorldInfo(World targetWorld, @Nonnull List<Vector3i> worldProtectedChunks, @Nonnull Map<String, Vector3d> warps, boolean isDimensionProtected) {
+    public WorldInfo(World targetWorld, @Nonnull List<Vector3i> worldProtectedChunks, @Nonnull List<PositionSnapshot> positionSnapshots, boolean isWorldProtected) {
 
         this(targetWorld);
         this.worldProtectedChunks = worldProtectedChunks;
-        this.warps = warps;
-        this.isDimensionProtected = isDimensionProtected;
+        this.positionSnapshots = positionSnapshots;
+        this.isWorldProtected = isWorldProtected;
 
     }
 
@@ -174,17 +198,9 @@ public class WorldInfo implements Serializable {
         return worldProtectedChunks;
     }
 
-    public void setWorldProtectedChunks(@Nonnull List<Vector3i> worldProtectedChunks) {
-        this.worldProtectedChunks = worldProtectedChunks;
-    }
-
     @Nonnull
     public Map<String, Vector3d> getWarps() {
         return warps;
-    }
-
-    public void setWarps(@Nonnull  Map<String, Vector3d> warps) {
-        this.warps = warps;
     }
 
     public List<String> getWarpNames(){
@@ -197,16 +213,12 @@ public class WorldInfo implements Serializable {
         return worldUniqueID == null ? Optional.empty() : Sponge.getServer().getWorld(worldUniqueID);
     }
 
-    public void setTargetWorld(World targetWorld) {
-        this.worldUniqueID = targetWorld.getUniqueId();
-    }
-
     public void setDimensionProtected(boolean dimensionProtected) {
-        isDimensionProtected = dimensionProtected;
+        isWorldProtected = dimensionProtected;
     }
 
     public boolean isWorldProtected() {
-        return this.isDimensionProtected;
+        return this.isWorldProtected;
     }
     
     @Nonnull
@@ -214,29 +226,15 @@ public class WorldInfo implements Serializable {
         return worldFactionHomes;
     }
 
-    public void setWorldFactionHomes(@Nonnull Map<UUID, Vector3d> worldFactionHomes) {
-        this.worldFactionHomes = worldFactionHomes;
-    }
-
-    @Nonnull
-    public List<Player> getForcedDamageTakers() {
-        return forcedDamageTakers;
-    }
-
     @Nonnull
     public Map<Player, Task> getRecentDamageMap() {
         return recentDamageMap;
     }
 
-    public void setRecentDamageMap(@Nonnull Map<Player, Task> recentDamageMap) {
-        this.recentDamageMap = recentDamageMap;
-    }
-
-    public void setGameWorld(boolean gameWorld) {
+    public void setIsGameWorld(boolean gameWorld) {
         isGameWorld = gameWorld;
     }
 
-    public boolean isGameWorld() {
-        return isGameWorld;
-    }
+    public boolean isGameWorld() { return isGameWorld; }
+
 }

@@ -2,10 +2,11 @@ package dev.sl4sh.polarity.commands.factions;
 
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.economy.PolarityAccount;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.data.factions.FactionMemberData;
-import dev.sl4sh.polarity.tablist.TabListManager;
+import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -41,14 +42,14 @@ public class FactionsDisband implements CommandExecutor {
 
             if(!disbandFaction(caller)){
 
-                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.25);
 
             }
 
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -71,10 +72,18 @@ public class FactionsDisband implements CommandExecutor {
                     if(Utilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).isPresent()){
 
                         Player factionPlayer = Utilities.getPlayerByUniqueID(memberData.getPlayerUniqueID()).get();
-                        factionPlayer.sendMessage(Text.of(TextColors.RED, "[Factions] | Your faction has been disbanded by the owner. (", caller.getName(), ")"));
-                        factionPlayer.playSound(SoundTypes.AMBIENT_CAVE, factionPlayer.getPosition(), 0.75);
+                        factionPlayer.sendMessage(Text.of(TextColors.RED, "Your faction has been disbanded by the owner. (", caller.getName(), ")"));
+                        factionPlayer.playSound(SoundTypes.AMBIENT_CAVE, factionPlayer.getPosition(), .25);
 
                     }
+
+                }
+
+                Utilities.removeAllFactionClaims(pendingDeleteFaction.getUniqueId());
+
+                if(Polarity.getEconomyService().isPresent()){
+
+                    Polarity.getAccounts().remove((PolarityAccount)Polarity.getEconomyService().get().getOrCreateAccount(pendingDeleteFaction.getUniqueId()).get());
 
                 }
 
@@ -86,14 +95,14 @@ public class FactionsDisband implements CommandExecutor {
             }
             else{
 
-                caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | The faction can only be disbanded by the owner."));
+                caller.sendMessage(Text.of(TextColors.AQUA, "The faction can only be disbanded by the owner."));
 
             }
 
         }
         else{
 
-            caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+            caller.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
         }
 

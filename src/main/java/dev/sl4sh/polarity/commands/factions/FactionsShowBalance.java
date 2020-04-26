@@ -51,24 +51,24 @@ public class FactionsShowBalance implements CommandExecutor {
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
-        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
-        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(Text.of(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(Text.of(PolarityErrors.UNAUTHORIZED.getDesc())); return; }
 
-        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
         PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
         Faction callerFaction = optCallerFaction.get();
 
-        if(!economyService.getOrCreateAccount(callerFaction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!economyService.getOrCreateAccount(callerFaction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
         Account factionAccount = economyService.getOrCreateAccount(callerFaction.getUniqueId()).get();
 
         PolarityCurrency dollarCurrency = new PolarityCurrency();
 
-        caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | Your current faction's balance is ", dollarCurrency.format(factionAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
-        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), 0.75);
+        caller.sendMessage(Text.of(TextColors.AQUA, "Your current faction's balance is ", dollarCurrency.format(factionAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
+        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), .25);
 
 
     }

@@ -56,7 +56,7 @@ public class FactionsAllyRequest implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -70,18 +70,18 @@ public class FactionsAllyRequest implements CommandExecutor {
         Optional<Faction> optTargetFaction = Utilities.getFactionByName(targetFactionName);
 
         // Return if the caller has no faction
-        if(!optTargetFaction.isPresent()) {  caller.sendMessage(Text.of(PolarityErrors.XERROR_XFNULL.getDesc())); return; }
+        if(!optTargetFaction.isPresent()) {  caller.sendMessage(Text.of(PolarityErrors.NULLFACTION.getDesc())); return; }
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
         // Return if the provided faction doesn't exist
-        if(!optCallerFaction.isPresent()) {  caller.sendMessage(Text.of(PolarityErrors.XERROR_NOXF.getDesc())); return; }
+        if(!optCallerFaction.isPresent()) {  caller.sendMessage(Text.of(PolarityErrors.NOFACTION.getDesc())); return; }
 
         // Get the safe references to our factions
         Faction targetFaction = optTargetFaction.get();
         Faction callerFaction = optCallerFaction.get();
 
-        if(callerFaction == targetFaction) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot ally your own faction!")); return;}
+        if(callerFaction == targetFaction) { caller.sendMessage(Text.of(TextColors.AQUA, "You cannot ally your own faction!")); return;}
 
         // Return if the faction is already allied
         if(targetFaction.isFactionAllied(callerFaction)) { caller.sendMessage(Text.of(PolarityInfo.XERROR_ALREADYALLIED.getDesc())); return;}
@@ -89,15 +89,15 @@ public class FactionsAllyRequest implements CommandExecutor {
         Optional<FactionMemberData> optTargetMemberData = Utilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(Text.of(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc())); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(Text.of(PolarityErrors.UNAUTHORIZED.getDesc())); return; }
 
         // Return if an ally request was already submitted to the provided faction
-        if(callerFaction.getAllyInvites().contains(targetFaction.getUniqueId())) {  caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You already submitted an ally request to this faction. Ask their owner to accept it.")); return; }
+        if(callerFaction.getAllyInvites().contains(targetFaction.getUniqueId())) {  caller.sendMessage(Text.of(TextColors.AQUA, "You already submitted an ally request to this faction. Ask their owner to accept it.")); return; }
 
         // Add the provided faction to the caller's faction alliance invitation list and notify the caller
         callerFaction.getAllyInvites().add(targetFaction.getUniqueId());
 
-        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully submitted your ally request to " , targetFaction.getDisplayName()));
+        caller.sendMessage(Text.of(TextColors.GREEN, "Successfully submitted your ally request to " , targetFaction.getDisplayName()));
 
         // For each TARGET faction's member
         for(FactionMemberData playerData : targetFaction.getMemberDataList()){
@@ -109,7 +109,7 @@ public class FactionsAllyRequest implements CommandExecutor {
 
                 // Check if the player exists / is online
                 // Notify the player that they received an alliance request
-                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "[Factions] | ", callerFaction.getDisplayName(), TextColors.RESET, TextColors.AQUA, " just sent you an alliance request! Type /factions ally accept ", callerFaction.getName(), " to accept the alliance or /factions ally decline ", callerFaction.getName(), " to decline it.")));
+                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.AQUA, "", callerFaction.getDisplayName(), TextColors.RESET, TextColors.AQUA, " just sent you an alliance request! Type /factions ally accept ", callerFaction.getName(), " to accept the alliance or /factions ally decline ", callerFaction.getName(), " to decline it.")));
 
             }
 

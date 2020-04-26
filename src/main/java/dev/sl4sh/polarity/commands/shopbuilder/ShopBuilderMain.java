@@ -15,13 +15,10 @@ public class ShopBuilderMain implements CommandExecutor {
         return CommandSpec.builder()
                 .description(Text.of("The main ShopBuilder command"))
                 .permission("polarity.shopbuilder")
-                .child(ShopBuilderSummon.getCommandSpec(), "summon")
                 .child(ShopBuilderSummonBuyer.getCommandSpec(), "summonbuyer")
                 .child(ShopBuilderList.getCommandSpec(), "list")
                 .child(ShopBuilderNew.getCommandSpec(), "new")
-                .child(ShopBuilderRemove.getCommandSpec(), "remove")
-                .child(ShopBuilderEditLayout.getCommandSpec(), "editlayout")
-                .child(ShopBuilderEditPrices.getCommandSpec(), "editprices")
+                .child(ShopBuilderEdit.getCommandSpec(), "edit")
                 .executor(new ShopBuilderMain())
                 .build();
 

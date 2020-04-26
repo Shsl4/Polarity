@@ -32,7 +32,7 @@ public class PolarityFactionTransfer implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Transfers money to a faction."))
-                .permission("polarity.factiontransfer")
+                .permission("polarity.transfer.faction")
                 .arguments(new FactionCommandElement(Text.of("factionName")), GenericArguments.bigDecimal(Text.of("amount")))
                 .executor(new PolarityFactionTransfer())
                 .build();
@@ -48,7 +48,7 @@ public class PolarityFactionTransfer implements CommandExecutor {
 
             if(!transferToFaction(caller, (BigDecimal)args.getOne("amount").get(), (String)args.getOne("factionName").get())){
 
-                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.25);
 
             }
 
@@ -62,15 +62,15 @@ public class PolarityFactionTransfer implements CommandExecutor {
 
         Optional<Faction> optTargetFaction = Utilities.getFactionByName(factionName);
 
-        if(!optTargetFaction.isPresent()) { caller.sendMessage(Text.of(PolarityErrors.XERROR_XFNULL.getDesc(), TextColors.RED, " Type /factions list to list existing factions.")); return false; }
+        if(!optTargetFaction.isPresent()) { caller.sendMessage(Text.of(PolarityErrors.NULLFACTION.getDesc(), TextColors.RED, " Type /factions list to list existing factions.")); return false; }
 
         Faction targetFaction = optTargetFaction.get();
 
-        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return false; }
 
         PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(targetFaction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(targetFaction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return false; }
 
         Account playerAccount = economyService.getOrCreateAccount(caller.getUniqueId()).get();
         Account factionAccount = economyService.getOrCreateAccount(targetFaction.getUniqueId()).get();
@@ -83,18 +83,18 @@ public class PolarityFactionTransfer implements CommandExecutor {
 
             case SUCCESS:
 
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Economy] | Successfully deposited ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", factionAccount.getDisplayName(), TextColors.GREEN, "!"));
-                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), 0.75);
+                caller.sendMessage(Text.of(TextColors.GREEN, "Successfully deposited ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", factionAccount.getDisplayName(), TextColors.GREEN, "!"));
+                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), .25);
                 return true;
 
             case ACCOUNT_NO_FUNDS:
 
-                caller.sendMessage(Text.of(TextColors.RED, "[Economy] | You do not have enough money to do that!"));
+                caller.sendMessage(Text.of(TextColors.RED, "You do not have enough money to do that!"));
                 return false;
 
         }
 
-        caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+        caller.sendMessage(Text.of(TextColors.RED, "Transaction Failed!"));
 
         return false;
 

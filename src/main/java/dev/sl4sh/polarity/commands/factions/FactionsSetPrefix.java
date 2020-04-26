@@ -6,7 +6,7 @@ import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.enums.PolarityColors;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
-import dev.sl4sh.polarity.tablist.TabListManager;
+import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -57,7 +57,7 @@ public class FactionsSetPrefix implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -75,27 +75,27 @@ public class FactionsSetPrefix implements CommandExecutor {
 
             Optional<FactionPermissionData> optPermData = Utilities.getPlayerFactionPermissions(caller);
 
-            if(!optPermData.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+            if(!optPermData.isPresent()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
             if(optPermData.get().getManage()){
 
                 if(factionPrefix.equals("")){
 
                     xFac.setPrefix("");
-                    caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully removed your faction's prefix."));
+                    caller.sendMessage(Text.of(TextColors.GREEN, "Successfully removed your faction's prefix."));
 
                 }
                 else{
 
                     if(Utilities.getStringWithoutModifiers(factionPrefix).length() > 15){
 
-                        caller.sendMessage(Text.of(PolarityErrors.XERROR_LGPREFIX.getDesc()));
+                        caller.sendMessage(Text.of(PolarityErrors.LONGPREFIX.getDesc()));
                         return;
 
                     }
 
                     xFac.setPrefix(color.getStringColor() + ("[" + Utilities.getStringWithoutModifiers(factionPrefix) + "]"));
-                    caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully updated your faction's prefix."));
+                    caller.sendMessage(Text.of(TextColors.GREEN, "Successfully updated your faction's prefix."));
 
                 }
 
@@ -106,13 +106,13 @@ public class FactionsSetPrefix implements CommandExecutor {
             }
             else{
 
-                caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc());
+                caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc());
 
             }
 
         }
 
-        caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+        caller.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
 
     }

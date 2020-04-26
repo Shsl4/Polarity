@@ -3,10 +3,11 @@ package dev.sl4sh.polarity.commands.factions;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.commands.elements.FactionCommandElement;
+import dev.sl4sh.polarity.economy.PolarityAccount;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.data.factions.FactionMemberData;
-import dev.sl4sh.polarity.tablist.TabListManager;
+import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -48,13 +49,13 @@ public class FactionsForceDisband implements CommandExecutor {
 
             if(forceDisbandFaction(args.getOne("factionName").get().toString().toLowerCase())){
 
-                serv.sendMessage(Text.of(TextColors.GREEN, "[Factions] | The faction " , args.getOne("factionName").get().toString().toLowerCase() , " has been successfully disbanded."));
+                serv.sendMessage(Text.of(TextColors.GREEN, "The faction " , args.getOne("factionName").get().toString().toLowerCase() , " has been successfully disbanded."));
                 TabListManager.refreshTabLists();
 
             }
             else{
 
-                serv.sendMessage(Text.of(TextColors.RED, "[Factions] | Failed to disband the faction. Does it exists?"));
+                serv.sendMessage(Text.of(TextColors.RED, "Failed to disband the faction. Does it exists?"));
 
             }
 
@@ -62,7 +63,7 @@ public class FactionsForceDisband implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_SERVERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.SERVERCOMMAND.getDesc());
 
         }
 
@@ -91,13 +92,20 @@ public class FactionsForceDisband implements CommandExecutor {
 
             }
 
+            if(Polarity.getEconomyService().isPresent()){
+
+                Polarity.getAccounts().remove((PolarityAccount)Polarity.getEconomyService().get().getOrCreateAccount(pendingDeleteFaction.getUniqueId()).get());
+
+            }
+
+            Polarity.getFactions().remove(pendingDeleteFaction);
             factions.remove(pendingDeleteFaction);
             Polarity.getPolarity().writeAllConfig();
 
             for(Player ply : players){
 
-                ply.sendMessage(Text.of(TextColors.RED, "\u00a7l[Factions] | Your faction has been disbanded by an administrator."));
-                ply.playSound(SoundTypes.AMBIENT_CAVE, ply.getPosition(), 0.75);
+                ply.sendMessage(Text.of(TextColors.RED, "\u00a7lYour faction has been disbanded by an administrator."));
+                ply.playSound(SoundTypes.AMBIENT_CAVE, ply.getPosition(), .25);
 
             }
 

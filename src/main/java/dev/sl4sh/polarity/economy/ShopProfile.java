@@ -1,22 +1,31 @@
 package dev.sl4sh.polarity.economy;
 
+import com.google.common.reflect.TypeToken;
+import com.google.inject.internal.cglib.core.$ObjectSwitchCallback;
+import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.enums.PolarityColors;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.data.DataSerializable;
+import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.common.AbstractData;
+import org.spongepowered.api.data.persistence.AbstractDataBuilder;
+import org.spongepowered.api.data.persistence.DataTranslator;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackComparators;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @ConfigSerializable
-public class ShopProfile implements Serializable {
+public class ShopProfile extends AbstractDataBuilder<ShopProfile> implements DataSerializable, Serializable {
 
     @Nonnull
     @Setting(value = "shopRecipes")
@@ -27,15 +36,34 @@ public class ShopProfile implements Serializable {
     private String profileName = "";
 
     @Setting(value = "shopPageHeight")
-    private int shopPageHeight = 3;
+    private Integer shopPageHeight = 3;
 
-    public ShopProfile() {}
+    public ShopProfile() {
+        super(ShopProfile.class, 0);
+    }
 
     public ShopProfile(List<ShopRecipe> shopRecipes, String profileName, int shopPageHeight) {
+        super(ShopProfile.class, 0);
 
         this.shopRecipes = shopRecipes;
         this.profileName = profileName;
         this.shopPageHeight = shopPageHeight;
+
+    }
+
+    public Optional<ShopRecipe> getRecipeWithIndex(int index){
+
+        for(ShopRecipe recipe : shopRecipes){
+
+            if(recipe.getIndex() == index){
+
+                return Optional.of(recipe);
+
+            }
+
+        }
+
+        return Optional.empty();
 
     }
 
@@ -78,7 +106,7 @@ public class ShopProfile implements Serializable {
             int snapVal = (int)snapDamage.get(DataQuery.of("UnsafeDamage")).get();
             int testVal = (int)testDamage.get(DataQuery.of("UnsafeDamage")).get();
 
-            if(ItemStackComparators.TYPE_SIZE.compare(recipe.getTargetItem().createStack(), editedSnap) == 0 &&
+            if(ItemStackComparators.TYPE.compare(recipe.getTargetItem().createStack(), editedSnap) == 0 &&
                     ItemStackComparators.PROPERTIES.compare(recipe.getTargetItem().createStack(), editedSnap) == 0 &&
                     snapVal == testVal){
 
@@ -92,4 +120,34 @@ public class ShopProfile implements Serializable {
 
     }
 
+    @Override
+    public int getContentVersion() {
+        return 0;
+    }
+
+    @Override
+    public DataContainer toContainer() {
+        return DataContainer.createNew().set(DataQuery.of("RecipeValues"), this.shopRecipes)
+                .set(DataQuery.of("ProfileName"), this.profileName)
+                .set(DataQuery.of("PageHeight"), this.shopPageHeight);
+    }
+
+
+    @Override
+    public Optional<ShopProfile> buildContent(DataView container) throws InvalidDataException {
+
+        this.shopPageHeight = container.getInt(DataQuery.of("PageHeight")).get();
+        this.profileName = container.getString(DataQuery.of("ProfileName")).get();
+        this.shopRecipes = new ArrayList<>();
+
+        for(Object object : container.getList(DataQuery.of("RecipeValues")).get()){
+
+            DataView view = (DataView)object;
+            this.shopRecipes.add(new ShopRecipe().buildContent(view).get());
+
+        }
+
+        return Optional.of(this);
+
+    }
 }

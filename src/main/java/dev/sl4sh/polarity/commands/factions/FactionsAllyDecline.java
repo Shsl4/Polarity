@@ -56,7 +56,7 @@ public class FactionsAllyDecline implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -69,12 +69,12 @@ public class FactionsAllyDecline implements CommandExecutor {
         Optional<Faction> optTargetFaction = Utilities.getFactionByName(targetFactionName);
 
         // Return if the caller has no faction
-        if(!optTargetFaction.isPresent()) {  caller.sendMessage(PolarityErrors.XERROR_XFNULL.getDesc()); return; }
+        if(!optTargetFaction.isPresent()) {  caller.sendMessage(PolarityErrors.NULLFACTION.getDesc()); return; }
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
         // Return if the provided faction doesn't exist
-        if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         // Get the safe references to our factions
         Faction targetFaction = optTargetFaction.get();
@@ -83,16 +83,16 @@ public class FactionsAllyDecline implements CommandExecutor {
         Optional<FactionMemberData> optTargetMemberData = Utilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
         // Return if no alliance request was sent by the provided faction
-        if(!targetFaction.getAllyInvites().contains(callerFaction.getUniqueId())) { caller.sendMessage(PolarityErrors.XERROR_NOALLYRQ.getDesc()); return; }
+        if(!targetFaction.getAllyInvites().contains(callerFaction.getUniqueId())) { caller.sendMessage(PolarityErrors.FACTION_NOALLYREQUEST.getDesc()); return; }
 
         // Remove the alliance request from the caller's faction
         targetFaction.getAllyInvites().remove(callerFaction.getUniqueId());
 
         // Send info message
-        caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You declined ", targetFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, "'s alliance request."));
+        caller.sendMessage(Text.of(TextColors.AQUA, "You declined ", targetFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, "'s alliance request."));
 
         // For each TARGET faction's member
         for(FactionMemberData playerData : targetFaction.getMemberDataList()){
@@ -103,7 +103,7 @@ public class FactionsAllyDecline implements CommandExecutor {
                 Optional<Player> optTargetFactionConfigPlayer = Utilities.getPlayerByUniqueID(playerData.getPlayerUniqueID());
 
                 // Check if the player exists / is online, Notify the player that their alliance request has been declined
-                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "[Factions] | ", callerFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
+                optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "", callerFaction.getDisplayName(), TextColors.RESET, TextColors.LIGHT_PURPLE, " declined your alliance request.")));
 
             }
 

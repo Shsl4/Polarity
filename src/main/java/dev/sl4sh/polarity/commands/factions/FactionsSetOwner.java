@@ -47,14 +47,14 @@ public class FactionsSetOwner implements CommandExecutor {
             }
             else{
 
-                ply.sendMessage(Text.of(PolarityErrors.XERROR_NULLPLAYER.getDesc()));
+                ply.sendMessage(Text.of(PolarityErrors.NULLPLAYER.getDesc()));
 
             }
 
         }
         else{
 
-            src.sendMessage(Text.of(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc()));
+            src.sendMessage(Text.of(PolarityErrors.PLAYERCOMMAND.getDesc()));
 
         }
 
@@ -63,19 +63,19 @@ public class FactionsSetOwner implements CommandExecutor {
 
     private void setFactionOwner(Player caller, Player newOwner){
 
-        if(caller == newOwner) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You are already the owner of this faction.")); return; }
+        if(caller == newOwner) { caller.sendMessage(Text.of(TextColors.AQUA, "You are already the owner of this faction.")); return; }
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
-        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         Faction callerFaction = optCallerFaction.get();
 
         Optional<Faction> optTargetFaction = Utilities.getPlayerFaction(newOwner);
 
-        if(!optTargetFaction.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOTAMEMBER.getDesc()); return; }
+        if(!optTargetFaction.isPresent()) { caller.sendMessage(PolarityErrors.FACTION_NOTAMEMBER.getDesc()); return; }
 
-        if(optTargetFaction.get() != callerFaction) { caller.sendMessage(PolarityErrors.XERROR_NOTAMEMBER.getDesc()); return; }
+        if(optTargetFaction.get() != callerFaction) { caller.sendMessage(PolarityErrors.FACTION_NOTAMEMBER.getDesc()); return; }
 
         if(callerFaction.isOwner(caller)){
 
@@ -84,20 +84,20 @@ public class FactionsSetOwner implements CommandExecutor {
                 callerFaction.setOwner(newOwner.getUniqueId());
                 Polarity.getPolarity().writeAllConfig();
 
-                caller.sendMessage(Text.of(TextColors.GREEN , "[Factions] | Successfully set " , TextColors.LIGHT_PURPLE , newOwner.getName() , TextColors.GREEN , " as the new faction owner!"));
-                newOwner.sendMessage(Text.of(TextColors.AQUA , "[Factions] | " , TextColors.LIGHT_PURPLE , caller.getName() , TextColors.AQUA , " just set you as the new owner of the faction!"));
+                caller.sendMessage(Text.of(TextColors.GREEN , "Successfully set " , TextColors.LIGHT_PURPLE , newOwner.getName() , TextColors.GREEN , " as the new faction owner!"));
+                newOwner.sendMessage(Text.of(TextColors.AQUA , "" , TextColors.LIGHT_PURPLE , caller.getName() , TextColors.AQUA , " just set you as the new owner of the faction!"));
 
             }
             else{
 
-                caller.sendMessage(PolarityErrors.XERROR_UNKNOWN.getDesc());
+                caller.sendMessage(PolarityErrors.UNKNOWN.getDesc());
 
             }
 
         }
         else{
 
-            caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc());
+            caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc());
 
         }
 

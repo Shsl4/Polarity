@@ -60,14 +60,14 @@ public class FactionsListAllies implements CommandExecutor {
 
                 Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
-                if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+                if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
                 optCallerFaction.get().listAllies(caller);
 
             }
             else{
 
-                src.sendMessage(Text.of(TextColors.AQUA, "[Factions] | As you are not a player, you need to specify a faction name"));
+                src.sendMessage(Text.of(TextColors.AQUA, "As you are not a player, you need to specify a faction name"));
 
             }
 
@@ -76,7 +76,7 @@ public class FactionsListAllies implements CommandExecutor {
 
             Optional<Faction> optTargetFaction = Utilities.getFactionByName(targetFactionName);
 
-            if(!optTargetFaction.isPresent()) { src.sendMessage(PolarityErrors.XERROR_XFNULL.getDesc()); return; }
+            if(!optTargetFaction.isPresent()) { src.sendMessage(PolarityErrors.NULLFACTION.getDesc()); return; }
 
             optTargetFaction.get().listAllies(src);
 

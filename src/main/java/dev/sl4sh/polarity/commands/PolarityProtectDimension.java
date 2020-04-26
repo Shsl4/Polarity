@@ -39,12 +39,12 @@ public class PolarityProtectDimension implements CommandExecutor {
                 worldInfo.setDimensionProtected(true);
                 Polarity.getPolarity().writeAllConfig();
 
-                caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | New dimension protected!"));
+                caller.sendMessage(Text.of(TextColors.AQUA, "New dimension protected!"));
                 return CommandResult.success();
 
             }
 
-            caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | This dimension is already protected."));
+            caller.sendMessage(Text.of(TextColors.AQUA, "This dimension is already protected."));
 
         }
 

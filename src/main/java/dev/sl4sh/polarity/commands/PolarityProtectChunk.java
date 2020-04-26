@@ -39,7 +39,7 @@ public class PolarityProtectChunk implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -57,13 +57,13 @@ public class PolarityProtectChunk implements CommandExecutor {
             // If not set the hub's location and write the configuration file.
             worldInfo.getWorldProtectedChunks().add(caller.getLocation().getChunkPosition());
             Polarity.getPolarity().writeAllConfig();
-            caller.sendMessage(Text.of(TextColors.GREEN, "[Polarity] | Added a protected chunk: " , caller.getLocation().getChunkPosition().toString()));
+            caller.sendMessage(Text.of(TextColors.GREEN, "Added a protected chunk: " , caller.getLocation().getChunkPosition().toString()));
 
         }
         // If true print a message.
         else{
 
-            caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | This chunk already protected."));
+            caller.sendMessage(Text.of(TextColors.AQUA, "This chunk already protected."));
 
         }
 

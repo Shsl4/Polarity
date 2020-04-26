@@ -1,6 +1,7 @@
 package dev.sl4sh.polarity.commands.shopbuilder;
 
-import dev.sl4sh.polarity.economy.shops.merchants.BuyerNPC;
+import dev.sl4sh.polarity.NPCManager;
+import dev.sl4sh.polarity.Polarity;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -29,7 +30,7 @@ public class ShopBuilderSummonBuyer implements CommandExecutor {
 
             Player caller = (Player)src;
 
-            BuyerNPC.summonNPC(caller.getWorld(), caller);
+            Polarity.getNPCManager().makeBuyerNPC(caller.getLocation());
 
         }
 

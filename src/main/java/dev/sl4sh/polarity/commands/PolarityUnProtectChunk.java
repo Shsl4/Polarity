@@ -40,7 +40,7 @@ public class PolarityUnProtectChunk implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -59,13 +59,13 @@ public class PolarityUnProtectChunk implements CommandExecutor {
             // Remove the protected chunk and save the configuration.
            worldInfo.getWorldProtectedChunks().remove(chunkPos);
            Polarity.getPolarity().writeAllConfig();
-           caller.sendMessage(Text.of(TextColors.GREEN, "[Polarity] | Removed a protected chunk: ", chunkPos.toString()));
+           caller.sendMessage(Text.of(TextColors.GREEN, "Removed a protected chunk: ", chunkPos.toString()));
 
         }
         // else print a message
         else{
 
-            caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | This chunk is not protected."));
+            caller.sendMessage(Text.of(TextColors.AQUA, "This chunk is not protected."));
 
         }
 

@@ -7,6 +7,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -84,15 +85,15 @@ public class ShopProfilesContainer implements PolarityContainer<ShopProfile> {
     }
 
     @Nonnull
-    public Map<ItemType, Float> getSaleableItems(){
+    public Map<ItemStackSnapshot, Float> getSaleableItems(){
 
-        Map<ItemType, Float> returnMap = new LinkedHashMap<>();
+        Map<ItemStackSnapshot, Float> returnMap = new LinkedHashMap<>();
 
         for(ShopProfile shopProfile : this.getList()){
 
             for(ShopRecipe recipe : shopProfile.getShopRecipes()){
 
-                returnMap.put(recipe.getTargetItem().getType(), (recipe.getPrice() / recipe.getTargetItem().getQuantity()) / 2);
+                returnMap.put(recipe.getTargetItem(), (recipe.getPrice() / recipe.getTargetItem().getQuantity()) / 2);
 
             }
 
@@ -104,7 +105,7 @@ public class ShopProfilesContainer implements PolarityContainer<ShopProfile> {
 
     public float getSellPrice(ItemStack stack){
 
-        return getSaleableItems().get(stack.getType()) == null ? 0.0f : getSaleableItems().get(stack.getType());
+        return getSaleableItems().get(stack.createSnapshot()) == null ? 0.0f : getSaleableItems().get(stack.createSnapshot());
 
     }
 

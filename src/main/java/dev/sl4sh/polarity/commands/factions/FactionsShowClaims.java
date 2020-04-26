@@ -46,7 +46,7 @@ public class FactionsShowClaims implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -58,16 +58,16 @@ public class FactionsShowClaims implements CommandExecutor {
 
        Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(Caller);
 
-        if(!optCallerFaction.isPresent()) { Caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) { Caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         Faction callerFaction = optCallerFaction.get();
         List<Vector3i> factionClaims = Utilities.getFactionClaimsInWorld(callerFaction.getUniqueId(), Caller.getWorld());
 
-        if(factionClaims.size() <= 0) { Caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | Your faction does not have any claims in this dimension.")); return; }
+        if(factionClaims.size() <= 0) { Caller.sendMessage(Text.of(TextColors.AQUA, "Your faction does not have any claims in this dimension.")); return; }
 
         for(Vector3i ChunkLoc : factionClaims){
 
-            if(!Caller.getWorld().getChunk(ChunkLoc).isPresent()) { PolarityErrors.XERROR_UNKNOWN.getDesc(); return; }
+            if(!Caller.getWorld().getChunk(ChunkLoc).isPresent()) { PolarityErrors.UNKNOWN.getDesc(); return; }
 
             Vector3d ChunkMax = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMax().toDouble();
             Vector3d ChunkMin = Caller.getWorld().getChunk(ChunkLoc).get().getBlockMin().toDouble();

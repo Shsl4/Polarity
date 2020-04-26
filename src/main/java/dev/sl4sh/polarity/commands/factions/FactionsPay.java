@@ -47,12 +47,12 @@ public class FactionsPay implements CommandExecutor {
 
             if(payPlayer(caller, (Player)args.getOne("playerName").get(), (BigDecimal)args.getOne("amount").get())){
 
-                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), 0.75);
+                caller.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, caller.getPosition(), 0.25);
 
             }
             else{
 
-                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.75);
+                caller.playSound(SoundTypes.BLOCK_NOTE_BASS, caller.getPosition(), 0.25);
 
             }
 
@@ -67,21 +67,21 @@ public class FactionsPay implements CommandExecutor {
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
         Optional<Faction> optTargetFaction = Utilities.getPlayerFaction(target);
 
-        if(!optCallerFaction.isPresent()) { caller.sendMessage(Text.of(PolarityErrors.XERROR_NOXF.getDesc())); return false; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(Text.of(PolarityErrors.NOFACTION.getDesc())); return false; }
 
-        if(!optTargetFaction.isPresent() || !optCallerFaction.get().equals(optTargetFaction.get())) { caller.sendMessage(Text.of(PolarityErrors.XERROR_NOTAMEMBER.getDesc())); return false; }
+        if(!optTargetFaction.isPresent() || !optCallerFaction.get().equals(optTargetFaction.get())) { caller.sendMessage(Text.of(PolarityErrors.FACTION_NOTAMEMBER.getDesc())); return false; }
 
-        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) {caller.sendMessage(Text.of(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc())); return false; }
+        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) {caller.sendMessage(Text.of(PolarityErrors.UNAUTHORIZED.getDesc())); return false; }
 
-        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | You cannot pay yourself. Use /factions withdraw instead")); return false; }
+        if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "You cannot pay yourself. Use /factions withdraw instead")); return false; }
 
         Faction faction = optCallerFaction.get();
 
-        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return false; }
 
         PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return false; }
+        if(!economyService.getOrCreateAccount(target.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(faction.getUniqueId()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return false; }
 
         Account targetAccount = economyService.getOrCreateAccount(target.getUniqueId()).get();
         Account factionAccount = economyService.getOrCreateAccount(faction.getUniqueId()).get();
@@ -94,17 +94,17 @@ public class FactionsPay implements CommandExecutor {
 
             case SUCCESS:
 
-                caller.sendMessage(Text.of(TextColors.GREEN, "[Economy] | Successfully transferred ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", TextColors.LIGHT_PURPLE, target.getName(), TextColors.GREEN, TextColors.GREEN, "!"));
+                caller.sendMessage(Text.of(TextColors.GREEN, "Successfully transferred ", dollarCurrency.format(amount, 2), TextColors.GREEN, " to ", TextColors.LIGHT_PURPLE, target.getName(), TextColors.GREEN, TextColors.GREEN, "!"));
                 return true;
 
             case ACCOUNT_NO_FUNDS:
 
-                caller.sendMessage(Text.of(TextColors.RED, "[Economy] | You faction does not have enough money to do that!"));
+                caller.sendMessage(Text.of(TextColors.RED, "You faction does not have enough money to do that!"));
                 return false;
 
         }
 
-        caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+        caller.sendMessage(Text.of(TextColors.RED, "Transaction Failed!"));
         return false;
 
     }

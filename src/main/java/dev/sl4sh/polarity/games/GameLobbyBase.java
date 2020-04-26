@@ -1,118 +1,147 @@
 package dev.sl4sh.polarity.games;
 
+import dev.sl4sh.polarity.commands.PolarityWarp;
 import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.data.WorldInfo;
+import dev.sl4sh.polarity.enums.PolarityColors;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.difficulty.Difficulties;
+import org.spongepowered.api.world.storage.WorldProperties;
 
-import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-/**
- * This interface is the base object for {@link Polarity}'s game lobbies.
- * No implementation is provided and it is recommended to inherit {@link AbstractGameLobby} instead if you want to create a game lobby
- * @param <T> The lobby's associated {@link GameBase} object
- */
-public interface GameLobbyBase<T extends GameBase> {
+public class GameLobbyBase implements GameLobby {
 
-    /**
-     * This method should return the world the lobby is located in
-     * @return The lobby's world
-     */
-    World getLobbyWorld();
+    private World lobbyWorld;
+    private boolean lobbyValid;
 
-    /**
-     * This method should return the lobby's name. Used for displaying
-     * @return The lobby's name
-     */
-    @Nonnull
-    String getLobbyName();
+    @Override
+    public final World getLobbyWorld(){ return lobbyWorld; }
 
-    /**
-     * This method should return a list containing all the players who will be playing the game
-     * @return The player list
-     */
-    @Nonnull
-    List<Player> getRegisteredPlayers();
+    @Override
+    public final boolean isValidLobby() { return lobbyValid && getLobbyWorld() != null; }
 
-    /**
-     * This method should return the game object associated with the lobby
-     * @return The actual game object
-     */
-    @Nonnull
-    T getGame();
+    @Override
+    public final void invalidateLobby() {
 
-    /**
-     * This method should return a scheduler {@link Task} which should call {@link #launchGame()} on execution
-     * @return An optional value of a task
-     */
-    @Nonnull
-    Optional<Task> getGameLaunchTask();
+        lobbyValid = false;
+        Sponge.getEventManager().unregisterListeners(this);
 
-    /**
-     * This method should fire when a player joins the lobby
-     * @param player The joining player
-     */
-    void onPlayerJoinedLobby(Player player);
+    }
 
-    /**
-     * This method should fire when a player leaves the lobby
-     * @param player The leaving player
-     */
-    void onPlayerLeftLobby(Player player);
+    @Override
+    public void destroyLobby() {
 
-    /**
-     * This method should be called to notify when a certain amount of time is remaining before the game launches
-     * @param timeInSeconds The actual time remaining before the game should launch
-     */
-    void notifyTimeBeforeLaunch(double timeInSeconds);
+        if(isValidLobby()){
 
-    /**
-     * This method should handle the game initialization logic
-     */
-    void launchGame();
+            Polarity.getLogger().info(PolarityColors.AQUA.getStringColor() + "Destroying game lobby " + getLobbyWorld().getName());
 
-    /**
-     * This method should handle the lobby destruction
-     */
-    void destroyLobby();
+            invalidateLobby();
 
-    /**
-     * This method should try to register a player who will participate in the game
-     * @param player The actual player
-     * @return Whether the player was successfully registered or not
-     */
-    boolean registerPlayer(Player player);
+            for(Player player : getLobbyWorld().getPlayers()){
+
+                if(!PolarityWarp.warp(player, "Hub", Polarity.getPolarity())){
+
+                    World defaultWorld = Sponge.getServer().getWorld(Sponge.getServer().getDefaultWorldName()).get();
+                    player.setLocation(new Location<>(defaultWorld, defaultWorld.getProperties().getSpawnPosition()));
+
+                }
+
+                Utilities.restoreMaxHealth(player);
+
+            }
+
+            if(getLobbyWorld().getPlayers().size() > 0){
+
+                for(Player problematicPlayer : getLobbyWorld().getPlayers()){
+
+                    problematicPlayer.kick(Text.of(TextColors.RED, "Internal Error. Please reconnect"));
+
+                }
+
+            }
+
+
+            try{
+
+                Utilities.removeWorldInfo(getLobbyWorld());
+                Sponge.getServer().unloadWorld(getLobbyWorld());
+                Sponge.getServer().deleteWorld(getLobbyWorld().getProperties());
+                this.lobbyWorld = null;
+
+            }
+            catch(IllegalStateException e){
+
+                System.out.println(PolarityColors.RED.getStringColor() + "Failed to remove lobby world " + getLobbyWorld().getName() + ". A manual removal is required.");
+
+            }
+
+        }
+
+    }
 
     /**
-     * This method should try to unregister a player who was supposed to participate in the game
-     * @param player The actual player
-     * @return Whether the player was successfully unregistered or not
+     * The game lobby constructor
+     * @param lobbyWorldName The name of the world that will be copied and used as the lobby's world
+     * @throws IllegalStateException If a creation error occurs. Check the source for more details
      */
-    boolean unRegisterPlayer(Player player);
+    protected GameLobbyBase(String lobbyWorldName) throws IllegalStateException {
 
-    /**
-     * This method should return the maximal amount of players in the game
-     * @return The maximal player amount
-     */
-    int getMaxPlayers();
+        try{
 
-    /**
-     * This method should return the minimal amount of players before starting scheduling the {@link GameLobbyBase#getGameLaunchTask()}
-     * @return The minimal player amount
-     */
-    int getMinPlayersToStart();
+            Sponge.getServer().loadWorld(lobbyWorldName);
+            if(!Sponge.getServer().getWorld(lobbyWorldName).isPresent()) { throw new IllegalStateException("The specified lobby world name does not exist: " + lobbyWorldName); }
 
-    /**
-     * This method should return true if the lobby can be used in any way
-     * @return Whether the lobby is considered valid or not
-     */
-    boolean isValidLobby();
+            CompletableFuture<Optional<WorldProperties>> props = Sponge.getGame().getServer().copyWorld(Sponge.getServer().getWorld(lobbyWorldName).get().getProperties(), lobbyWorldName + "-" + (new Date().toString()).replace(":", "-"));
 
-    /**
-     * This method should declare the lobby as unusable / invalid {@link #isValidLobby()}
-     */
-    void invalidateLobby();
+            if(!props.get().isPresent()) { throw new IllegalStateException("The properties failed to create."); }
+
+            WorldProperties worldProps = props.get().get();
+
+            worldProps.setDifficulty(Difficulties.PEACEFUL);
+            worldProps.setGameMode(GameModes.ADVENTURE);
+            worldProps.setPVPEnabled(false);
+            worldProps.setWorldTime(18000);
+            worldProps.setRaining(false);
+            worldProps.setGameRule("doWeatherCycle", "false");
+            worldProps.setGameRule("doDayLightCycle", "false");
+
+            Optional<World> loadResult = Sponge.getServer().loadWorld(worldProps);
+
+            if(!loadResult.isPresent()) {
+
+                Sponge.getServer().deleteWorld(props.get().get());
+                throw new IllegalStateException("Could not load the newly created world.");
+
+            }
+
+            lobbyWorld = loadResult.get();
+
+            Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
+
+            Utilities.createWorldInfoFrom(getLobbyWorld(), Sponge.getServer().getWorld(lobbyWorldName).get());
+            Utilities.getOrCreateWorldInfo(getLobbyWorld()).setDimensionProtected(true);
+            Utilities.getOrCreateWorldInfo(getLobbyWorld()).setIsGameWorld(true);
+
+            lobbyValid = true;
+
+        }
+        catch(InterruptedException | ExecutionException e){
+
+            e.printStackTrace();
+            this.destroyLobby();
+
+        }
+
+    }
 
 }

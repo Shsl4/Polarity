@@ -51,7 +51,7 @@ public class FactionsListMembers implements CommandExecutor {
                 }
                 else{
 
-                    src.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+                    src.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
                 }
 
@@ -65,7 +65,7 @@ public class FactionsListMembers implements CommandExecutor {
                 }
                 else{
 
-                    src.sendMessage(PolarityErrors.XERROR_XFNULL.getDesc());
+                    src.sendMessage(PolarityErrors.NULLFACTION.getDesc());
 
                 }
 
@@ -74,7 +74,7 @@ public class FactionsListMembers implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 

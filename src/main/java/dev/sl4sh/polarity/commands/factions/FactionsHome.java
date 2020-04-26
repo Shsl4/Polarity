@@ -46,7 +46,7 @@ public class FactionsHome implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -57,13 +57,13 @@ public class FactionsHome implements CommandExecutor {
 
         Optional<Faction> OptCallerFaction = Utilities.getPlayerFaction(caller);
 
-        if(!OptCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!OptCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         Faction callerFaction = OptCallerFaction.get();
 
         WorldInfo worldInfo = Utilities.getOrCreateWorldInfo(caller.getWorld());
 
-        if(!Utilities.getFactionHomeWorld(callerFaction.getUniqueId()).isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOHOME.getDesc()); return;  }
+        if(!Utilities.getFactionHomeWorld(callerFaction.getUniqueId()).isPresent()) { caller.sendMessage(PolarityErrors.NOHOME.getDesc()); return;  }
 
         Optional<World> optHomeWorld = Utilities.getFactionHomeWorld(callerFaction.getUniqueId());
 
@@ -74,12 +74,12 @@ public class FactionsHome implements CommandExecutor {
         if(safeLoc.isPresent()){
 
             caller.setLocation(safeLoc.get());
-            caller.playSound(SoundTypes.ENTITY_ENDERMEN_TELEPORT, caller.getPosition(), 0.75);
+            caller.playSound(SoundTypes.ENTITY_ENDERMEN_TELEPORT, caller.getPosition(), 0.25);
 
         }
         else{
 
-            caller.sendMessage(PolarityErrors.XERROR_NOSAFELOC.getDesc());
+            caller.sendMessage(PolarityErrors.NOSAFELOC.getDesc());
 
         }
 

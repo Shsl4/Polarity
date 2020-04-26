@@ -51,7 +51,7 @@ public class FactionsSetPerm implements CommandExecutor {
             }
             else{
 
-                ply.sendMessage(PolarityErrors.XERROR_NULLPLAYER.getDesc());
+                ply.sendMessage(PolarityErrors.NULLPLAYER.getDesc());
 
             }
 
@@ -72,7 +72,7 @@ public class FactionsSetPerm implements CommandExecutor {
 
             Optional<FactionPermissionData> optCallerPermData = Utilities.getPlayerFactionPermissions(caller);
 
-            if(!optCallerPermData.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+            if(!optCallerPermData.isPresent()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
             FactionPermissionData callerPermData = optCallerPermData.get();
 
@@ -80,7 +80,7 @@ public class FactionsSetPerm implements CommandExecutor {
 
                 Optional<FactionPermissionData> optTargetPermData = Utilities.getPlayerFactionPermissions(targetPlayer);
 
-                if(!optTargetPermData.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return;}
+                if(!optTargetPermData.isPresent()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return;}
 
                 FactionPermissionData targetPermData = optTargetPermData.get();
 
@@ -107,32 +107,32 @@ public class FactionsSetPerm implements CommandExecutor {
 
                         }
 
-                        caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully set " , targetPermission , " permission to " , value , " for player " , targetPlayer.getName()));
+                        caller.sendMessage(Text.of(TextColors.GREEN, "Successfully set " , targetPermission , " permission to " , value , " for player " , targetPlayer.getName()));
                     }
                     else{
 
-                        caller.sendMessage(Text.of(TextColors.AQUA, "[Factions] | The owner's permissions can't be changed"));
+                        caller.sendMessage(Text.of(TextColors.AQUA, "The owner's permissions can't be changed"));
 
                     }
 
                 }
                 else{
 
-                    caller.sendMessage(PolarityErrors.XERROR_NOTAMEMBER.getDesc());
+                    caller.sendMessage(PolarityErrors.FACTION_NOTAMEMBER.getDesc());
 
                 }
 
             }
             else{
 
-                caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc());
+                caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc());
 
             }
 
         }
         else{
 
-            caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+            caller.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
         }
 

@@ -35,7 +35,7 @@ public class PolarityHub implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 

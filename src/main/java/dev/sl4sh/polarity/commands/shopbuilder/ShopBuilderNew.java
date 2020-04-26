@@ -1,6 +1,7 @@
 package dev.sl4sh.polarity.commands.shopbuilder;
 
-import dev.sl4sh.polarity.economy.shops.UI.ShopBuilderNewUI;
+import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.economy.ShopProfile;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -10,6 +11,9 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+
+import java.util.ArrayList;
 
 public class ShopBuilderNew implements CommandExecutor {
 
@@ -31,8 +35,14 @@ public class ShopBuilderNew implements CommandExecutor {
 
             Player caller = (Player)src;
 
-            ShopBuilderNewUI intf = new ShopBuilderNewUI((String)args.getOne("profileName").get(), (int)args.getOne("height").get());
-            intf.makeShopBuilderInterface(caller);
+            String name = (String)args.getOne("profileName").get();
+            Integer height = (Integer)args.getOne("height").get();
+
+            if(Polarity.getShopProfiles().getExistingShopProfilesNames().contains(name)) { throw new CommandException(Text.of("This shop profile already exists")); }
+
+            Polarity.getShopProfiles().addShopProfile(new ShopProfile(new ArrayList<>(), name, height));
+
+            caller.sendMessage(Text.of(TextColors.GREEN, "Added a shop profile named " + name));
 
         }
 

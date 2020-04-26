@@ -1,8 +1,8 @@
 package dev.sl4sh.polarity;
 
+import dev.sl4sh.polarity.chat.FactionChatChannel;
 import dev.sl4sh.polarity.data.factions.FactionMemberData;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
-import dev.sl4sh.polarity.tablist.TabListManager;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.Sponge;
@@ -58,15 +58,13 @@ public class Faction implements Identifiable, Serializable {
     @Setting(value = "enemies")
     private List<UUID> enemies = new ArrayList<>();
 
-    //Contains invited player UUIDs
-    @Nonnull
-    @Setting(value = "playerInvites")
-    private List<UUID> playerInvites = new ArrayList<>();
-
     //Contains allied factions UUIDs
     @Nonnull
     @Setting(value = "allyInvites")
     private List<UUID> allyInvites = new ArrayList<>();
+
+    @Nonnull
+    private final FactionChatChannel factionChannel = new FactionChatChannel(new ArrayList<>());
 
     public Faction() {}
 
@@ -79,30 +77,6 @@ public class Faction implements Identifiable, Serializable {
     public void setOwner(@Nonnull UUID owner){
 
         this.owner = owner;
-
-    }
-
-    public void setMemberDataList(@Nonnull List<FactionMemberData> memberDataList){
-
-        this.memberDataList = memberDataList;
-
-    }
-
-    public void setAllies(@Nonnull List<UUID> allies){
-
-        this.allies = allies;
-
-    }
-
-    public void setEnemies(@Nonnull List<UUID> enemies){
-
-        this.enemies = enemies;
-
-    }
-
-    public void setPlayerInvites(@Nonnull List<UUID> playerInvites){
-
-        this.playerInvites = playerInvites;
 
     }
 
@@ -141,14 +115,6 @@ public class Faction implements Identifiable, Serializable {
 
     }
 
-    @Nonnull
-    public List<UUID> getPlayerInvites(){
-
-        return this.playerInvites;
-
-    }
-
-
     public Faction(@Nonnull String name, @Nonnull Player owner){
 
         this.name = name;
@@ -158,7 +124,6 @@ public class Faction implements Identifiable, Serializable {
         this.memberDataList = new ArrayList<>();
         this.allies = new ArrayList<>();
         this.enemies = new ArrayList<>();
-        this.playerInvites = new ArrayList<>();
         this.allyInvites = new ArrayList<>();
 
         this.memberDataList.add(new FactionMemberData(owner.getUniqueId(), new FactionPermissionData(true, true, true)));
@@ -287,5 +252,10 @@ public class Faction implements Identifiable, Serializable {
     @Override
     public UUID getUniqueId() {
         return this.uniqueID;
+    }
+
+    @Nonnull
+    public FactionChatChannel getFactionChannel() {
+        return factionChannel;
     }
 }

@@ -42,7 +42,7 @@ public class PolarityShowBalance implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -57,14 +57,14 @@ public class PolarityShowBalance implements CommandExecutor {
 
         Optional<UniqueAccount> optCallerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
 
-        if(!optCallerAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access your account. Please try again later.")); return; }
+        if(!optCallerAccount.isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access your account. Please try again later.")); return; }
 
         UniqueAccount callerAccount = optCallerAccount.get();
 
         PolarityCurrency dollarCurrency = new PolarityCurrency();
 
-        caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | Your current balance is ", dollarCurrency.format(callerAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
-        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), 0.75);
+        caller.sendMessage(Text.of(TextColors.AQUA, "Your current balance is ", dollarCurrency.format(callerAccount.getBalance(dollarCurrency), 2), TextColors.AQUA, "."));
+        caller.playSound(SoundTypes.BLOCK_NOTE_HARP, caller.getPosition(), 0.25);
 
     }
 

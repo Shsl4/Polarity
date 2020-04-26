@@ -54,7 +54,7 @@ public class FactionsDeAlly implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -67,12 +67,12 @@ public class FactionsDeAlly implements CommandExecutor {
         Optional<Faction> optTargetFaction = Utilities.getFactionByName(targetFactionName);
 
         // Return if the caller has no faction
-        if(!optTargetFaction.isPresent()) {  caller.sendMessage(PolarityErrors.XERROR_XFNULL.getDesc()); return; }
+        if(!optTargetFaction.isPresent()) {  caller.sendMessage(PolarityErrors.NULLFACTION.getDesc()); return; }
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
         // Return if the caller doesn't have any faction
-        if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) {  caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         // Get the safe references to our factions
         Faction targetFaction = optTargetFaction.get();
@@ -84,7 +84,7 @@ public class FactionsDeAlly implements CommandExecutor {
         Optional<FactionMemberData> optTargetMemberData = Utilities.getMemberDataForPlayer(caller);
 
         // Return if the permission data is inaccessible or if the caller is not allowed to configure the faction
-        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!optTargetMemberData.isPresent() || !optTargetMemberData.get().permissions.getManage()) {  caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
         targetFaction.getAllies().remove(callerFaction.getUniqueId());
         callerFaction.getAllies().remove(targetFaction.getUniqueId());
@@ -96,7 +96,7 @@ public class FactionsDeAlly implements CommandExecutor {
 
             // Check if the player exists / is online
             // Notify the player of the alliance destruction
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | " , callerFaction.getDisplayName(), TextColors.RESET, TextColors.RED, " are no longer your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "" , callerFaction.getDisplayName(), TextColors.RESET, TextColors.RED, " are no longer your allies!")));
 
         }
 
@@ -107,7 +107,7 @@ public class FactionsDeAlly implements CommandExecutor {
 
             // Check if the player exists / is online
             // Notify the player of the alliance destruction
-            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "[Factions] | ", targetFaction.getDisplayName(), TextColors.RED, " are no longer your allies!")));
+            optTargetFactionConfigPlayer.ifPresent(player -> player.sendMessage(Text.of(TextColors.RED, "", targetFaction.getDisplayName(), TextColors.RED, " are no longer your allies!")));
 
         }
 

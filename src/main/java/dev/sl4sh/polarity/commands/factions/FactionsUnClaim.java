@@ -53,7 +53,7 @@ public class FactionsUnClaim implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -72,7 +72,7 @@ public class FactionsUnClaim implements CommandExecutor {
 
             Optional<FactionPermissionData> optPermData = Utilities.getPlayerFactionPermissions(ply);
 
-            if(!optPermData.isPresent()) { ply.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+            if(!optPermData.isPresent()) { ply.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
             FactionPermissionData permData = optPermData.get();
 
@@ -82,21 +82,23 @@ public class FactionsUnClaim implements CommandExecutor {
 
                 if(worldInfo.isClaimed(chunkPosition)){
 
-                    if(!Polarity.getEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+                    if(!Polarity.getEconomyService().isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
                     PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
-                    if(!economyService.getOrCreateAccount(playerFaction.getName()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+                    if(!economyService.getOrCreateAccount(playerFaction.getUniqueId()).isPresent()) { ply.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
                     PolarityCurrency dollarCurrency = new PolarityCurrency();
 
-                    economyService.getOrCreateAccount(playerFaction.getName()).get().deposit(dollarCurrency, BigDecimal.valueOf(75.0), Cause.of(EventContext.empty(), ply));
+                    int numClaimedChunks = Utilities.getAllFactionClaims(playerFaction.getUniqueId()).size();
 
-                    if(!worldInfo.removeClaim(chunkPosition, playerFaction.getUniqueId())) { ply.sendMessage(PolarityErrors.XERROR_UNKNOWN.getDesc()); return; }
+                    economyService.getOrCreateAccount(playerFaction.getUniqueId()).get().deposit(dollarCurrency, BigDecimal.valueOf((2500 * (numClaimedChunks / 10.0)) / 2), Cause.of(EventContext.empty(), ply));
 
-                    ply.playSound(SoundTypes.BLOCK_NOTE_CHIME, ply.getPosition(), 0.75);
+                    if(!worldInfo.removeClaim(chunkPosition, playerFaction.getUniqueId())) { ply.sendMessage(PolarityErrors.UNKNOWN.getDesc()); return; }
 
-                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully unclaimed chunk! ", chunkPosition, " | Refunded ", dollarCurrency.format(BigDecimal.valueOf(75.0f), 2), TextColors.GREEN, "."));
+                    ply.playSound(SoundTypes.BLOCK_NOTE_CHIME, ply.getPosition(), 0.25);
+
+                    ply.sendMessage(Text.of(TextColors.GREEN, "Successfully unclaimed chunk! ", chunkPosition, " | Refunded ", dollarCurrency.format(BigDecimal.valueOf((2500 * (numClaimedChunks / 10.0)) / 2), 2), TextColors.GREEN, "."));
 
                 }
                 else{
@@ -108,14 +110,14 @@ public class FactionsUnClaim implements CommandExecutor {
             }
             else{
 
-                ply.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc());
+                ply.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc());
 
             }
 
         }
         else{
 
-            ply.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+            ply.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
         }
 

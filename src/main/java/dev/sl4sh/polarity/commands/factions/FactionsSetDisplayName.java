@@ -6,7 +6,7 @@ import dev.sl4sh.polarity.enums.PolarityColors;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
-import dev.sl4sh.polarity.tablist.TabListManager;
+import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -52,7 +52,7 @@ public class FactionsSetDisplayName implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -68,20 +68,20 @@ public class FactionsSetDisplayName implements CommandExecutor {
 
             Optional<FactionPermissionData> optPermData = Utilities.getPlayerFactionPermissions(ply);
 
-            if(!optPermData.isPresent()) { ply.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+            if(!optPermData.isPresent()) { ply.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
             if(optPermData.get().getManage()){
 
                 if(displayName.equals("")){
 
                     optXFac.get().setDisplayName(optXFac.get().getName());
-                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully removed your faction's display name."));
+                    ply.sendMessage(Text.of(TextColors.GREEN, "Successfully removed your faction's display name."));
 
                 }
                 else{
 
                     optXFac.get().setDisplayName(color.getStringColor() + Utilities.getStringWithoutModifiers(displayName));
-                    ply.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully updated your faction's display name."));
+                    ply.sendMessage(Text.of(TextColors.GREEN, "Successfully updated your faction's display name."));
 
                 }
 
@@ -92,13 +92,13 @@ public class FactionsSetDisplayName implements CommandExecutor {
             }
             else{
 
-                ply.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc());
+                ply.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc());
 
             }
 
         }
 
-        ply.sendMessage(PolarityErrors.XERROR_NOXF.getDesc());
+        ply.sendMessage(PolarityErrors.NOFACTION.getDesc());
 
     }
 

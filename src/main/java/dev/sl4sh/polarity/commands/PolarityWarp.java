@@ -97,6 +97,11 @@ public class PolarityWarp implements CommandExecutor {
                         return true;
 
                     }
+                    else{
+
+                        return false;
+
+                    }
 
                 }
 
@@ -130,7 +135,7 @@ class PolaritySetWarp implements CommandExecutor {
 
                 if(worldInfo.getWarps().get(warpName) != null){
 
-                    caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | This warp already exist."));
+                    caller.sendMessage(Text.of(TextColors.AQUA, "This warp already exist."));
                     return CommandResult.success();
 
                 }
@@ -139,7 +144,7 @@ class PolaritySetWarp implements CommandExecutor {
 
             WorldInfo worldInfo = Utilities.getOrCreateWorldInfo(caller.getWorld());
             worldInfo.getWarps().put(warpName, caller.getPosition());
-            caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | Added a new warp named ", warpName, "."));
+            caller.sendMessage(Text.of(TextColors.AQUA, "Added a new warp named ", warpName, "."));
             Polarity.getPolarity().writeAllConfig();
 
         }
@@ -161,14 +166,14 @@ class PolarityRemoveWarp implements CommandExecutor {
             if(worldInfo.getWarps().get(warpName) != null){
 
                 worldInfo.getWarps().remove(warpName);
-                src.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | Warp ", warpName, " removed."));
+                src.sendMessage(Text.of(TextColors.AQUA, "Warp ", warpName, " removed."));
                 return CommandResult.success();
 
             }
 
         }
 
-        src.sendMessage(Text.of(TextColors.RED, "[Polarity] | Failed to remove ", warpName, ". It may not exist"));
+        src.sendMessage(Text.of(TextColors.RED, "Failed to remove ", warpName, ". It may not exist"));
         return CommandResult.success();
     }
 }

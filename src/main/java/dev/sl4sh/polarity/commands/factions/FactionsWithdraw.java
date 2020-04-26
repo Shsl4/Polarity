@@ -53,23 +53,23 @@ public class FactionsWithdraw implements CommandExecutor {
 
     public void withdraw(Player caller, BigDecimal amount){
 
-        if(!Utilities.getPlayerFaction(caller).isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); }
+        if(!Utilities.getPlayerFaction(caller).isPresent()) { caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); }
 
         Faction callerFaction = Utilities.getPlayerFaction(caller).get();
 
         Optional<FactionMemberData> optMemberData = Utilities.getMemberDataForPlayer(caller);
 
-        if(!optMemberData.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!optMemberData.isPresent()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
         FactionMemberData memberData = optMemberData.get();
 
-        if(!memberData.getPermissions().getManage()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!memberData.getPermissions().getManage()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
-        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!Polarity.getEconomyService().isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
         PolarityEconomyService economyService = Polarity.getEconomyService().get();
 
-        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(callerFaction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Unable to access accounts. Please try again later.")); return; }
+        if(!economyService.getOrCreateAccount(caller.getUniqueId()).isPresent() || !economyService.getOrCreateAccount(callerFaction.getName()).isPresent()) { caller.sendMessage(Text.of(TextColors.RED, "Unable to access accounts. Please try again later.")); return; }
 
         Account playerAccount = economyService.getOrCreateAccount(caller.getUniqueId()).get();
         Account factionAccount = economyService.getOrCreateAccount(callerFaction.getName()).get();
@@ -82,17 +82,17 @@ public class FactionsWithdraw implements CommandExecutor {
 
             case SUCCESS:
 
-                caller.sendMessage(Text.of(TextColors.AQUA, "[Economy] | Successfully withdrawn ", dollarCurrency.format(amount, 2), TextColors.AQUA, " from your faction."));
+                caller.sendMessage(Text.of(TextColors.AQUA, "Successfully withdrawn ", dollarCurrency.format(amount, 2), TextColors.AQUA, " from your faction."));
                 return;
 
             case ACCOUNT_NO_FUNDS:
 
-                caller.sendMessage(Text.of(TextColors.RED, "[Economy] | You faction does not have enough money to do that!"));
+                caller.sendMessage(Text.of(TextColors.RED, "You faction does not have enough money to do that!"));
                 return;
 
         }
 
-        caller.sendMessage(Text.of(TextColors.RED, "[Economy] | Transaction Failed!"));
+        caller.sendMessage(Text.of(TextColors.RED, "Transaction Failed!"));
 
     }
 

@@ -30,7 +30,6 @@ public class FactionsMainCommand implements CommandExecutor {
                 .child(FactionsSetPrefix.getCommandSpec(), "setprefix")
                 .child(FactionsSetPerm.getCommandSpec(), "setperm")
                 .child(FactionsInvite.getCommandSpec(), "invite")
-                .child(FactionsJoin.getCommandSpec(), "join")
                 .child(FactionsKick.getCommandSpec(), "kick")
                 .child(FactionsShowClaims.getCommandSpec(), "showclaims")
                 .child(FactionsHome.getCommandSpec(), "home")
@@ -57,7 +56,7 @@ public class FactionsMainCommand implements CommandExecutor {
         }
         else {
 
-            src.sendMessage(Text.of(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc()));
+            src.sendMessage(Text.of(PolarityErrors.PLAYERCOMMAND.getDesc()));
 
         }
 

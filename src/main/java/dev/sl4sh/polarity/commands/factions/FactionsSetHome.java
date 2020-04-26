@@ -46,7 +46,7 @@ public class FactionsSetHome implements CommandExecutor {
         }
         else{
 
-            src.sendMessage(Text.of(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc()));
+            src.sendMessage(Text.of(PolarityErrors.PLAYERCOMMAND.getDesc()));
 
         }
 
@@ -57,11 +57,11 @@ public class FactionsSetHome implements CommandExecutor {
 
         Optional<Faction> optCallerFaction = Utilities.getPlayerFaction(caller);
 
-        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.XERROR_NOXF.getDesc()); return; }
+        if(!optCallerFaction.isPresent()) { caller.sendMessage(PolarityErrors.NOFACTION.getDesc()); return; }
 
         Faction callerFaction = optCallerFaction.get();
 
-        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(PolarityErrors.XERROR_NOTAUTHORIZED.getDesc()); return; }
+        if(!Utilities.getPlayerFactionPermissions(caller).isPresent() || !Utilities.getPlayerFactionPermissions(caller).get().getManage()) { caller.sendMessage(PolarityErrors.UNAUTHORIZED.getDesc()); return; }
 
         Optional<Location<World>> safeLoc = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<>(caller.getWorld(), caller.getPosition()));
 
@@ -70,12 +70,12 @@ public class FactionsSetHome implements CommandExecutor {
             WorldInfo worldInfo = Utilities.getOrCreateWorldInfo(caller.getWorld());
             worldInfo.setFactionHome(callerFaction.getUniqueId(), safeLoc.get().getPosition());
             Polarity.getPolarity().writeAllConfig();
-            caller.sendMessage(Text.of(TextColors.GREEN, "[Factions] | Successfully set your faction's home!"));
+            caller.sendMessage(Text.of(TextColors.GREEN, "Successfully set your faction's home!"));
 
         }
         else{
 
-            caller.sendMessage(PolarityErrors.XERROR_NOSAFELOC.getDesc());
+            caller.sendMessage(PolarityErrors.NOSAFELOC.getDesc());
 
         }
 

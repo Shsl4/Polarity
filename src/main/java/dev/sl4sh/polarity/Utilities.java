@@ -6,44 +6,64 @@ import dev.sl4sh.polarity.data.InventoryBackup;
 import dev.sl4sh.polarity.data.containers.WorldsInfoContainer;
 import dev.sl4sh.polarity.data.factions.FactionMemberData;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
+import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
 import dev.sl4sh.polarity.economy.PolarityEconomyService;
 import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
+import dev.sl4sh.polarity.data.registration.player.TransientPlayerData;
+import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.games.GameSession;
+import dev.sl4sh.polarity.games.PositionSnapshot;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.Loader;
 import noppes.npcs.api.IWorld;
 import noppes.npcs.api.NpcAPI;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataHolder;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
+import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.enchantment.Enchantment;
+import org.spongepowered.api.item.enchantment.EnchantmentTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackComparators;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.transaction.InventoryTransactionResult;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Utilities {
 
     /**
-     * Just a static accessor for {@link WorldsInfoContainer#getOrCreateWorldInfo(World)}
+     * Just a static accessor for {@link WorldsInfoContainer#getOrCreate(World)}
      * The saved objects are held in the {@link Polarity} plugin instance. See {@link Polarity#getWorldsInfo()}
      * @param world The world to get the custom info of
      * @return The fetched or newly created {@link WorldInfo}
      */
     public static WorldInfo getOrCreateWorldInfo(World world){
 
-        return Polarity.getWorldsInfo().getOrCreateWorldInfo(world);
+        return Polarity.getWorldsInfo().getOrCreate(world);
 
     }
 
@@ -75,17 +95,20 @@ public class Utilities {
     }
 
     /**
-     * Safely give an ItemStack to a player. Offers the ItemStack in the player's inventory if not full, otherwise summon a TileEntity of the item at the player's location.
+     * Safely give an ItemStack to a player. Offers the ItemStack in the player's inventory if not full, otherwise summon a TileEntity of the item at the player's location if {@param drop} is true.
      * @param player The player to give an ItemStack to
      * @param stack The ItemStack to give
+     * @param drop Should drop the item if the inventory is full
      * @return Whether the operation succeeded or not
      */
-    public static boolean givePlayer(Player player, ItemStack stack){
+    public static boolean givePlayer(Player player, ItemStack stack, boolean drop){
 
         InventoryTransactionResult result = player.getInventory().offer(stack);
 
         if(result.getType().equals(InventoryTransactionResult.Type.FAILURE) ||
                 result.getType().equals(InventoryTransactionResult.Type.ERROR)){
+
+            if(!drop) { return false; }
 
             Entity item = player.getWorld().createEntity(EntityTypes.ITEM, player.getPosition());
             item.offer(Keys.REPRESENTED_ITEM, stack.createSnapshot());
@@ -96,15 +119,36 @@ public class Utilities {
                 return player.getWorld().spawnEntity(item);
 
             }
-            catch(Exception e){
-
-                return false;
-
-            }
 
         }
 
         return true;
+
+    }
+
+    public static boolean spawnItem(Location<World> location, ItemStackSnapshot snapshot){
+
+        Entity item = location.getExtent().createEntity(EntityTypes.ITEM, location.getPosition());
+        item.offer(Keys.REPRESENTED_ITEM, snapshot);
+
+        try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+
+            frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.PLUGIN);
+            return location.getExtent().spawnEntity(item);
+
+        }
+
+    }
+
+    public static <E extends DataHolder> boolean hasTag(E object, String tag){
+
+        if(object.get(Polarity.Keys.NPC.TAGS).isPresent()){
+
+            return object.get(Polarity.Keys.NPC.TAGS).get().contains(tag);
+
+        }
+
+        return false;
 
     }
 
@@ -129,7 +173,7 @@ public class Utilities {
     }
 
     /**
-     * Saves a player's inventory to an InventoryBackupsContainer {@link Polarity#getInventoryBackups()} WITHOUT emptying it
+     * Saves a player's inventory to an InventoryBackupsContainer {@link Polarity#getInventoryBackups()} WITHOUT clearing it
      * @param player The player who must get it's inventory saved
      */
     public static void savePlayerInventory(Player player){
@@ -142,7 +186,17 @@ public class Utilities {
 
             Optional<ItemStack> optStack = inv.peek();
 
-            optStack.ifPresent(itemStack -> snaps.add(itemStack.createSnapshot()));
+            if(optStack.isPresent()){
+
+                // Check if the stack was a ui stack (prevent UI items from being saved as this method can be called when the player has a ui opened)
+                if(!optStack.get().get(UIStackData.class).isPresent()){
+
+                    optStack.ifPresent(itemStack -> snaps.add(itemStack.createSnapshot()));
+
+                }
+
+            }
+
 
         }
 
@@ -157,19 +211,80 @@ public class Utilities {
     }
 
     /**
+     * Compares two ItemStacks by their data, type and variant but NOT quantity.
+     * @param stack1 The first stack to test
+     * @param stack2 The second stack to test
+     * @return Whether the stacks are equal or not
+     */
+    public static boolean compareStacksNoSize(ItemStack stack1, ItemStack stack2){
+
+        DataContainer snapDamage = stack1.toContainer();
+        DataContainer testDamage = stack2.toContainer();
+
+        int snapVal = (int)snapDamage.get(DataQuery.of("UnsafeDamage")).get();
+        int testVal = (int)testDamage.get(DataQuery.of("UnsafeDamage")).get();
+
+        if(ItemStackComparators.TYPE.compare(stack1, stack2) == 0 &&
+                ItemStackComparators.PROPERTIES.compare(stack1, stack2) == 0 &&
+                snapVal == testVal){
+
+            return true;
+
+        }
+
+        return false;
+
+    }
+
+    public static Optional<NpcAPI> getNPCsAPI(){
+
+        if(Loader.isModLoaded("customnpcs")){
+
+            return Optional.ofNullable(NpcAPI.Instance());
+
+        }
+        else{
+
+            return Optional.empty();
+
+        }
+
+    }
+
+    public static boolean listContainsStack(List<ItemStack> stackList, ItemStack testStack){
+
+        for(ItemStack stack : stackList){
+
+            if(compareStacksNoSize(stack, testStack)){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
+    /**
      * Restores a player's inventory saved with {@link #savePlayerInventory(Player)}
      * @param player The player who must get it's inventory restored
      */
-    public static void restorePlayerInventory(Player player){
+    public static boolean restorePlayerInventory(Player player){
 
         Optional<InventoryBackup> optBackup = Polarity.getInventoryBackups().getBackupForPlayer(player.getUniqueId());
 
         if(optBackup.isPresent()){
 
-            optBackup.get().getSnapshots().removeIf(snap -> Utilities.givePlayer(player, snap.createStack()));
+            optBackup.get().getSnapshots().removeIf(snap -> Utilities.givePlayer(player, snap.createStack(), false));
             Polarity.getPolarity().writeAllConfig();
 
+            return true;
+
         }
+
+        return false;
 
     }
 
@@ -220,7 +335,7 @@ public class Utilities {
      */
     public static Optional<WorldServer> getSpongeWorldToServerWorld(World world){
 
-        for(IWorld iWorld : NpcAPI.Instance().getIWorlds()){
+        for(IWorld iWorld : Utilities.getNPCsAPI().get().getIWorlds()){
 
             if(iWorld.getName().equals(world.getName())){
 
@@ -255,7 +370,138 @@ public class Utilities {
      */
     public static void removePotionEffects(Player player){
 
-        player.offer(Keys.POTION_EFFECTS, new ArrayList<>());
+        Utilities.setPotionEffects(player, new ArrayList<>());
+
+    }
+
+    public static void setPotionEffects(Player player, List<PotionEffect> potionEffects){
+
+        player.offer(Keys.POTION_EFFECTS, potionEffects);
+
+    }
+
+    /**
+     * Sets a player's game mode
+     * @param player The player which should have its GameMode changed
+     * @param gameMode The new GameMode
+     */
+    public static void setGameMode(Player player, GameMode gameMode){
+
+        player.offer(Keys.GAME_MODE, gameMode);
+
+    }
+
+    public static ItemStack makeUIStack(ItemType type, int count, Text displayName, List<Text> lore, boolean enchanted){
+
+        List<Enchantment> enchants = new ArrayList<>();
+
+        if(enchanted){
+
+            enchants.add(Enchantment.builder().type(EnchantmentTypes.EFFICIENCY).level(1).build());
+
+        }
+
+        ItemStack stack = ItemStack.builder().itemType(type)
+                .add(Keys.ITEM_ENCHANTMENTS, enchants)
+                .add(Keys.DISPLAY_NAME, displayName)
+                .add(Keys.ITEM_LORE, lore)
+                .add(Keys.HIDE_ENCHANTMENTS, true)
+                .add(Keys.HIDE_ATTRIBUTES, true)
+                .add(Keys.HIDE_MISCELLANEOUS, true)
+                .add(Keys.HIDE_UNBREAKABLE, true)
+                .add(Keys.HIDE_CAN_DESTROY, true)
+                .add(Keys.HIDE_CAN_PLACE, true)
+                .quantity(count).build();
+
+        stack.offer(new UIStackData());
+
+        return stack;
+
+    }
+
+    public static boolean isUIStack(ItemStack stack){
+
+        return stack.get(UIStackData.class).isPresent();
+
+    }
+
+    public static List<PositionSnapshot> getPositionSnapshotsByTag(World world, String tag){
+
+        List<PositionSnapshot> list = new ArrayList<>();
+
+        for(PositionSnapshot snap : Polarity.getWorldsInfo().getOrCreate(world).getPositionSnapshots()){
+
+            if(snap.getTag().equals(tag)){
+
+                list.add(snap);
+
+            }
+
+        }
+
+        return list;
+
+    }
+
+    public static void delayOneTick(Runnable runnable){
+
+        Task.builder().execute(runnable).delayTicks(1L).submit(Polarity.getPolarity());
+
+    }
+
+    public static WorldInfo createWorldInfoFrom(World world, World from){
+
+        return Polarity.getWorldsInfo().createFrom(world, from);
+
+    }
+
+    public static boolean isValidSessionID(int id){
+
+        return Polarity.getGameManager().doesSessionExistsByID(id);
+
+    }
+
+    public static Optional<GameSession<?>> getGameSessionByID(int id){
+
+        return Polarity.getGameManager().getGameSessionByID(id);
+
+    }
+
+    public static int getNextFreeWrapperID(){
+
+        return Polarity.getGameManager().getNextFreeSessionID();
+
+    }
+
+    public static boolean isValidGameID(int id){
+
+        return Polarity.getGameManager().getValidGameIDs().contains(id);
+
+    }
+
+    public static List<GameSession<?>> getGameSessionsByGameID(int id){
+
+        return Polarity.getGameManager().getGameSessionsByGameID(id);
+
+    }
+
+    public static <T> void ifNotNull(T object, Consumer<T> runnable){
+
+        if(object != null){
+
+            runnable.accept(object);
+
+        }
+
+    }
+
+    public static <T> void ifNull(T object, Runnable runnable){
+
+        if(object == null){
+
+            runnable.run();
+
+        }
 
     }
 
@@ -318,6 +564,12 @@ public class Utilities {
 
     }
 
+    public static void closePlayerInventory(Player player){
+
+        Task.builder().delayTicks(1L).execute(player::closeInventory).submit(Polarity.getPolarity());
+
+    }
+
     static public Map<Vector3i, World> getAllFactionClaims(UUID factionUUID){
 
         Map<Vector3i, World> returnMap = new LinkedHashMap<>();
@@ -337,6 +589,69 @@ public class Utilities {
         }
 
         return returnMap;
+
+    }
+
+    static public void removeAllFactionClaims(UUID factionID){
+
+        for(WorldInfo worldInfo : Polarity.getWorldsInfo().getList()){
+
+            worldInfo.getWorldFactionClaims().remove(factionID);
+
+        }
+
+    }
+
+    static public ChannelTypes getPreferredChannel(Player player){
+
+        if(player.supports(Polarity.Keys.PREFERRED_CHANNEL)){
+
+            if(player.get(Polarity.Keys.PREFERRED_CHANNEL).get().equals(ChannelTypes.FACTION_CHANNEL) && !Utilities.getPlayerFaction(player).isPresent()){
+
+                return ChannelTypes.WORLD_CHANNEL;
+
+            }
+
+            return player.get(Polarity.Keys.PREFERRED_CHANNEL).get();
+
+        }
+        else{
+
+            player.offer(new TransientPlayerData(ChannelTypes.WORLD_CHANNEL));
+            return ChannelTypes.WORLD_CHANNEL;
+
+        }
+
+    }
+
+    static public void setPreferredChannel(Player player, ChannelTypes channel){
+
+        if(!player.supports(Polarity.Keys.PREFERRED_CHANNEL)){
+
+            player.offer(new TransientPlayerData());
+
+        }
+
+        player.offer(Polarity.Keys.PREFERRED_CHANNEL, channel);
+
+    }
+
+    static public MessageChannel getChannelForPlayer(Player player){
+
+        switch(Utilities.getPreferredChannel(player)){
+
+            case WORLD_CHANNEL:
+                return Utilities.getOrCreateWorldInfo(player.getWorld()).getMessageChannel();
+            case GENERAL_CHANNEL:
+                return Polarity.getGeneralChannel();
+            case FACTION_CHANNEL:
+                if(getPlayerFaction(player).isPresent()){
+                    return getPlayerFaction(player).get().getFactionChannel();
+                }
+
+        }
+
+        return Utilities.getOrCreateWorldInfo(player.getWorld()).getMessageChannel();
 
     }
 

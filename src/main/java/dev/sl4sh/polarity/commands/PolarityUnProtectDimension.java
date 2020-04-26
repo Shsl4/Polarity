@@ -39,7 +39,7 @@ public class PolarityUnProtectDimension implements CommandExecutor {
 
         } else {
 
-            src.sendMessage(PolarityErrors.XERROR_PLAYERCOMMAND.getDesc());
+            src.sendMessage(PolarityErrors.PLAYERCOMMAND.getDesc());
 
         }
 
@@ -57,13 +57,13 @@ public class PolarityUnProtectDimension implements CommandExecutor {
             // Remove the protected chunk and save the configuration.
            worldInfo.setDimensionProtected(false);
            Polarity.getPolarity().writeAllConfig();
-           caller.sendMessage(Text.of(TextColors.GREEN, "[Polarity] | Removed a protected dimension: ", worldInfo.getTargetWorld().get().getName()));
+           caller.sendMessage(Text.of(TextColors.GREEN, "Removed a protected dimension: ", worldInfo.getTargetWorld().get().getName()));
 
         }
         // else print a message
         else{
 
-            caller.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | This dimension is not protected."));
+            caller.sendMessage(Text.of(TextColors.AQUA, "This dimension is not protected."));
 
         }
 

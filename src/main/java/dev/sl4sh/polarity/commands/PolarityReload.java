@@ -27,7 +27,7 @@ public class PolarityReload implements CommandExecutor {
 
         Polarity.getPolarity().loadAllConfig();
 
-        src.sendMessage(Text.of(TextColors.AQUA, "[Polarity] | Reloaded configuration."));
+        src.sendMessage(Text.of(TextColors.AQUA, "Reloaded configuration."));
 
         return CommandResult.success();
 

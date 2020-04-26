@@ -1,7 +1,9 @@
 package dev.sl4sh.polarity.data.containers;
 
+import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.commands.PolarityWarp;
 import dev.sl4sh.polarity.data.WorldInfo;
+import dev.sl4sh.polarity.events.PlayerChangeDimensionEvent;
 import dev.sl4sh.polarity.events.PlayerWarpEvent;
 import dev.sl4sh.polarity.Polarity;
 import ninja.leaping.configurate.objectmapping.Setting;
@@ -17,6 +19,7 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
@@ -35,7 +38,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     @Setting(value = "list")
     @Nonnull
-    private List<WorldInfo> list = new ArrayList<>();
+    private final List<WorldInfo> list = new ArrayList<>();
 
     @Nonnull
     @Override
@@ -63,7 +66,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
      * @param world The world to get the custom info of
      * @return The fetched or newly created object
      */
-    public WorldInfo getOrCreateWorldInfo(World world){
+    public WorldInfo getOrCreate(World world){
 
         // Check if an WorldInfo object exists for the input world
         for(WorldInfo worldInfo : getList()){
@@ -84,6 +87,26 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
+    public WorldInfo createFrom(World world, World from){
+
+        for(WorldInfo worldInfo : getList()){
+
+            if(worldInfo.getWorldUniqueID().equals(world.getUniqueId())){
+
+                return worldInfo;
+
+            }
+
+        }
+
+        WorldInfo info = getOrCreate(from);
+        WorldInfo copy = new WorldInfo(world, info.getWorldProtectedChunks(), info.getPositionSnapshots(), info.isWorldProtected());
+        this.add(copy);
+        return copy;
+
+    }
+
+
     /**
      * This method removes a {@link WorldInfo} object for the desired world if existing.
      * @param world The world to get the custom info removed
@@ -96,40 +119,52 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
     }
 
     @Listener
+    public void onDimensionChanged(PlayerChangeDimensionEvent.Post event){
+
+        WorldInfo toInfo = Utilities.getOrCreateWorldInfo(event.getToWorld());
+        WorldInfo fromInfo = Utilities.getOrCreateWorldInfo(event.getFromWorld());
+
+        fromInfo.getMessageChannel().removeMember(event.getTargetEntity());
+        toInfo.getMessageChannel().addMember(event.getTargetEntity());
+
+    }
+
+    @Listener
+    public void onPlayerLogin(ClientConnectionEvent.Join event){
+
+        WorldInfo info = Utilities.getOrCreateWorldInfo(event.getTargetEntity().getWorld());
+        info.getMessageChannel().addMember(event.getTargetEntity());
+
+    }
+
+    @Listener
+    public void onDisconnect(ClientConnectionEvent.Disconnect event){
+
+        WorldInfo info = Utilities.getOrCreateWorldInfo(event.getTargetEntity().getWorld());
+        info.getMessageChannel().removeMember(event.getTargetEntity());
+
+    }
+
+    @Listener
     public void onDamageEvent(DamageEntityEvent event){
 
-        WorldInfo worldInfo = getOrCreateWorldInfo(event.getTargetEntity().getWorld());
+        if(event.getSource() instanceof Player && ((Player)event.getSource()).hasPermission("*")){
 
-        // Cancel damage if the dimension is protected or if the target is in a protected chunk
-        if(worldInfo.isWorldProtected() || (worldInfo.getWorldProtectedChunks().contains(event.getTargetEntity().getLocation().getChunkPosition()))){
-
-            // Allow damage if causer and targets are players who are both in the forced damage player list.
-            if(event.getTargetEntity() instanceof Player){
-
-                Player target = (Player)event.getTargetEntity();
-
-                if(worldInfo.getForcedDamageTakers().contains(target)){
-
-                    if (event.getSource() instanceof Player && worldInfo.getForcedDamageTakers().contains(target)) {
-
-                        event.setCancelled(false);
-
-                    }
-
-                }
-
-            }
-            else{
-
-                event.setCancelled(false);
-
-            }
-
-            event.setCancelled(true);
+            event.setCancelled(false);
+            return;
 
         }
 
-        if(!event.isCancelled() && event.getTargetEntity() instanceof Player){
+        WorldInfo worldInfo = getOrCreate(event.getTargetEntity().getWorld());
+
+        if(event.getTargetEntity() instanceof Player){
+
+            if(worldInfo.isWorldProtected()){
+
+                event.setCancelled(true);
+                return;
+
+            }
 
             Player target = (Player)event.getTargetEntity();
 
@@ -143,13 +178,13 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
             worldInfo.getRecentDamageMap().put(target, task);
 
         }
-        
+
     }
 
     @Listener
     public void onEntityInteract(InteractEntityEvent event){
 
-        WorldInfo worldInfo = getOrCreateWorldInfo(event.getTargetEntity().getWorld());
+        WorldInfo worldInfo = getOrCreate(event.getTargetEntity().getWorld());
 
         // Cancel interaction if the dimension is protected or if the target (Hanging) is in a protected chunk. This prevents frames form being interacted with.
         if(worldInfo.isWorldProtected() || (worldInfo.getWorldProtectedChunks().contains(event.getTargetEntity().getLocation().getChunkPosition()))){
@@ -180,7 +215,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
         if(event.getTargetBlock().getLocation().isPresent()){
 
-            WorldInfo worldInfo = getOrCreateWorldInfo(event.getTargetBlock().getLocation().get().getExtent());
+            WorldInfo worldInfo = getOrCreate(event.getTargetBlock().getLocation().get().getExtent());
 
             // Cancel interaction if the dimension is protected or if the target (container block) is in a protected chunk
             if(worldInfo.isWorldProtected() || (worldInfo.getWorldProtectedChunks().contains(event.getTargetBlock().getLocation().get().getChunkPosition()))){
@@ -216,7 +251,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
             if(snap.getFinal().getLocation().isPresent()){
 
                 Location<World> location = snap.getFinal().getLocation().get();
-                WorldInfo worldInfo = getOrCreateWorldInfo(location.getExtent());
+                WorldInfo worldInfo = getOrCreate(location.getExtent());
 
                 if(worldInfo.isWorldProtected() || worldInfo.getWorldProtectedChunks().contains(location.getChunkPosition())){
 
@@ -240,7 +275,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
     @Listener
     public void onExplosion(ExplosionEvent.Pre event){
 
-        WorldInfo worldInfo = getOrCreateWorldInfo(event.getExplosion().getLocation().getExtent());
+        WorldInfo worldInfo = getOrCreate(event.getExplosion().getLocation().getExtent());
 
         // Cancel all explosions
         if(worldInfo.isWorldProtected() || worldInfo.getWorldProtectedChunks().contains(event.getExplosion().getLocation().getChunkPosition())){
@@ -252,14 +287,6 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
     }
 
     @Listener
-    public void onPlayerRespawn(RespawnPlayerEvent event){
-
-        // Respawn the player to the hub if the warp exists.
-        PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity());
-
-    }
-
-    @Listener
     public void onBlockPlaced(ChangeBlockEvent.Place event) {
 
         // Cancel placement if the dimension is protected or if the target (block) is in a protected chunk
@@ -267,7 +294,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
             if(snap.getFinal().getLocation().isPresent()) {
 
-                WorldInfo worldInfo = getOrCreateWorldInfo(snap.getFinal().getLocation().get().getExtent());
+                WorldInfo worldInfo = getOrCreate(snap.getFinal().getLocation().get().getExtent());
 
                 // Ignore restrictions if the instigator is an administrator
                 if (event.getSource() instanceof Player) {
@@ -295,9 +322,9 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
         if(event.getSource() instanceof Player){
 
-            WorldInfo worldInfo = getOrCreateWorldInfo(event.getWorld());
+            WorldInfo worldInfo = getOrCreate(event.getWorld());
 
-            if(!worldInfo.isGameWorld() && worldInfo.getRecentDamageMap().containsKey(event.getTargetEntity())){
+            if((!worldInfo.isGameWorld() && !worldInfo.isWorldProtected()) && worldInfo.getRecentDamageMap().containsKey(event.getTargetEntity())){
 
                 event.setCancelled(true);
                 event.getTargetEntity().sendTitle(Title.builder().actionBar(Text.of(TextColors.DARK_RED, "You must be safe in order to warp")).build());

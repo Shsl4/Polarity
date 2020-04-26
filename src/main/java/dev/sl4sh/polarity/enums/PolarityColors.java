@@ -25,6 +25,22 @@ public enum PolarityColors {
     private TextColor textColor;
     private String stringColor;
 
+    public static String stringColorFrom(TextColor color){
+
+        for(PolarityColors pColor : PolarityColors.values()){
+
+            if(pColor.getTextColor().equals(color)){
+
+                return pColor.getStringColor();
+
+            }
+
+        }
+
+        return "";
+
+    }
+
     PolarityColors(TextColor textColor, String stringColor) {
 
         this.textColor = textColor;

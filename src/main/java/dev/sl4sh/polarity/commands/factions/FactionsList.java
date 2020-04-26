@@ -3,6 +3,7 @@ package dev.sl4sh.polarity.commands.factions;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Faction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -59,7 +60,7 @@ public class FactionsList implements CommandExecutor {
 
             for(Faction faction : factionList){
 
-                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , faction.getOwner() , listTintColor , " | Real name: " , TextColors.WHITE , faction.getName()));
+                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , faction.getDisplayName(), listTintColor , " | Owner: " , TextColors.WHITE , (Sponge.getServer().getPlayer(faction.getOwner()).isPresent() ? Sponge.getServer().getPlayer(faction.getOwner()).get().getName() : "Unknown") , listTintColor , " | Real name: " , TextColors.WHITE , faction.getName()));
                 it++;
 
             }

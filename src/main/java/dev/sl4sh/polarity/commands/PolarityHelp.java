@@ -25,22 +25,8 @@ public class PolarityHelp implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 
-        printEconomyHelp(src);
+        src.sendMessage(Text.of(TextColors.AQUA, "Use subcommands"));
         return CommandResult.success();
-
-    }
-
-    public static void printEconomyHelp(CommandSource caller){
-
-        TextColor helpAccentColor = TextColors.GREEN;
-
-        caller.sendMessage(Text.of(TextColors.DARK_GREEN, "============ Economy Help ============"));
-        caller.sendMessage(Text.of(helpAccentColor, "/polarity (help) ", TextColors.WHITE, "Prints this help menu."));
-        caller.sendMessage(Text.of(helpAccentColor, "/polarity transfer ", TextColors.WHITE, "Transfers money to a player."));
-        caller.sendMessage(Text.of(helpAccentColor, "/polarity showbalance ", TextColors.WHITE, "Shows your current balance."));
-        caller.sendMessage(Text.of(helpAccentColor, "/polarity factiontransfer ", TextColors.WHITE, "Transfers money to a faction."));
-        caller.sendMessage(Text.of(helpAccentColor, "/polarity playertransfer ", TextColors.WHITE, "Transfers money to a player. (The player must be online)"));
-
 
     }
 
