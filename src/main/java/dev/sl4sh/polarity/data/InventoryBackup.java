@@ -1,8 +1,8 @@
 package dev.sl4sh.polarity.data;
 
+import dev.sl4sh.polarity.Utilities;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 
@@ -24,7 +24,7 @@ public class InventoryBackup implements Serializable {
     @Setting(value = "snapshots")
     private List<ItemStackSnapshot> snapshots = new ArrayList<>();
 
-    public Optional<Player> getTargetPlayer() { return Sponge.getServer().getPlayer(targetPlayerID); }
+    public Optional<Player> getTargetPlayer() { return Utilities.getPlayerByUniqueID(targetPlayerID); }
 
     @Nonnull
     public UUID getTargetPlayerID() { return targetPlayerID; }

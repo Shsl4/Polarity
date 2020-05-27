@@ -4,12 +4,13 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.SharedUI;
 import dev.sl4sh.polarity.economy.ShopProfile;
 import dev.sl4sh.polarity.enums.NPCTypes;
-import dev.sl4sh.polarity.enums.PolarityColors;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.*;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataHolder;
+import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.mutable.common.AbstractData;
 import org.spongepowered.api.data.merge.MergeFunction;
-import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.data.value.mutable.ListValue;
 import org.spongepowered.api.data.value.mutable.OptionalValue;
 import org.spongepowered.api.data.value.mutable.Value;
@@ -145,19 +146,19 @@ public class NPCData extends AbstractData<NPCData, ImmutableNPCData> {
     @Override
     public Optional<NPCData> from(DataContainer container) {
 
-        Polarity.getLogger().info(PolarityColors.AQUA.getStringColor() + "Building from data container");
+        Polarity.getLogger().info(PolarityColor.AQUA.getStringColor() + "Building from data container");
 
-        this.tags = container.getStringList(Polarity.Keys.NPC.TAGS.getQuery()).orElse(new ArrayList<>());
+        this.tags = container.getStringList(Polarity.Keys.NPC.TAGS.getQuery()).get();
         this.type = NPCTypes.valueOf(container.getString(Polarity.Keys.NPC.TYPE.getQuery()).orElse("DEFAULT"));
         this.shopProfile = new ShopProfile().buildContent((DataView)container.get(Polarity.Keys.NPC.SHOP_PROFILE.getQuery()).get()).get();
         this.storage = container.getSerializableList(Polarity.Keys.NPC.STORAGE.getQuery(), ItemStackSnapshot.class).orElse(new ArrayList<>());
 
         /*
-        Polarity.getLogger().info(PolarityColors.GREEN.getStringColor() + "Success");
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "tag count: " + tags.size());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "type: " + type.name());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "storage count: " + storage.size());*/
+        Polarity.getLogger().info(PolarityColor.GREEN.getStringColor() + "Success");
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "tag count: " + tags.size());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "type: " + type.name());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "storage count: " + storage.size());*/
 
         return Optional.of(this);
 
@@ -171,11 +172,11 @@ public class NPCData extends AbstractData<NPCData, ImmutableNPCData> {
         this.storage = view.getSerializableList(Polarity.Keys.NPC.STORAGE.getQuery(), ItemStackSnapshot.class).orElse(new ArrayList<>());
 
         /*
-        Polarity.getLogger().info(PolarityColors.GREEN.getStringColor() + "Success");
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "tag count: " + tags.size());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "type: " + type.name());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
-        Polarity.getLogger().info(PolarityColors.LIGHT_PURPLE.getStringColor() + "storage count: " + storage.size());*/
+        Polarity.getLogger().info(PolarityColor.GREEN.getStringColor() + "Success");
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "tag count: " + tags.size());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "type: " + type.name());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
+        Polarity.getLogger().info(PolarityColor.LIGHT_PURPLE.getStringColor() + "storage count: " + storage.size());*/
 
         return Optional.of(this);
 
@@ -185,10 +186,10 @@ public class NPCData extends AbstractData<NPCData, ImmutableNPCData> {
     public NPCData copy() {
 
         /*
-        Polarity.getLogger().info(PolarityColors.GOLD.getStringColor() + "tag count: " + tags.size());
-        Polarity.getLogger().info(PolarityColors.GOLD.getStringColor() + "type: " + type.name());
-        Polarity.getLogger().info(PolarityColors.GOLD.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
-        Polarity.getLogger().info(PolarityColors.GOLD.getStringColor() + "storage count: " + storage.size());*/
+        Polarity.getLogger().info(PolarityColor.GOLD.getStringColor() + "tag count: " + tags.size());
+        Polarity.getLogger().info(PolarityColor.GOLD.getStringColor() + "type: " + type.name());
+        Polarity.getLogger().info(PolarityColor.GOLD.getStringColor() + "profile recipes: " + shopProfile.getShopRecipes().size());
+        Polarity.getLogger().info(PolarityColor.GOLD.getStringColor() + "storage count: " + storage.size());*/
 
         return new NPCData(this.tags, this.type, this.sharedUI, this.shopProfile, this.storage);
 

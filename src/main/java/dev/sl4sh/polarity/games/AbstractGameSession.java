@@ -3,6 +3,7 @@ package dev.sl4sh.polarity.games;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.commands.PolarityWarp;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.enums.games.GameNotifications;
 import dev.sl4sh.polarity.enums.games.GameSessionState;
 import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
@@ -15,17 +16,23 @@ import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.advancement.CriterionEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.event.cause.entity.damage.source.IndirectEntityDamageSource;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.KickPlayerEvent;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scoreboard.CollisionRules;
+import org.spongepowered.api.scoreboard.Scoreboard;
+import org.spongepowered.api.scoreboard.Team;
+import org.spongepowered.api.scoreboard.Visibilities;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.text.title.Title;
@@ -42,19 +49,21 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     private final GameLobby lobby;
     private final T game;
     private GameSessionState state = GameSessionState.INACTIVE;
-    private final GameManager gameManager;
     private final SessionProperties properties;
     private final int sessionID;
     private Task sessionTask;
     private Task notificationTask;
-    private final Map<Player, Integer> activePlayers = new HashMap<>();
-    private final List<Player> spectatingPlayers = new ArrayList<>();
-    
+    private final List<UUID> activePlayers = new ArrayList<>();
+    private final List<UUID> spectatingPlayers = new ArrayList<>();
+    private final List<Task> registeredTasks = new ArrayList<>();
+    private final String sessionTasksName = "Session-" + UUID.randomUUID().toString();
+    private final List<Team> internalPreTeams = new ArrayList<>();
+
+    private Scoreboard sessionScoreboard = null;
+
     private int notificationTime;
 
-    public AbstractGameSession(GameManager gameManager, int sessionID, @Nonnull SessionProperties properties) throws IllegalStateException {
-
-        this.gameManager = gameManager;
+    public AbstractGameSession(int sessionID, @Nonnull SessionProperties properties) throws IllegalStateException {
         this.sessionID = sessionID;
         this.properties = properties;
 
@@ -89,7 +98,7 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     }
 
     public GameManager getGameManager() {
-        return gameManager;
+        return Polarity.getGameManager();
     }
 
     /**
@@ -108,11 +117,28 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Override
     public T getGame() { return this.game; }
 
+    @Override
+    public List<Team> getTeams() {
+
+        if(getScoreboard() == null){
+
+            return this.internalPreTeams;
+
+        }
+
+        return new ArrayList<>(getScoreboard().getTeams());
+    }
+
+    @Override
+    public Scoreboard getScoreboard() {
+        return this.sessionScoreboard;
+    }
+
     /**
      * This method should return the session's relevant world. (Example: The lobby world if waiting for players, the game world if playing...)
      * @return The relevant world
      */
-    public World getRelevantWorld() { if(getLobby().isValidLobby()) { return getLobby().getLobbyWorld(); } else { return getGame().getGameWorld(); } }
+    public Optional<World> getRelevantWorld() { if(getLobby().isValidLobby()) { return getLobby().getLobbyWorld(); } else { return getGame().getGameWorld(); } }
 
     /**
      * This method should return the session's active state (Example: Waiting for players, running...)
@@ -148,25 +174,8 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Override
     public Optional<Task> getNotificationTask() { return Optional.ofNullable(notificationTask); }
 
-    /**
-     * This method should return the {@link #getGame()}'s actively participating players. (Example: Alive players, Waiting for respawn players...)
-     *
-     * @return The active players.
-     */
     @Override
-    public List<Player> getActivePlayers() {
-
-        return new ArrayList<>(activePlayers.keySet());
-
-    }
-
-    /**
-     * This method should return the active players associated with their team ID
-     *
-     * @return The players
-     */
-    @Override
-    public Map<Player, Integer> getPlayerTeams() {
+    public List<UUID> getActivePlayers() {
         return activePlayers;
     }
 
@@ -175,7 +184,7 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
      */
     @Override
     public void removeActivePlayer(Player player) {
-        activePlayers.remove(player);
+        activePlayers.remove(player.getUniqueId());
     }
 
     /**
@@ -184,8 +193,10 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
      * @return The spectating players
      */
     @Override
-    public List<Player> getSpectatingPlayers() {
+    public List<UUID> getSpectatingPlayers() {
+
         return spectatingPlayers;
+
     }
 
     /**
@@ -195,9 +206,9 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
      */
     @Nonnull
     @Override
-    public List<Player> getSessionPlayers() {
+    public List<UUID> getSessionPlayers() {
 
-        List<Player> newList = new ArrayList<>();
+        List<UUID> newList = new ArrayList<>();
         newList.addAll(getActivePlayers());
         newList.addAll(getSpectatingPlayers());
 
@@ -248,7 +259,7 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
      * @param notificationType The type of notification that will be sent to {@link #notifyTime(int, GameNotifications)}
      */
     @Override
-    public void scheduleTask(int timeInSeconds, Runnable runnable, GameNotifications notificationType) {
+    public void scheduleSessionTask(int timeInSeconds, Runnable runnable, GameNotifications notificationType) {
 
         notificationTime = timeInSeconds;
 
@@ -257,14 +268,22 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
 
         if(timeInSeconds <= 0) { return; }
 
-        sessionTask = Task.builder().delay(timeInSeconds, TimeUnit.SECONDS).execute(runnable).submit(Polarity.getPolarity());
-        notificationTask = Task.builder().interval(1, TimeUnit.SECONDS).delay(0, TimeUnit.SECONDS).execute(() ->{
+        sessionTask = Task.builder().name(sessionTasksName).delay(timeInSeconds, TimeUnit.SECONDS).execute(runnable).submit(Polarity.getPolarity());
+        notificationTask = Task.builder().name(sessionTasksName).interval(1, TimeUnit.SECONDS).delay(0, TimeUnit.SECONDS).execute(() ->{
 
             this.notifyTime(notificationTime, notificationType);
             notificationTime--;
 
         }).submit(Polarity.getPolarity());
 
+        registerTask(sessionTask);
+        registerTask(notificationTask);
+
+    }
+
+    @Override
+    public void registerTask(Task task) {
+        registeredTasks.add(task);
     }
 
     /**
@@ -276,71 +295,69 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Override
     public void joinSession(Player player, PlayerSessionRole playerSessionRole) {
 
-        if(getSessionPlayers().contains(player)) { return; }
+        if(getSessionPlayers().contains(player.getUniqueId())) { return; }
 
-        List<Player> actualPlayers = new ArrayList<>();
+        PlayerSessionRole localRole = playerSessionRole;
+        List<UUID> actualPlayers = new ArrayList<>();
 
         if(Polarity.getPartyManager().getPlayerParty(player).isPresent()) {
 
             GameParty party = Polarity.getPartyManager().getPlayerParty(player).get();
+
+            if(!party.getPartyOwner().equals(player.getUniqueId())){
+
+                player.sendMessage(Text.of(TextColors.RED, "Only the party owner may join game lobbies."));
+                return;
+
+            }
 
             actualPlayers.addAll(party.getPartyPlayers());
 
         }
         else{
 
-            actualPlayers.add(player);
+            actualPlayers.add(player.getUniqueId());
 
         }
 
-        if(getLobby().isValidLobby()){
+        if(getLobby().getLobbyWorld().isPresent()){
 
-            if(playerSessionRole.equals(PlayerSessionRole.PLAYER)){
+            for(UUID actualPlayerID : actualPlayers){
 
-                if(actualPlayers.size() + getActivePlayers().size() > getProperties().getMaxPlayers()){
+                if(!Sponge.getServer().getPlayer(actualPlayerID).isPresent()) { continue; }
 
-                    if(Polarity.getPartyManager().getPlayerParty(player).isPresent()) {
+                Player actualPlayer = Sponge.getServer().getPlayer(actualPlayerID).get();
 
-                        player.sendMessage(Text.of(TextColors.RED, "There are too many players in your party to join this lobby"));
+                makeTeamForPlayer(actualPlayer);
 
-                    }
-                    else {
+                if(!actualPlayer.setLocation(new Location<>(getLobby().getLobbyWorld().get(), getLobby().getLobbyWorld().get().getProperties().getSpawnPosition()))) { return; }
 
-                        player.sendMessage(Text.of(TextColors.RED, "This lobby is full. You may only join as a spectator"));
+                Utilities.savePlayerInventory(actualPlayerID);
+                Utilities.removePotionEffects(actualPlayerID);
+                Utilities.restoreMaxHealth(actualPlayerID);
+                Utilities.clearPlayerInventory(actualPlayerID);
 
-                    }
+                if(getActivePlayers().size() >= getProperties().getMaxPlayers()){
 
-                    return;
+                    localRole = PlayerSessionRole.SPECTATOR;
 
                 }
 
-            }
-
-            Integer teamID = getNextFreeTeamID();
-
-            for(Player actualPlayer : actualPlayers){
-
-                if(!actualPlayer.setLocation(new Location<>(getLobby().getLobbyWorld(), getLobby().getLobbyWorld().getProperties().getSpawnPosition()))) { return; }
-
-                Utilities.savePlayerInventory(actualPlayer);
-                Utilities.removePotionEffects(actualPlayer);
-                Utilities.restoreMaxHealth(actualPlayer);
-                player.getInventory().clear();
-
-                switch (playerSessionRole){
+                switch (localRole){
 
                     case SPECTATOR:
 
-                        getSpectatingPlayers().add(actualPlayer);
-                        Utilities.setGameMode(actualPlayer, GameModes.SPECTATOR);
+                        getSpectatingPlayers().add(actualPlayerID);
+                        Utilities.setGameMode(actualPlayerID, GameModes.SPECTATOR);
                         break;
 
                     case PLAYER:
 
-                        activePlayers.put(actualPlayer, teamID);
-                        for(Player presentPlayer : getSessionPlayers()){
+                        activePlayers.add(actualPlayerID);
 
-                            presentPlayer.sendMessage(Text.of(TextColors.AQUA, "[", getGame().getGameName(), "] | ", actualPlayer.getName(), " joined the lobby (", getActivePlayers().size(), "/", getProperties().getMaxPlayers(), ")"));
+                        for(UUID sessionPlayerID : getSessionPlayers()){
+
+                            Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((msgPlayer) -> msgPlayer.sendMessage(Text.of(getGame().getGameTintColor(), "[", getGame().getGameName(), "] | ", actualPlayer.getName(), " joined the lobby (", getActivePlayers().size(), "/", getProperties().getMaxPlayers(), ")")));
 
                         }
                         break;
@@ -354,22 +371,27 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
             if(getActivePlayers().size() == getProperties().getMaxPlayers()){
 
                 setState(GameSessionState.LAUNCHING);
-                scheduleTask(10, this::launchGame, GameNotifications.LOBBY_LAUNCH);
+                scheduleSessionTask(10, this::launchGame, GameNotifications.LOBBY_LAUNCH);
 
             }
             else if(getActivePlayers().size() >= getProperties().getMinPlayers()){
 
                 setState(GameSessionState.LAUNCHING);
-                scheduleTask(60, this::launchGame, GameNotifications.LOBBY_LAUNCH);
+                scheduleSessionTask(60, this::launchGame, GameNotifications.LOBBY_LAUNCH);
 
             }
 
         }
         else if(getGame().isValidGame()){
 
-            for(Player actualPlayer : actualPlayers){
+            for(UUID actualPlayerID : actualPlayers){
 
-                getSpectatingPlayers().add(actualPlayer);
+                getSpectatingPlayers().add(actualPlayerID);
+
+                if(!Sponge.getServer().getPlayer(actualPlayerID).isPresent()) { return; }
+
+                Player actualPlayer = Sponge.getServer().getPlayer(actualPlayerID).get();
+
                 getGame().handlePlayerJoin(actualPlayer, playerSessionRole);
                 onPlayerJoinedSession(actualPlayer, playerSessionRole);
 
@@ -401,16 +423,27 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Override
     public void onPlayerLeftSession(Player player) {
 
-        if(!getSessionPlayers().contains(player)) { return; }
+        if(!getSessionPlayers().contains(player.getUniqueId())) { return; }
 
-        getPlayerTeams().remove(player);
-        getSpectatingPlayers().remove(player);
+        if (!getLobby().isValidLobby() && getGame().isValidGame()) { getGame().handlePlayerLeft(player); }
+
+        Utilities.clearPlayerInventory(player);
+        Utilities.removePotionEffects(player);
+        Utilities.restoreMaxHealth(player);
+        Utilities.clearFireEffects(player);
+        Utilities.resetAllVelocities(player);
+        Utilities.clearArrows(player);
+        Utilities.setGameMode(player, player.getWorld().getProperties().getGameMode());
+        Utilities.setCanFly(player, false);
+
+        getActivePlayers().remove(player.getUniqueId());
+        getSpectatingPlayers().remove(player.getUniqueId());
 
         if(getLobby().isValidLobby()){
 
-            for(Player sessionPlayer : getSessionPlayers()){
+            for(UUID playerID : getSessionPlayers()){
 
-                sessionPlayer.sendMessage(Text.of(TextColors.RED, "[", getGame().getGameName(), "] | ", player.getName(), " left the lobby."));
+                Utilities.getPlayerByUniqueID(playerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(TextColors.RED, "[", getGame().getGameName(), "] | ", TextColors.LIGHT_PURPLE, player.getName(), TextColors.RED, " left the lobby.")));
 
             }
 
@@ -427,11 +460,6 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
             }
 
         }
-        else if (getGame().isValidGame()) { getGame().handlePlayerLeft(player); }
-
-        player.getInventory().clear();
-        Utilities.removePotionEffects(player);
-        Utilities.restoreMaxHealth(player);
 
         if(getActivePlayers().size() <= 0){
 
@@ -461,12 +489,12 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
         else{
 
             // Send titles to players when the times in seconds below are remaining before the game starts.
-            if(Arrays.asList(60, 30, 10, 5, 4, 3, 2, 1).contains(timeInSeconds)){
+            if(Arrays.asList(60, 30, 10, 5, 4, 3, 2, 1).contains(timeInSeconds) && getLobby().isValidLobby()){
 
-                for(Player player : getLobby().getLobbyWorld().getPlayers()){
+                for(Player player : getLobby().getLobbyWorld().get().getPlayers()){
 
-                    player.sendTitle(Title.builder().title(Text.of(TextColors.AQUA, getGame().getGameName()))
-                            .subtitle(Text.of(TextColors.AQUA, "Game starts in ", timeInSeconds, " seconds"))
+                    player.sendTitle(Title.builder().title(Text.of(getGame().getGameTintColor(), getGame().getGameName()))
+                            .subtitle(Text.of(getGame().getGameTintColor(), "Game starts in ", timeInSeconds, " seconds"))
                             .actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(30).build());
 
                     player.playSound(SoundTypes.BLOCK_NOTE_PLING, player.getPosition(), 0.5);
@@ -479,14 +507,22 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
 
     }
 
+    boolean transferring = false;
+
     /**
      * This method should handle the game initialization logic
      */
     @Override
     public void launchGame() {
 
+        this.transferring = true;
+
+        sessionScoreboard = Scoreboard.builder().teams(internalPreTeams).build();
+        getGame().setupPreGame();
         getLobby().destroyLobby();
-        getGame().setupPreGame(activePlayers, getSpectatingPlayers());
+        setupScoreboard();
+
+        this.transferring = false;
 
     }
 
@@ -501,24 +537,23 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
         // Basically invalidate and destroy everything that we can
         this.setState(GameSessionState.OVER);
 
-        Sponge.getEventManager().unregisterListeners(this);
+        for(Task task : registeredTasks){
 
-        Utilities.ifNotNull(notificationTask, Task::cancel);
-        Utilities.ifNotNull(sessionTask, Task::cancel);
+            task.cancel();
+
+        }
+
         Utilities.ifNotNull(lobby, GameLobby::destroyLobby);
         Utilities.ifNotNull(game, GameInstance::destroyGame);
 
         notificationTask = null;
         sessionTask = null;
+        activePlayers.clear();
+        spectatingPlayers.clear();
 
         Utilities.ifNotNull(source, (object) -> getGameManager().removeSession(this));
 
-        for(Player player: this.getSessionPlayers()){
-
-            Utilities.removePotionEffects(player);
-            this.printRestoreMessage(player);
-
-        }
+        Task.builder().execute(() -> Sponge.getEventManager().unregisterListeners(this)).delay(5L, TimeUnit.SECONDS).submit(Polarity.getPolarity());
 
     }
 
@@ -551,38 +586,74 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
 
     }
 
-    private Integer getNextFreeTeamID(){
+    protected abstract void setupScoreboard();
 
-        List<Integer> existingIDs = new ArrayList<>(activePlayers.values());
+    protected void makeTeamForPlayer(Player player) {
 
-        Collections.sort(existingIDs);
+        if(getProperties().getMaxTeamPlayers() <= 1) {
 
-        int old = -1;
-
-        for(Integer num : existingIDs){
-
-            Polarity.getLogger().info(String.valueOf(num));
-
-            if(old + 1 != num){
-
-                return old + 1;
-
-            }
-
-            old = num;
+            Set<Text> playerSet = new HashSet<>();
+            playerSet.add(Text.of(player.getName()));
+            internalPreTeams.add(Team.builder().members(playerSet).name(player.getName() + "'s Team").color(TextColors.NONE).build());
 
         }
 
-        return old + 1;
+        for(TextColor teamColor : Arrays.asList(TextColors.DARK_PURPLE, TextColors.GOLD, TextColors.WHITE, TextColors.BLACK)){
+
+            boolean exists = false;
+
+            for(Team team : internalPreTeams){
+
+                if(team.getColor().equals(teamColor) ){
+
+                    exists = true;
+
+                    if(team.getMembers().size() < getProperties().getMaxTeamPlayers()){
+
+                        team.addMember(Text.of(player.getName()));
+                        return;
+
+                    }
+
+                    break;
+
+
+                }
+
+            }
+    
+            if(!exists){
+
+                Set<Text> playerSet = new HashSet<>();
+                playerSet.add(Text.of(player.getName()));
+
+                internalPreTeams.add(Team.builder().allowFriendlyFire(false)
+                        .color(teamColor)
+                        .collisionRule(CollisionRules.PUSH_OTHER_TEAMS)
+                        .name(PolarityColor.colorNameFrom(teamColor) + " Team")
+                        .nameTagVisibility(Visibilities.ALWAYS)
+                        .canSeeFriendlyInvisibles(true)
+                        .members(playerSet)
+                        .build());
+
+                return;
+
+            }
+
+        }
 
     }
 
     @Listener
     public final void onDimensionChange_Post(PlayerChangeDimensionEvent.Post event){
 
-        if(getRelevantWorld().getUniqueId().equals(event.getFromWorld().getUniqueId())){
+        if(getRelevantWorld().isPresent() && getRelevantWorld().get().getUniqueId().equals(event.getFromWorld().getUniqueId())){
 
-            onPlayerLeftSession(event.getTargetEntity());
+            if(!transferring){
+
+                onPlayerLeftSession(event.getTargetEntity());
+
+            }
 
         }
 
@@ -591,21 +662,26 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Listener
     public void onPlayerMove(MoveEntityEvent event, @First Player eventPlayer){
 
-        if(event.getToTransform().getExtent().getUniqueId().equals(getRelevantWorld().getUniqueId())){
+        if(getRelevantWorld().isPresent() &&  event.getToTransform().getExtent().getUniqueId().equals(getRelevantWorld().get().getUniqueId())){
 
-            if(getState().equals(GameSessionState.PRE_GAME)){
+            if(getState().equals(GameSessionState.PRE_GAME) && activePlayers.contains(eventPlayer.getUniqueId())){
 
                 event.setToTransform(eventPlayer.getTransform());
 
             }
 
-            if(event.getToTransform().getPosition().getY() <= 5.0f){
+            if(event.getToTransform().getPosition().getY() <= 5.0f && !eventPlayer.gameMode().get().equals(GameModes.SPECTATOR)){
 
-                event.getTargetEntity().setLocation(new Location<>(getRelevantWorld(), getRelevantWorld().getProperties().getSpawnPosition()));
+                if(getLobby().isValidLobby() || getState().equals(GameSessionState.FINISHING)){
+
+                    event.getTargetEntity().setLocation(new Location<>(getRelevantWorld().get(), getRelevantWorld().get().getProperties().getSpawnPosition()));
+                    return;
+
+                }
 
                 if(getGame().isValidGame()){
 
-                    getGame().eliminatePlayer(eventPlayer, Cause.of(EventContext.empty(), getGame()));
+                    getGame().handlePlayerDeath(eventPlayer, eventPlayer);
 
                 }
 
@@ -618,9 +694,17 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Listener
     public void onDisconnect(@Nonnull ClientConnectionEvent.Disconnect event){
 
-        if(getRelevantWorld().getUniqueId().equals(event.getTargetEntity().getWorld().getUniqueId())){
+        if(getRelevantWorld().isPresent() && getRelevantWorld().get().getUniqueId().equals(event.getTargetEntity().getWorld().getUniqueId())){
 
-            PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity());
+            if(!PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity())){
+
+                // If it fails for some reason, teleport the players to the default world
+                // Getting a world by the server's default world name should always return a value
+                World defaultWorld = Sponge.getServer().getWorld(Sponge.getServer().getDefaultWorldName()).get();
+                event.getTargetEntity().setLocation(new Location<>(defaultWorld, defaultWorld.getProperties().getSpawnPosition()));
+
+            }
+
             onPlayerLeftSession(event.getTargetEntity());
 
         }
@@ -630,19 +714,36 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
     @Listener
     public void onKick(KickPlayerEvent event){
 
-        if(getRelevantWorld().getUniqueId().equals(event.getTargetEntity().getWorld().getUniqueId())){
+        if(getRelevantWorld().isPresent() && getRelevantWorld().get().getUniqueId().equals(event.getTargetEntity().getWorld().getUniqueId())){
 
-            PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity());
+            if(!PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity())){
+
+                // If it fails for some reason, teleport the players to the default world
+                // Getting a world by the server's default world name should always return a value
+                World defaultWorld = Sponge.getServer().getWorld(Sponge.getServer().getDefaultWorldName()).get();
+                event.getTargetEntity().setLocation(new Location<>(defaultWorld, defaultWorld.getProperties().getSpawnPosition()));
+
+            }
+
             onPlayerLeftSession(event.getTargetEntity());
 
         }
 
     }
 
-    @Listener
-    public void onPlayerDamage(DamageEntityEvent event, @First Player eventPlayer) {
+    @Listener(order = Order.LAST)
+    public void onPlayerDamage(DamageEntityEvent event) {
 
-        if (getRelevantWorld().getUniqueId().equals(eventPlayer.getWorld().getUniqueId())) {
+        if(!(event.getTargetEntity() instanceof Player)) { return; }
+
+        if (getRelevantWorld().isPresent() && getRelevantWorld().get().getUniqueId().equals(event.getTargetEntity().getWorld().getUniqueId())) {
+
+            if(getLobby().isValidLobby()){
+
+                event.setCancelled(true);
+                return;
+
+            }
 
             if(getState().equals(GameSessionState.FINISHING) || getState().equals(GameSessionState.OVER)){
 
@@ -651,10 +752,32 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
 
             }
 
-            if (getGame().isValidGame() && eventPlayer.health().get() <= event.getFinalDamage()) {
+            if(getSpectatingPlayers().contains(((Player)event.getTargetEntity()).getUniqueId())){
 
                 event.setCancelled(true);
-                getGame().handlePlayerDeath(eventPlayer);
+                return;
+
+            }
+
+            if(event.willCauseDeath()){
+
+                event.setCancelled(true);
+
+                if(event.getCause().first(Player.class).isPresent()){
+
+                    getGame().handlePlayerDeath((Player)event.getTargetEntity(), event.getCause().first(Player.class).get());
+
+                }
+                else if(event.getCause().first(IndirectEntityDamageSource.class).isPresent() && event.getCause().first(IndirectEntityDamageSource.class).get().getIndirectSource() instanceof Player){
+
+                    getGame().handlePlayerDeath((Player)event.getTargetEntity(), (Player)event.getCause().first(IndirectEntityDamageSource.class).get().getIndirectSource());
+
+                }
+                else{
+
+                    getGame().handlePlayerDeath((Player)event.getTargetEntity(), event.getSource());
+
+                }
 
             }
 
@@ -673,11 +796,26 @@ public abstract class AbstractGameSession<T extends GameInstance> implements Gam
 
             BlockSnapshot snap = transaction.getOriginal();
 
-            if(snap.getWorldUniqueId().equals(getRelevantWorld().getUniqueId())){
+            if(getRelevantWorld().isPresent() && snap.getWorldUniqueId().equals(getRelevantWorld().get().getUniqueId())){
 
                 event.setCancelled(true);
 
             }
+
+        }
+
+    }
+
+    /**
+     * This method listens for advancement events. Cancels everything: we don't want players to be able to fulfill advancements while they are playing games.
+     * @param event The criterion event
+     */
+    @Listener
+    public void onAdvancement(CriterionEvent.Grant event){
+
+        if(getRelevantWorld().isPresent() && event.getTargetEntity().getWorld().getUniqueId().equals(getRelevantWorld().get().getUniqueId())){
+
+            event.setCancelled(true);
 
         }
 

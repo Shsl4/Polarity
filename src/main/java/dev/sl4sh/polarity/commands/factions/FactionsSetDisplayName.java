@@ -2,7 +2,7 @@ package dev.sl4sh.polarity.commands.factions;
 
 import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.enums.PolarityColors;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.enums.PolarityErrors;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
@@ -27,7 +27,7 @@ public class FactionsSetDisplayName implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Sets your faction's display name."))
-                .arguments(GenericArguments.string(Text.of("displayName")), GenericArguments.enumValue(Text.of("color"), PolarityColors.class))
+                .arguments(GenericArguments.string(Text.of("displayName")), GenericArguments.enumValue(Text.of("color"), PolarityColor.class))
                 .permission("polarity.factions.setdisplayname")
                 .executor(new FactionsSetDisplayName())
                 .build();
@@ -45,7 +45,7 @@ public class FactionsSetDisplayName implements CommandExecutor {
             if(args.getOne("displayName").isPresent() && args.getOne("color").isPresent()){
 
                 String displayName = args.getOne("displayName").get().toString();
-                setFactionDisplayName(displayName, ply, (PolarityColors)args.getOne("color").get());
+                setFactionDisplayName(displayName, ply, (PolarityColor)args.getOne("color").get());
 
             }
 
@@ -60,7 +60,7 @@ public class FactionsSetDisplayName implements CommandExecutor {
 
     }
 
-    private void setFactionDisplayName(String displayName, Player ply, PolarityColors color){
+    private void setFactionDisplayName(String displayName, Player ply, PolarityColor color){
 
         Optional<Faction> optXFac = Utilities.getPlayerFaction(ply);
 
@@ -86,7 +86,8 @@ public class FactionsSetDisplayName implements CommandExecutor {
                 }
 
                 Polarity.getPolarity().writeAllConfig();
-                TabListManager.refreshTabLists();
+
+                TabListManager.refreshAll();
                 return;
 
             }

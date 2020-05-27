@@ -74,7 +74,7 @@ public class PolarityEconomyService implements EconomyService {
 
         }
 
-        Optional<Player> optTargetPlayer = Sponge.getServer().getPlayer(uuid);
+        Optional<Player> optTargetPlayer = Utilities.getPlayerByUniqueID(uuid);
 
         PolarityAccount newAccount;
 

@@ -1,10 +1,11 @@
 package dev.sl4sh.polarity.games;
 
 import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.enums.PolarityColors;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.games.arena.ArenaGameSession;
 import dev.sl4sh.polarity.games.rush.RushGameSession;
 import dev.sl4sh.polarity.games.spleef.SpleefGameSession;
+import org.spongepowered.api.entity.living.player.Player;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -115,6 +116,22 @@ public class GameManager {
 
     }
 
+    public Optional<GameSession<?>> getPlayerSession(Player player){
+
+        for(GameSession<?> session : getGameSessions()){
+
+            if(session.getSessionPlayers().contains(player.getUniqueId())){
+
+                return Optional.of(session);
+
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
+
     <T extends GameSession<?>> Optional<Class<T>> getSessionClassByGameID(int id){
 
         if(id == 0){
@@ -143,7 +160,7 @@ public class GameManager {
 
         if(doesSessionExistsByID(sessionID)) {
 
-            Polarity.getLogger().info(PolarityColors.RED.getStringColor() + "Tried to create a game session with an existing id.");
+            Polarity.getLogger().info(PolarityColor.RED.getStringColor() + "Tried to create a game session with an existing id.");
             return Optional.empty();
 
         }
@@ -166,7 +183,7 @@ public class GameManager {
                 }
                 catch (IllegalStateException e){
 
-                    System.out.println(PolarityColors.RED.getStringColor() + e.getMessage());
+                    System.out.println(PolarityColor.RED.getStringColor() + e.getMessage());
                     return Optional.empty();
 
                 }
@@ -185,7 +202,7 @@ public class GameManager {
                 }
                 catch (IllegalStateException e){
 
-                    System.out.println(PolarityColors.RED.getStringColor() + e.getMessage());
+                    System.out.println(PolarityColor.RED.getStringColor() + e.getMessage());
                     return Optional.empty();
 
                 }
@@ -196,7 +213,7 @@ public class GameManager {
 
                 try{
 
-                    session = new RushGameSession(this, sessionID, properties);
+                    session = new RushGameSession(sessionID, properties);
                     sessions.add(session);
                     Polarity.getNPCManager().refreshGameSelectionUIs();
                     return Optional.of(session);
@@ -204,7 +221,7 @@ public class GameManager {
                 }
                 catch (IllegalStateException e){
 
-                    System.out.println(PolarityColors.RED.getStringColor() + e.getMessage());
+                    System.out.println(PolarityColor.RED.getStringColor() + e.getMessage());
                     return Optional.empty();
 
                 }

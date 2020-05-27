@@ -1,8 +1,7 @@
 package dev.sl4sh.polarity.commands;
 
 import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.commands.elements.PositionSnapshotTagCommandElement;
-import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.enums.ChannelTypes;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;

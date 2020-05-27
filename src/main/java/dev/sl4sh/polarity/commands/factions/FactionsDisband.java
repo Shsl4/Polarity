@@ -89,7 +89,7 @@ public class FactionsDisband implements CommandExecutor {
 
                 Polarity.getFactions().remove(pendingDeleteFaction);
                 Polarity.getPolarity().writeAllConfig();
-                TabListManager.refreshTabLists();
+                TabListManager.refreshAll();
                 return true;
 
             }

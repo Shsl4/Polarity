@@ -1,9 +1,5 @@
 package dev.sl4sh.polarity.data.registration.player;
 
-import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.data.registration.UIStack.ImmutableUIStackData;
-import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
-import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.DataManipulatorBuilder;
@@ -32,4 +28,5 @@ public class TransientPlayerDataManipulatorBuilder extends AbstractDataBuilder<T
     protected Optional<TransientPlayerData> buildContent(DataView container) throws InvalidDataException {
         return Optional.empty();
     }
+
 }

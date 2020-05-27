@@ -1,7 +1,5 @@
 package dev.sl4sh.polarity.games.spleef;
 
-import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.enums.PolarityColors;
 import dev.sl4sh.polarity.enums.games.GameSessionState;
 import dev.sl4sh.polarity.games.AbstractGameSession;
 import dev.sl4sh.polarity.games.GameManager;
@@ -17,12 +15,17 @@ import java.util.Random;
 public class SpleefGameSession extends AbstractGameSession<SpleefGameInstance> {
 
     public SpleefGameSession(GameManager gameManager, int sessionID, SessionProperties properties) throws IllegalStateException {
-        super(gameManager, sessionID, properties);
+        super(sessionID, properties);
     }
 
     @Override
     public SpleefGameInstance createGame() throws IllegalStateException {
         return new SpleefGameInstance(this.getProperties().getGameMapNames().get(new Random().nextInt(this.getProperties().getGameMapNames().size())), this);
+    }
+
+    @Override
+    protected void setupScoreboard() {
+
     }
 
     /**
@@ -40,18 +43,16 @@ public class SpleefGameSession extends AbstractGameSession<SpleefGameInstance> {
 
                 BlockSnapshot snap = transaction.getOriginal();
 
-                if(snap.getWorldUniqueId().equals(getGame().getGameWorld().getUniqueId())){
+                if(snap.getWorldUniqueId().equals(getGame().getGameWorld().get().getUniqueId())){
 
                     if(!getState().equals(GameSessionState.RUNNING)){
 
                         event.setCancelled(true);
                         return;
-
                     }
 
                     if(!snap.getState().getType().equals(BlockTypes.SNOW)){
 
-                        Polarity.getLogger().info(PolarityColors.RED.getStringColor() + "Not snow but : " + snap.getState().getType().getName());
                         event.setCancelled(true);
 
                     }

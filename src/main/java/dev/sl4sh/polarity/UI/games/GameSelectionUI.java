@@ -40,7 +40,7 @@ public class GameSelectionUI extends SharedUI {
 
         for(int value : Polarity.getGameManager().getValidGameIDs()){
 
-            lobbySelectionUIs.add(new LobbySelectionUI(value));
+            lobbySelectionUIs.add(new LobbySelectionUI(value, 0));
 
         }
 
@@ -128,7 +128,7 @@ public class GameSelectionUI extends SharedUI {
                 loreList.add(Text.of(TextColors.YELLOW, "Fight your opponents in a"));
                 loreList.add(Text.of(TextColors.YELLOW, "closed arena!"));
 
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.DIAMOND_SWORD, 1, Text.of(TextColors.AQUA, "Arena"), loreList, true);
+                ItemStack stack = Utilities.makeUIStack(ItemTypes.DIAMOND_SWORD, 1, Text.of(TextColors.RED, "Arena"), loreList, true);
                 stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.GAME_SELECTION_STACK);
                 stack.offer(Polarity.Keys.UIStack.DATA_ID, 1);
                 slot.set(stack);

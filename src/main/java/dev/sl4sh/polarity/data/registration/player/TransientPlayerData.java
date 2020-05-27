@@ -1,17 +1,14 @@
 package dev.sl4sh.polarity.data.registration.player;
 
 import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.enums.ChannelTypes;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.manipulator.mutable.common.AbstractData;
 import org.spongepowered.api.data.merge.MergeFunction;
-import org.spongepowered.api.data.value.mutable.OptionalValue;
 import org.spongepowered.api.data.value.mutable.Value;
-import org.spongepowered.api.text.channel.MessageChannel;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 public class TransientPlayerData extends AbstractData<TransientPlayerData, ImmutableTransientPlayerData> {

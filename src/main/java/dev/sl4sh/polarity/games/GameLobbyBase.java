@@ -1,10 +1,9 @@
 package dev.sl4sh.polarity.games;
 
-import dev.sl4sh.polarity.commands.PolarityWarp;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.data.WorldInfo;
-import dev.sl4sh.polarity.enums.PolarityColors;
+import dev.sl4sh.polarity.commands.PolarityWarp;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -15,17 +14,19 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.difficulty.Difficulties;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class GameLobbyBase implements GameLobby {
 
-    private World lobbyWorld;
+    private UUID lobbyWorldID;
     private boolean lobbyValid;
 
     @Override
-    public final World getLobbyWorld(){ return lobbyWorld; }
+    public final Optional<World> getLobbyWorld(){ return Sponge.getServer().getWorld(lobbyWorldID); }
 
     @Override
     public final boolean isValidLobby() { return lobbyValid && getLobbyWorld() != null; }
@@ -43,11 +44,11 @@ public class GameLobbyBase implements GameLobby {
 
         if(isValidLobby()){
 
-            Polarity.getLogger().info(PolarityColors.AQUA.getStringColor() + "Destroying game lobby " + getLobbyWorld().getName());
+            Polarity.getLogger().info(PolarityColor.AQUA.getStringColor() + "Destroying game lobby " + getLobbyWorld().get().getName());
 
             invalidateLobby();
 
-            for(Player player : getLobbyWorld().getPlayers()){
+            for(Player player : getLobbyWorld().get().getPlayers()){
 
                 if(!PolarityWarp.warp(player, "Hub", Polarity.getPolarity())){
 
@@ -60,28 +61,28 @@ public class GameLobbyBase implements GameLobby {
 
             }
 
-            if(getLobbyWorld().getPlayers().size() > 0){
+            if(getLobbyWorld().get().getPlayers().size() > 0){
 
-                for(Player problematicPlayer : getLobbyWorld().getPlayers()){
+                for(Player problematicPlayer : getLobbyWorld().get().getPlayers()){
 
-                    problematicPlayer.kick(Text.of(TextColors.RED, "Internal Error. Please reconnect"));
+                    problematicPlayer.kick(Text.of(TextColors.RED, "Unexpected Error. Please reconnect"));
 
                 }
 
             }
 
-
             try{
 
-                Utilities.removeWorldInfo(getLobbyWorld());
-                Sponge.getServer().unloadWorld(getLobbyWorld());
-                Sponge.getServer().deleteWorld(getLobbyWorld().getProperties());
-                this.lobbyWorld = null;
+                WorldProperties props = getLobbyWorld().get().getProperties();
+                Utilities.removeWorldInfo(getLobbyWorld().get());
+                Sponge.getServer().unloadWorld(getLobbyWorld().get());
+                Sponge.getServer().deleteWorld(props);
+                this.lobbyWorldID = null;
 
             }
             catch(IllegalStateException e){
 
-                System.out.println(PolarityColors.RED.getStringColor() + "Failed to remove lobby world " + getLobbyWorld().getName() + ". A manual removal is required.");
+                System.out.println(PolarityColor.RED.getStringColor() + "Failed to remove lobby world " + getLobbyWorld().get().getName() + ". A manual removal is required.");
 
             }
 
@@ -113,7 +114,12 @@ public class GameLobbyBase implements GameLobby {
             worldProps.setWorldTime(18000);
             worldProps.setRaining(false);
             worldProps.setGameRule("doWeatherCycle", "false");
-            worldProps.setGameRule("doDayLightCycle", "false");
+            worldProps.setGameRule("doDaylightCycle", "false");
+            worldProps.setGameRule("doFireTick", "false");
+            worldProps.setGameRule("announceAdvancements", "false");
+            worldProps.setGameRule("commandBlocksEnabled", "true");
+            worldProps.setGameRule("commandBlockOutput", "false");
+            worldProps.setGameRule("keepInventory", "false");
 
             Optional<World> loadResult = Sponge.getServer().loadWorld(worldProps);
 
@@ -124,13 +130,13 @@ public class GameLobbyBase implements GameLobby {
 
             }
 
-            lobbyWorld = loadResult.get();
+            lobbyWorldID = loadResult.get().getUniqueId();
 
             Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
 
-            Utilities.createWorldInfoFrom(getLobbyWorld(), Sponge.getServer().getWorld(lobbyWorldName).get());
-            Utilities.getOrCreateWorldInfo(getLobbyWorld()).setDimensionProtected(true);
-            Utilities.getOrCreateWorldInfo(getLobbyWorld()).setIsGameWorld(true);
+            Utilities.createWorldInfoFrom(loadResult.get(), Sponge.getServer().getWorld(lobbyWorldName).get());
+            Utilities.getOrCreateWorldInfo(loadResult.get()).setDimensionProtected(true);
+            Utilities.getOrCreateWorldInfo(loadResult.get()).setIsGameWorld(true);
 
             lobbyValid = true;
 

@@ -10,9 +10,6 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.channel.MessageChannel;
-import org.spongepowered.api.text.channel.MessageReceiver;
-import org.spongepowered.api.text.channel.type.WorldMessageChannel;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -174,7 +171,7 @@ public class WorldInfo implements Serializable {
 
     public void addPositionSnapshot(Vector3d location, Vector3d rotation, String tag){
 
-        positionSnapshots.add(new PositionSnapshot(location, rotation, tag));
+        positionSnapshots.add(new PositionSnapshot(location.toInt(), rotation.toInt(), tag));
 
     }
 

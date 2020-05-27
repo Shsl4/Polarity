@@ -1,7 +1,6 @@
 package dev.sl4sh.polarity.commands;
 
-import dev.sl4sh.polarity.Polarity;
-import org.spongepowered.api.Sponge;
+import dev.sl4sh.polarity.TabListManager;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -9,12 +8,8 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.WorldArchetype;
-import org.spongepowered.api.world.storage.WorldProperties;
-
-import java.io.IOException;
+import org.spongepowered.api.text.format.TextColors;
 
 public class PolarityTest implements CommandExecutor {
 
@@ -34,6 +29,28 @@ public class PolarityTest implements CommandExecutor {
         if(!(src instanceof Player)) { return CommandResult.success(); }
 
         Player player = (Player)src;
+
+        /*List<UUID> pendingRemove = new ArrayList<>();
+
+        for(WorldInfo info : Polarity.getWorldsInfo().getList()){
+
+            if(!Sponge.getServer().getWorldProperties(info.getWorldUniqueID()).isPresent()){
+
+                pendingRemove.add(info.getWorldUniqueID());
+
+            }
+        }
+
+        for(UUID id : pendingRemove){
+
+            Polarity.getWorldsInfo().removeWorldInfo(id);
+
+        }*/
+
+        TabListManager.refreshAll();
+
+        player.sendMessage(Text.of(TextColors.AQUA, "Refreshed."));
+
         return CommandResult.success();
 
     }

@@ -3,8 +3,8 @@ package dev.sl4sh.polarity.commands.factions;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.enums.PolarityErrors;
-import dev.sl4sh.polarity.enums.PolarityColors;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
 import dev.sl4sh.polarity.TabListManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -27,7 +27,7 @@ public class FactionsSetPrefix implements CommandExecutor {
 
         return CommandSpec.builder()
                 .description(Text.of("Sets your faction's prefix name."))
-                .arguments(GenericArguments.string(Text.of("prefix")), GenericArguments.enumValue(Text.of("color"), PolarityColors.class))
+                .arguments(GenericArguments.string(Text.of("prefix")), GenericArguments.enumValue(Text.of("color"), PolarityColor.class))
                 .permission("polarity.factions.setprefix")
                 .executor(new FactionsSetPrefix())
                 .build();
@@ -45,12 +45,12 @@ public class FactionsSetPrefix implements CommandExecutor {
             if(args.getOne("prefix").isPresent() && args.getOne("color").isPresent()){
 
                 String prefix = args.getOne("prefix").get().toString();
-                setFactionPrefix(ply, prefix, (PolarityColors)args.getOne("color").get());
+                setFactionPrefix(ply, prefix, (PolarityColor)args.getOne("color").get());
 
             }
             else{
 
-                setFactionPrefix(ply, "", PolarityColors.WHITE);
+                setFactionPrefix(ply, "", PolarityColor.WHITE);
 
             }
 
@@ -65,7 +65,7 @@ public class FactionsSetPrefix implements CommandExecutor {
 
     }
 
-    private void setFactionPrefix(Player caller, String factionPrefix, PolarityColors color){
+    private void setFactionPrefix(Player caller, String factionPrefix, PolarityColor color){
 
         Optional<Faction> optXFac = Utilities.getPlayerFaction(caller);
 
@@ -100,7 +100,7 @@ public class FactionsSetPrefix implements CommandExecutor {
                 }
 
                 Polarity.getPolarity().writeAllConfig();
-                TabListManager.refreshTabLists();
+                TabListManager.refreshAll();
                 return;
 
             }

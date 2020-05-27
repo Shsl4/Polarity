@@ -4,7 +4,6 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.UniqueUI;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
-import dev.sl4sh.polarity.economy.ShopProfile;
 import dev.sl4sh.polarity.economy.ShopRecipe;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
@@ -15,16 +14,16 @@ import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
-import org.spongepowered.api.item.inventory.query.QueryOperationTypes;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class EditLayoutUserShopUI extends UniqueUI {
 
@@ -118,6 +117,8 @@ public class EditLayoutUserShopUI extends UniqueUI {
 
     @Override
     protected void onInteract(InteractInventoryEvent event) {
+
+        if(!canEdit) { event.setCancelled(true); return; }
 
         event.setCancelled(false);
 

@@ -5,7 +5,6 @@ import dev.sl4sh.polarity.data.factions.FactionMemberData;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -57,11 +56,6 @@ public class Faction implements Identifiable, Serializable {
     @Nonnull
     @Setting(value = "enemies")
     private List<UUID> enemies = new ArrayList<>();
-
-    //Contains allied factions UUIDs
-    @Nonnull
-    @Setting(value = "allyInvites")
-    private List<UUID> allyInvites = new ArrayList<>();
 
     @Nonnull
     private final FactionChatChannel factionChannel = new FactionChatChannel(new ArrayList<>());
@@ -124,11 +118,8 @@ public class Faction implements Identifiable, Serializable {
         this.memberDataList = new ArrayList<>();
         this.allies = new ArrayList<>();
         this.enemies = new ArrayList<>();
-        this.allyInvites = new ArrayList<>();
 
         this.memberDataList.add(new FactionMemberData(owner.getUniqueId(), new FactionPermissionData(true, true, true)));
-
-        TabListManager.refreshTabLists();
 
     }
 
@@ -153,16 +144,16 @@ public class Faction implements Identifiable, Serializable {
 
         for(FactionMemberData mbData : glData){
 
-            if(Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).isPresent()){
+            if(Utilities.getPlayerByUniqueID(mbData.getPlayerUniqueID()).isPresent()){
 
                 if (mbData.getPlayerUniqueID().equals(getOwner())){
 
-                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.GOLD , "(Owner)"));
+                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Utilities.getPlayerByUniqueID(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.GOLD , "(Owner)"));
 
                 }
                 else{
 
-                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Sponge.getServer().getPlayer(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.WHITE , "(Member)"));
+                    src.sendMessage(Text.of(TextColors.GREEN, "#" , it , ". " , TextColors.WHITE , Utilities.getPlayerByUniqueID(mbData.getPlayerUniqueID()).get().getName() , TextColors.GREEN , " | " , TextColors.WHITE , "(Member)"));
 
                 }
 
@@ -237,15 +228,7 @@ public class Faction implements Identifiable, Serializable {
     public void setDisplayName(@Nonnull String displayName) {
 
         this.displayName = displayName;
-    }
 
-    @Nonnull
-    public List<UUID> getAllyInvites() {
-        return allyInvites;
-    }
-
-    public void setAllyInvites(@Nonnull List<UUID> allyInvites) {
-        this.allyInvites = allyInvites;
     }
 
     @Nonnull

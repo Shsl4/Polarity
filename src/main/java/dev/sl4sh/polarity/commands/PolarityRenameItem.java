@@ -1,8 +1,5 @@
 package dev.sl4sh.polarity.commands;
 
-import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.enums.PolarityColors;
-import dev.sl4sh.polarity.enums.PolarityStyles;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;

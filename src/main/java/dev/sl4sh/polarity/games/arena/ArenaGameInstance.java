@@ -1,37 +1,35 @@
 package dev.sl4sh.polarity.games.arena;
 
-import com.flowpowered.math.vector.Vector3d;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.economy.PolarityEconomyService;
+import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
 import dev.sl4sh.polarity.enums.games.GameNotifications;
 import dev.sl4sh.polarity.enums.games.GameSessionState;
-import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
 import dev.sl4sh.polarity.games.AbstractGameInstance;
 import dev.sl4sh.polarity.games.GameSession;
-import dev.sl4sh.polarity.games.PositionSnapshot;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.GoldenApples;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.enchantment.EnchantmentTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
+import java.math.BigDecimal;
 import java.util.*;
 
 public class ArenaGameInstance extends AbstractGameInstance {
@@ -40,70 +38,20 @@ public class ArenaGameInstance extends AbstractGameInstance {
         super(gameWorldModel, session);
     }
 
-    /**
-     * This method should set the players spawn locations when the game starts
-     *
-     * @param players The players and their bound team ID
-     */
     @Override
-    public void setPlayerSpawnLocations(Map<Player, Integer> players) {
+    public void setupPreGame() {
 
-        List<PositionSnapshot> locations = new ArrayList<>(Utilities.getPositionSnapshotsByTag(getGameWorld(), PositionSnapshot.Tags.SPAWN_ANY));
+        if(!isValidGame()) { return; }
 
-        for(Player player : players.keySet()){
-
-            if(locations.size() > 0){
-
-                Random rand = new Random();
-                PositionSnapshot randSnap = locations.get(rand.nextInt(locations.size()));
-                player.setLocationAndRotation(new Location<>(getGameWorld(), randSnap.getLocation()), randSnap.getRotation());
-                player.offer(Keys.VELOCITY, Vector3d.ZERO);
-                player.offer(Keys.FALL_DISTANCE, 0.0f);
-                player.offer(Keys.FALL_TIME, 0);
-
-                if(locations.size() > 1){
-
-                    locations.remove(randSnap);
-
-                }
-
-                break;
-
-            }
-            else{
-
-                player.setLocation(new Location<>(getGameWorld(), getGameWorld().getProperties().getSpawnPosition()));
-
-            }
-
-        }
-
-    }
-
-    /**
-     * This method should set the spectators spawn locations when the game starts
-     *
-     * @param players The game spectators list
-     */
-    @Override
-    public void setSpectatorsSpawnLocations(List<Player> players) {
-
-        for (Player player : players){
-
-            player.setLocation(new Location<World>(getGameWorld(), getGameWorld().getProperties().getSpawnPosition()));
-
-        }
-
-    }
-
-    @Override
-    public void setupPreGame(Map<Player, Integer> players, List<Player> spectators) {
-
-        super.setupPreGame(players, spectators);
+        super.setupPreGame();
 
         ArenaPreset preset = Polarity.getGamePresets().getRandomGamePresetForGameID(getGameID()).orElse(ArenaPreset.getRandomArenaStaticPreset());
 
-        for(Player player : players.keySet()){
+        for(UUID playerID : getSession().getActivePlayers()){
+
+            if(!Utilities.getPlayerByUniqueID(playerID).isPresent()) { continue; }
+
+            Player player = Utilities.getPlayerByUniqueID(playerID).get();
 
             List<Enchantment> armorEnchantments = new ArrayList<>();
             armorEnchantments.add(Enchantment.builder().type(EnchantmentTypes.UNBREAKING).level(10).build());
@@ -132,21 +80,9 @@ public class ArenaGameInstance extends AbstractGameInstance {
     }
 
     @Override
-    public void handleGameStart() {
-
-        super.handleGameStart();
-
-        for(Player player : getSession().getActivePlayers()){
-
-            player.sendTitle(Title.builder().title(Text.of(TextColors.RED, "Fight!")).subtitle(Text.of(TextColors.RED, "Good luck! You'll need it...")).fadeIn(5).stay(20).fadeOut(5).build());
-            player.playSound(SoundTypes.BLOCK_NOTE_PLING, player.getPosition(), .25, 2.0);
-
-        }
-
-    }
-
-    @Override
     public void handleGameEnd() {
+
+        if(!isValidGame()) { return; }
 
         if(!getSession().getState().equals(GameSessionState.RUNNING)) { return; }
 
@@ -155,11 +91,15 @@ public class ArenaGameInstance extends AbstractGameInstance {
 
         if(getSession().getActivePlayers().size() == 1){
 
-            Player winner = getSession().getActivePlayers().get(0);
+            UUID winnerID = getSession().getActivePlayers().get(0);
 
-            for(Player sessionPlayer : getSession().getSessionPlayers()){
+            if(Utilities.getPlayerByUniqueID(winnerID).isPresent()){
 
-                sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.GREEN, winner.getName(), " wins!")).subtitle(Text.of(TextColors.GREEN, "Well played!")).actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(40).build());
+                for(UUID sessionPlayerID : getSession().getSessionPlayers()){
+
+                    Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.GREEN, Utilities.getPlayerByUniqueID(winnerID).get().getName(), " wins!")).subtitle(Text.of(TextColors.GREEN, "Well played!")).actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(40).build()));
+
+                }
 
             }
 
@@ -168,9 +108,9 @@ public class ArenaGameInstance extends AbstractGameInstance {
         }
         else if(getSession().getActivePlayers().size() == 0){
 
-            for(Player sessionPlayer : getSession().getSessionPlayers()){
+            for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.GRAY, "It's a tie!")).subtitle(Text.of(TextColors.GRAY, "No one wins on this one")).fadeIn(5).fadeOut(5).stay(40).actionBar(Text.EMPTY).build());
+                Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.GRAY, "It's a tie!")).subtitle(Text.of(TextColors.GRAY, "No one wins on this one")).fadeIn(5).fadeOut(5).stay(40).actionBar(Text.EMPTY).build()));
 
             }
 
@@ -179,17 +119,21 @@ public class ArenaGameInstance extends AbstractGameInstance {
         }
         else{
 
-            for(Player sessionPlayer : getSession().getSessionPlayers()){
+            for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.RED, "Sudden death!")).subtitle(Text.of(TextColors.RED, "Let's make it harder")).fadeIn(5).fadeOut(5).stay(20).actionBar(Text.EMPTY).build());
+                Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> {
 
-            }
+                    sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.RED, "Sudden death!")).subtitle(Text.of(TextColors.RED, "Let's make it harder")).fadeIn(5).fadeOut(5).stay(20).actionBar(Text.EMPTY).build());
 
-            for(Player alivePlayer : getSession().getActivePlayers()){
+                    if(getSession().getActivePlayers().contains(sessionPlayerID)){
 
-                List<PotionEffect> effects = Arrays.asList(PotionEffect.builder().potionType(PotionEffectTypes.WEAKNESS).particles(false).duration(1000000).amplifier(2).build(),
-                        PotionEffect.builder().potionType(PotionEffectTypes.WITHER).particles(false).duration(1000000).amplifier(1).build());
-                alivePlayer.offer(Keys.POTION_EFFECTS, effects);
+                        List<PotionEffect> effects = Arrays.asList(PotionEffect.builder().potionType(PotionEffectTypes.WEAKNESS).particles(false).duration(1000000).amplifier(2).build(),
+                                PotionEffect.builder().potionType(PotionEffectTypes.WITHER).particles(false).duration(1000000).amplifier(1).build());
+                        sessionPlayer.offer(Keys.POTION_EFFECTS, effects);
+
+                    }
+
+                });
 
             }
 
@@ -207,23 +151,20 @@ public class ArenaGameInstance extends AbstractGameInstance {
     @Override
     public void notifyTime(int timeInSeconds, GameNotifications notificationType) {
 
-        if(notificationType.equals(GameNotifications.PRE_GAME) && Arrays.asList(3, 2, 1).contains(timeInSeconds)){
+        if(!isValidGame()) { return; }
 
-            for(Player player : getSession().getActivePlayers()){
-
-                player.sendTitle(Title.builder().title(Text.of(TextColors.RED, timeInSeconds)).subtitle(Text.of(TextColors.RED, "Get ready!")).fadeIn(5).stay(40).fadeOut(5).build());
-                player.playSound(SoundTypes.BLOCK_NOTE_PLING, player.getPosition(), .25);
-
-            }
-
-        }
+        super.notifyTime(timeInSeconds, notificationType);
 
         if(notificationType.equals(GameNotifications.RUNNING_GAME) && Arrays.asList(60, 30, 15).contains(timeInSeconds)){
 
-            for(Player player : getSession().getActivePlayers()){
+            for(UUID playerID : getSession().getActivePlayers()){
 
-                player.sendTitle(Title.builder().title(Text.of(TextColors.RED, "Arena")).subtitle(Text.of(TextColors.RED, timeInSeconds, " seconds remaining")).fadeIn(5).stay(20).fadeOut(5).build());
-                player.playSound(SoundTypes.BLOCK_NOTE_BASS, player.getPosition(), .25);
+                Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> {
+
+                    player.sendTitle(Title.builder().title(Text.of(TextColors.RED, "Arena")).subtitle(Text.of(TextColors.RED, timeInSeconds, " seconds remaining")).fadeIn(5).stay(20).fadeOut(5).build());
+                    player.playSound(SoundTypes.BLOCK_NOTE_BASS, player.getPosition(), .25);
+
+                });
 
             }
 
@@ -237,33 +178,81 @@ public class ArenaGameInstance extends AbstractGameInstance {
     }
 
     @Override
-    public void eliminatePlayer(Player player, Cause cause) {
+    public void eliminatePlayer(Player player, Object source, boolean hasLeft) {
+
+        if(!isValidGame()) { return; }
 
         if(!getSession().getState().equals(GameSessionState.RUNNING)) { return; }
 
-        if (cause.contains(this)){
+        super.eliminatePlayer(player, source, hasLeft);
+
+        if(!hasLeft){
 
             player.sendTitle(Title.builder().title(Text.of(TextColors.RED, "You died!")).subtitle(Text.of(TextColors.RED, "They've been better than you")).actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(60).build());
 
         }
 
-        for(Player sessionPlayer : getSession().getSessionPlayers()){
+        for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-            if(sessionPlayer != player){
+            Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> {
 
-                sessionPlayer.sendMessage(Text.of(TextColors.RED, "[", getGameName(), "] | ", player.getName(), " died! ", getSession().getActivePlayers().size(), " players remaining!"));
+                if(sessionPlayer != player){
 
-            }
+                    if(getSession().getActivePlayers().size() > 1){
+
+                        sessionPlayer.sendMessage(Text.of(TextColors.RED, "[", getGameName(), "] | ", player.getName(), " died! ", getSession().getActivePlayers().size(), " players remaining!"));
+
+                    }
+
+                }
+
+                sessionPlayer.playSound(SoundTypes.ENTITY_WITHER_DEATH, sessionPlayer.getPosition(), 0.25);
+
+            });
 
         }
-
-        super.eliminatePlayer(player, cause);
 
     }
 
     @Override
     public int getGameTimeInSeconds() {
         return 90;
+    }
+
+    @Override
+    public void rewardPlayers() {
+
+        if(!Polarity.getEconomyService().isPresent()) { return; }
+
+        PolarityEconomyService service = Polarity.getEconomyService().get();
+        PolarityCurrency currency = new PolarityCurrency();
+
+        for(UUID playerID : getSession().getActivePlayers()){
+
+            service.getOrCreateAccount(playerID).get().deposit(currency, BigDecimal.valueOf(2.5), Cause.of(EventContext.empty(), this));
+
+        }
+
+    }
+
+    /**
+     * This method should return a color that will be used to color displayed texts
+     *
+     * @return The game's color
+     */
+    @Override
+    public TextColor getGameTintColor() {
+        return TextColors.RED;
+    }
+
+    /**
+     * This method should return the GameMode players should play in
+     *
+     * @return The GameMode
+     */
+    @Override
+    public GameMode getMode() {
+        return GameModes.ADVENTURE;
     }
 
 }

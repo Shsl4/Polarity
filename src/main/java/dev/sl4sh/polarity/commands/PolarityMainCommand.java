@@ -31,8 +31,8 @@ public class PolarityMainCommand implements CommandExecutor {
                 .child(PolarityHelp.getCommandSpec(), "help")
                 .child(PolarityTest.getCommandSpec(), "test")
                 .child(PolarityAddPositionSnapshot.getCommandSpec(), "addsnap")
-                .child(PolaritySummonGameSelection.getCommandSpec(), "gamesnpc")
-                .child(PolaritySummonUserShop.getCommandSpec(), "ushopnpc")
+                .child(PolaritySummonGameSelection.getCommandSpec(), "gamenpc")
+                .child(PolaritySummonUserShop.getCommandSpec(), "usershopnpc")
                 .permission("polarity")
                 .executor(new PolarityMainCommand())
                 .build();

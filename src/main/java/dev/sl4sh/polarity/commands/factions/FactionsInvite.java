@@ -138,7 +138,7 @@ public class FactionsInvite implements CommandExecutor {
         }
 
         Polarity.getPolarity().writeAllConfig();
-        TabListManager.refreshTabLists();
+        TabListManager.refreshAll();
 
     }
 

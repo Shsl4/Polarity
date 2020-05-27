@@ -1,20 +1,26 @@
 package dev.sl4sh.polarity.games;
 
+import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.commands.PolarityWarp;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.enums.games.GameNotifications;
 import dev.sl4sh.polarity.enums.games.GameSessionState;
 import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
-import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.enums.PolarityColors;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.title.Title;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.difficulty.Difficulties;
@@ -24,12 +30,15 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractGameInstance implements GameInstance {
 
-    private World gameWorld;
+    private UUID gameWorldID;
     private final GameSession<?> session;
     private boolean gameValid;
+
+    private Date startTime;
 
     /**
      * The game system works by copying an existing world template (which should have been prepared on the server before utilization),
@@ -55,13 +64,18 @@ public abstract class AbstractGameInstance implements GameInstance {
 
             WorldProperties worldProps = props.get().get();
 
-            worldProps.setPVPEnabled(true);
-            worldProps.setGameMode(GameModes.SURVIVAL);
+            worldProps.setPVPEnabled(getSession().getProperties().getPVP());
+            worldProps.setGameMode(getMode());
             worldProps.setDifficulty(Difficulties.HARD);
             worldProps.setWorldTime(18000);
             worldProps.setRaining(false);
             worldProps.setGameRule("doWeatherCycle", "false");
-            worldProps.setGameRule("doDayLightCycle", "false");
+            worldProps.setGameRule("doDaylightCycle", "false");
+            worldProps.setGameRule("announceAdvancements", "false");
+            worldProps.setGameRule("commandBlocksEnabled", "true");
+            worldProps.setGameRule("commandBlockOutput", "false");
+            worldProps.setGameRule("keepInventory", "false");
+            worldProps.setGameRule("doTileDrops", String.valueOf(enableBlockDrops()));
 
             Optional<World> loadResult = Sponge.getServer().loadWorld(worldProps);
 
@@ -72,10 +86,10 @@ public abstract class AbstractGameInstance implements GameInstance {
 
             }
 
-            gameWorld = loadResult.get();
+            gameWorldID = loadResult.get().getUniqueId();
 
-            Utilities.createWorldInfoFrom(getGameWorld(), Sponge.getServer().getWorld(gameWorldName).get());
-            Utilities.getOrCreateWorldInfo(getGameWorld()).setIsGameWorld(true);
+            Utilities.createWorldInfoFrom(loadResult.get(), Sponge.getServer().getWorld(gameWorldName).get());
+            Utilities.getOrCreateWorldInfo(loadResult.get()).setIsGameWorld(true);
             this.gameValid = true;
 
         }
@@ -88,13 +102,15 @@ public abstract class AbstractGameInstance implements GameInstance {
 
     }
 
+    protected boolean enableBlockDrops() { return true; }
+
     /**
      * This method should return the world the game is occurring in
      *
      * @return The game's world
      */
     @Override
-    public final World getGameWorld() { return this.gameWorld; }
+    public final Optional<World> getGameWorld() { return Sponge.getServer().getWorld(this.gameWorldID); }
 
     /**
      * This method should return the game's name. Used for displaying.
@@ -132,19 +148,140 @@ public abstract class AbstractGameInstance implements GameInstance {
 
     /**
      * This method should set the players spawn locations when the game starts
-     *
-     * @param players The players and their bound team ID
      */
     @Override
-    public abstract void setPlayerSpawnLocations(Map<Player, Integer> players);
+    public final void setPlayersSpawnLocations(){
+
+        if(!this.isValidGame()) { return; }
+
+        for(Team team : getSession().getTeams()){
+
+            String snapTag = "";
+
+            TextColor color = team.getColor();
+
+            if (TextColors.WHITE.equals(color)) {
+
+                snapTag = PositionSnapshot.Tags.WHITE_SPAWN;
+
+            } else if (TextColors.AQUA.equals(color)) {
+
+                snapTag = PositionSnapshot.Tags.CYAN_SPAWN;
+
+            } else if (TextColors.GOLD.equals(color)) {
+
+                snapTag = PositionSnapshot.Tags.GOLD_SPAWN;
+
+            } else if (TextColors.DARK_PURPLE.equals(color)) {
+
+                snapTag = PositionSnapshot.Tags.PURPLE_SPAWN;
+
+            } else if (TextColors.NONE.equals(color)) {
+
+                snapTag = PositionSnapshot.Tags.ANY_SPAWN;
+
+            }
+
+            spawnPlayersFromNameWithTag(team.getMembers(), snapTag);
+
+        }
+
+    }
+
 
     /**
      * This method should set the spectators spawn locations when the game starts
-     *
-     * @param players The game spectators list
      */
     @Override
-    public abstract void setSpectatorsSpawnLocations(List<Player> players);
+    public final void setSpectatorsSpawnLocations(){
+
+        spawnPlayersFromUUIDWithTag(getSession().getSpectatingPlayers(), PositionSnapshot.Tags.SPECTATOR_SPAWN);
+
+    }
+
+    public long getTimeElapsed(TimeUnit unit){
+
+        if(startTime != null){
+
+            Date now = new Date();
+            return unit.convert(now.getTime() - startTime.getTime(), TimeUnit.MILLISECONDS);
+
+        }
+
+        return 0L;
+
+    }
+
+    private void spawnPlayersFromUUIDWithTag(List<UUID> players, String tag){
+
+        if(!getGameWorld().isPresent()) { return; }
+
+        List<PositionSnapshot> locations = new ArrayList<>(Utilities.getPositionSnapshotsByTag(getGameWorld().get(), tag));
+
+        for(UUID playerID : players){
+
+            Optional<Player> player = Utilities.getPlayerByUniqueID(playerID);
+
+            if(!player.isPresent()) { continue; }
+
+            if(locations.size() > 0){
+
+                List<PositionSnapshot> used = new ArrayList<>();
+                List<PositionSnapshot> newList = new ArrayList<>(locations);
+                newList.removeAll(used);
+
+                PositionSnapshot snap = newList.get(new Random().nextInt(newList.size()));
+
+                if (used.size() + 1 < locations.size()) { used.add(snap); } else used.clear();
+
+                player.get().setLocationAndRotation(new Location<>(getGameWorld().get(), snap.getLocation()), snap.getRotation().toDouble());
+
+            }
+            else{
+
+                player.get().setLocation(new Location<>(getGameWorld().get(), getGameWorld().get().getProperties().getSpawnPosition()));
+
+            }
+
+        }
+
+    }
+
+    private void spawnPlayersFromNameWithTag(Set<Text> players, String tag){
+
+        if(!getGameWorld().isPresent()) { return; }
+
+        List<PositionSnapshot> locations = new ArrayList<>(Utilities.getPositionSnapshotsByTag(getGameWorld().get(), tag));
+
+        for(Text playerName : players){
+
+            Optional<Player> player = Utilities.getPlayerByName(playerName.toPlain());
+
+            if(!player.isPresent()) { continue; }
+
+            if(locations.size() > 0){
+
+                List<PositionSnapshot> used = new ArrayList<>();
+                List<PositionSnapshot> newList = new ArrayList<>(locations);
+                newList.removeAll(used);
+
+                PositionSnapshot snap = newList.get(new Random().nextInt(newList.size()));
+
+                if (used.size() + 1 < locations.size()) { used.add(snap); } else used.clear();
+
+                player.get().setLocationAndRotation(new Location<>(getGameWorld().get(), snap.getLocation()), snap.getRotation().toDouble());
+
+            }
+            else{
+
+                player.get().setLocation(new Location<>(getGameWorld().get(), getGameWorld().get().getProperties().getSpawnPosition()));
+
+            }
+
+        }
+
+    }
+
     /**
      * This method should handle when a player joins the game.
      *
@@ -154,23 +291,22 @@ public abstract class AbstractGameInstance implements GameInstance {
     @Override
     public void handlePlayerJoin(Player player, PlayerSessionRole role) {
 
-        if(player.setLocation(new Location<>(getGameWorld(), getGameWorld().getProperties().getSpawnPosition()))){
+        if(!getGameWorld().isPresent()) { return; }
 
-            Utilities.setGameMode(player, GameModes.SPECTATOR);
-
-        }
+        spawnPlayersFromUUIDWithTag(Collections.singletonList(player.getUniqueId()), PositionSnapshot.Tags.SPECTATOR_SPAWN);
+        Utilities.setGameMode(player, getSpectatorMode());
 
     }
 
     /**
      * This method should handle when a player leaves the game.
      *
-     * @param player The player who joined.
+     * @param player The player who left.
      */
     @Override
     public void handlePlayerLeft(Player player) {
 
-        eliminatePlayer(player, Cause.of(EventContext.empty(), player));
+        eliminatePlayer(player, Cause.of(EventContext.empty(), player), true);
 
         if(getSession().getActivePlayers().size() <= 0){
 
@@ -183,12 +319,12 @@ public abstract class AbstractGameInstance implements GameInstance {
     /**
      * This method should handle when a player dies in the game dimension.
      *
-     * @param player The player who joined.
+     * @param player The player who died.
      */
     @Override
-    public void handlePlayerDeath(Player player) {
+    public void handlePlayerDeath(Player player, Object source) {
 
-        eliminatePlayer(player, Cause.of(EventContext.empty(),this));
+        eliminatePlayer(player, Cause.of(EventContext.empty(), source), false);
 
     }
 
@@ -198,16 +334,37 @@ public abstract class AbstractGameInstance implements GameInstance {
     @Override
     public void handleGameStart() {
 
-        getSession().setState(GameSessionState.RUNNING);
-        getSession().scheduleTask(getGameTimeInSeconds(), this::handleGameEnd, GameNotifications.RUNNING_GAME);
+        for(UUID playerID : getSession().getActivePlayers()){
 
-        for(Player player : getSession().getActivePlayers()){
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> {
 
-            Utilities.setGameMode(player, GameModes.SURVIVAL);
+                player.sendTitle(Title.builder().title(Text.of(getGameTintColor(), "Let's Go!")).subtitle(Text.of(getGameTintColor(), "Good luck and have fun!")).fadeIn(5).stay(20).fadeOut(5).build());
+                player.playSound(SoundTypes.BLOCK_NOTE_PLING, player.getPosition(), .25, 2.0);
+
+            });
 
         }
 
+        for(UUID playerID : getSession().getActivePlayers()){
+
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> Utilities.setGameMode(player, getMode()));
+
+        }
+
+        for(UUID playerID : getSession().getSpectatingPlayers()){
+
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> Utilities.setGameMode(player, getSpectatorMode()));
+
+        }
+
+        getSession().setState(GameSessionState.RUNNING);
+        this.startTime = new Date();
+        getSession().scheduleSessionTask(getGameTimeInSeconds(), this::handleGameEnd, GameNotifications.RUNNING_GAME);
+
     }
+
+    @Override
+    public final GameMode getSpectatorMode() { return getSession().getProperties().getSpectatorMode(); }
 
     /**
      * This method should handle the game end.
@@ -215,17 +372,45 @@ public abstract class AbstractGameInstance implements GameInstance {
     @Override
     public void handleGameEnd() {
 
+        if(!getSession().getState().equals(GameSessionState.RUNNING)) { return; }
+
         getSession().setState(GameSessionState.FINISHING);
 
         Sponge.getEventManager().unregisterListeners(this);
 
-        for(Player player : getSession().getActivePlayers()){
+        for(UUID playerID : getSession().getActivePlayers()){
 
-            Utilities.setGameMode(player, GameModes.ADVENTURE);
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> Utilities.setGameMode(player, GameModes.ADVENTURE));
 
         }
 
-        getSession().scheduleTask(10, () -> getSession().endSession(this), GameNotifications.FINISHING_GAME);
+        this.rewardPlayers();
+
+        getSession().scheduleSessionTask(10, () -> getSession().endSession(this), GameNotifications.FINISHING_GAME);
+
+    }
+
+    protected final Optional<Team> getPlayerTeam(Player target){
+
+        return getSession().getScoreboard().getMemberTeam(Text.of(target.getName()));
+
+    }
+
+    protected final List<Team> getActiveTeams(){
+
+        List<Team> teams = new ArrayList<>();
+
+        for(UUID playerID : getSession().getActivePlayers()){
+
+            if(!Utilities.getPlayerByUniqueID(playerID).isPresent()) { continue; }
+
+            if(!getSession().getScoreboard().getMemberTeam(Text.of(Utilities.getPlayerByUniqueID(playerID).get().getName())).isPresent()) { continue; }
+
+            teams.add(getSession().getScoreboard().getMemberTeam(Text.of(Utilities.getPlayerByUniqueID(playerID).get().getName())).get());
+
+        }
+
+        return teams;
 
     }
 
@@ -236,25 +421,50 @@ public abstract class AbstractGameInstance implements GameInstance {
      * @param notificationType The notification type
      */
     @Override
-    public abstract void notifyTime(int timeInSeconds, GameNotifications notificationType);
+    public void notifyTime(int timeInSeconds, GameNotifications notificationType){
+
+        if(notificationType.equals(GameNotifications.PRE_GAME) && Arrays.asList(3, 2, 1).contains(timeInSeconds)){
+
+            for(UUID playerID : getSession().getActivePlayers()){
+
+                Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> {
+
+                    player.sendTitle(Title.builder().title(Text.of(getGameTintColor(), timeInSeconds)).subtitle(Text.of(getGameTintColor(), "Get ready!")).fadeIn(5).stay(40).fadeOut(5).build());
+                    player.playSound(SoundTypes.BLOCK_NOTE_PLING, player.getPosition(), .25);
+
+                });
+
+            }
+
+        }
+
+    }
 
     /**
      * This method should handle a player's elimination
-     *
      * @param player The eliminated player
-     * @param cause The cause of the elimination. If the cause contains the player, it means they they left the game
+     * @param source The source of the elimination
+     * @param hasLeft Whether the player has left the game
      */
     @Override
-    public void eliminatePlayer(Player player, Cause cause) {
+    public void eliminatePlayer(Player player, Object source, boolean hasLeft) {
 
-        player.getInventory().clear();
-        Utilities.removePotionEffects(player);
+        for(Inventory slot : player.getInventory().slots()){
 
-        if(cause.contains(this)){
+            if(slot.peek().isPresent()){
+
+                Utilities.spawnItem(new Location<>(player.getWorld(), player.getPosition()), slot.poll().get().createSnapshot());
+
+            }
+
+        }
+
+        getSession().removeActivePlayer(player);
+
+        if(!hasLeft){
 
             player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
-            getSession().removeActivePlayer(player);
-            getSession().getSpectatingPlayers().add(player);
+            getSession().getSpectatingPlayers().add(player.getUniqueId());
 
         }
 
@@ -269,32 +479,40 @@ public abstract class AbstractGameInstance implements GameInstance {
 
     /**
      * This method should handle the game's initialization
-     *
-     * @param players The participating players
      */
     @Override
-    public void setupPreGame(Map<Player, Integer> players, List<Player> spectators){
-
-        this.setPlayerSpawnLocations(players);
-        this.setSpectatorsSpawnLocations(spectators);
+    public void setupPreGame(){
 
         getSession().setState(GameSessionState.PRE_GAME);
 
-        for(Player player : players.keySet()){
+        this.setPlayersSpawnLocations();
+        this.setSpectatorsSpawnLocations();
 
-            Utilities.setGameMode(player, GameModes.ADVENTURE);
+        for(UUID playerID : getSession().getActivePlayers()){
+
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> {
+
+                Utilities.resetAllVelocities(player);
+                Utilities.setGameMode(player, GameModes.ADVENTURE);
+
+            });
 
         }
 
-        for(Player player : spectators){
+        for(UUID playerID : getSession().getSpectatingPlayers()){
 
-            Utilities.setGameMode(player, GameModes.SPECTATOR);
+            Utilities.getPlayerByUniqueID(playerID).ifPresent((player) -> {
+
+                Utilities.resetAllVelocities(player);
+                Utilities.setGameMode(player, getSpectatorMode());
+
+            });
 
         }
 
         Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
 
-        getSession().scheduleTask(5, this::handleGameStart, GameNotifications.PRE_GAME);
+        getSession().scheduleSessionTask(5, this::handleGameStart, GameNotifications.PRE_GAME);
 
     }
 
@@ -304,7 +522,7 @@ public abstract class AbstractGameInstance implements GameInstance {
      * @return Whether the game is considered valid or not
      */
     @Override
-    public final boolean isValidGame() { return gameValid && getGameWorld() != null; }
+    public final boolean isValidGame() { return gameValid && getGameWorld().isPresent(); }
 
     /**
      * This method should declare the game as unusable / invalid {@link #isValidGame()}
@@ -321,12 +539,14 @@ public abstract class AbstractGameInstance implements GameInstance {
         // Check if the game has not already been destroyed
         if(this.isValidGame()){
 
-            Polarity.getLogger().info(PolarityColors.AQUA.getStringColor() + "Destroying game world " + getGameWorld().getName());
+            Sponge.getEventManager().unregisterListeners(this);
+
+            Polarity.getLogger().info(PolarityColor.AQUA.getStringColor() + "Destroying game world " + getGameWorld().get().getName());
 
             this.invalidateGame();
 
             // If we want to destroy the game world we'll need to get rid of all the players in it, so we'll just warp all the player to the hub.
-            for(Player player : getGameWorld().getPlayers()){
+            for(Player player : getGameWorld().get().getPlayers()){
 
                 if(!PolarityWarp.warp(player, "Hub", Polarity.getPolarity())){
 
@@ -340,11 +560,11 @@ public abstract class AbstractGameInstance implements GameInstance {
             }
 
             // This should basically never happen, but just in case, kick all the players who haven't been teleported.
-            if(getGameWorld().getPlayers().size() > 0){
+            if(getGameWorld().get().getPlayers().size() > 0){
 
-                for(Player problematicPlayer : getGameWorld().getPlayers()){
+                for(Player problematicPlayer : getGameWorld().get().getPlayers()){
 
-                    problematicPlayer.kick(Text.of(TextColors.RED, "Internal Error. Please reconnect"));
+                    problematicPlayer.kick(Text.of(TextColors.RED, "Unexpected Error. Please reconnect"));
 
                 }
 
@@ -353,16 +573,18 @@ public abstract class AbstractGameInstance implements GameInstance {
             // Try to unload and delete the game's world
             try{
 
-                Utilities.removeWorldInfo(getGameWorld());
-                Sponge.getServer().unloadWorld(getGameWorld());
-                Sponge.getServer().deleteWorld(getGameWorld().getProperties());
-                this.gameWorld = null;
+                WorldProperties props = getGameWorld().get().getProperties();
+
+                Utilities.removeWorldInfo(getGameWorld().get());
+                Sponge.getServer().unloadWorld(getGameWorld().get());
+                Sponge.getServer().deleteWorld(props);
+                this.gameWorldID = null;
 
             }
             catch(IllegalStateException e){
 
                 // Print an error in the console on failure
-                System.out.println(PolarityColors.RED.getStringColor() + "Failed to remove lobby world " + getGameWorld().getName() + ". A manual removal is required.");
+                System.out.println(PolarityColor.RED.getStringColor() + "Failed to remove lobby world " + getGameWorld().get().getName() + ". A manual removal is required.");
 
             }
 

@@ -1,6 +1,5 @@
 package dev.sl4sh.polarity.UI.shops.user;
 
-import dev.sl4sh.polarity.NPCManager;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.shops.ShopUI;
 import dev.sl4sh.polarity.Utilities;
@@ -39,7 +38,10 @@ import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 public class MasterUserShopUI extends ShopUI {
 
@@ -165,7 +167,7 @@ public class MasterUserShopUI extends ShopUI {
 
         if(ownerName.isEmpty()) { return Optional.empty(); }
 
-        return Sponge.getServer().getPlayer(ownerName);
+        return Utilities.getPlayerByName(ownerName);
 
     }
 

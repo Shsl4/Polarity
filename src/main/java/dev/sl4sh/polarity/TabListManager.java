@@ -1,23 +1,24 @@
 package dev.sl4sh.polarity;
 
-import dev.sl4sh.polarity.commands.PolarityWarp;
-import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.Faction;
+import dev.sl4sh.polarity.data.WorldInfo;
+import dev.sl4sh.polarity.events.PlayerChangeDimensionEvent;
+import dev.sl4sh.polarity.games.GameInstance;
+import dev.sl4sh.polarity.games.GameSession;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.tab.TabList;
 import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.DestructEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
-import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 
-import javax.swing.*;
+import java.util.List;
 import java.util.Optional;
 
 public class TabListManager {
@@ -27,9 +28,9 @@ public class TabListManager {
     @Listener
     public void onPlayerJoined(ClientConnectionEvent.Join event){
 
-        if (!event.getTargetEntity().hasPlayedBefore()) {
+        event.setMessageCancelled(true);
 
-            PolarityWarp.warp(event.getTargetEntity(), "Hub", Polarity.getPolarity());
+        if (!event.getTargetEntity().hasPlayedBefore()) {
 
             for (Player ply : Sponge.getGame().getServer().getOnlinePlayers()) {
 
@@ -39,79 +40,169 @@ public class TabListManager {
 
         }
 
-        refreshTabLists();
+        refreshAll();
+
+        Sponge.getEventManager().post(new PlayerChangeDimensionEvent.Post(event.getTargetEntity(), event.getTargetEntity().getWorld(), event.getTargetEntity().getWorld(), Polarity.getPolarity()));
 
     }
 
+    @Listener
+    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event){
+
+        event.setMessageCancelled(true);
+
+    }
+
+    @Listener
+    public void onEntityDeath(DestructEntityEvent.Death event){
+
+        event.setMessageCancelled(true);
+
+    }
 
     @Listener
     public void onPlayerRespawn(RespawnPlayerEvent event){
 
-        TabList playerTabList = event.getTargetEntity().getTabList();
+        refreshForPlayer(event.getTargetEntity());
 
-        for(TabListEntry tlEntry : event.getOriginalPlayer().getTabList().getEntries()){
+    }
 
-            TabListEntry nEntry = TabListEntry.builder()
-                    .gameMode(tlEntry.getGameMode())
-                    .displayName(tlEntry.getDisplayName().get())
-                    .latency(tlEntry.getLatency())
-                    .list(playerTabList)
-                    .profile(tlEntry.getProfile())
-                    .build();
+    public static void refreshForPlayer(Player player){
 
-            playerTabList.addEntry(nEntry);
+        refresh(player);
+
+    }
+
+    public static void refreshForPlayers(List<Player> players){
+
+        for(Player player : players){
+
+            refresh(player);
+
 
         }
 
     }
 
-    public static void refreshTabLists(){
+    public static void refreshAll(){
 
-        for(Player tPlayer : Sponge.getServer().getOnlinePlayers()){
+        for(Player player : Sponge.getServer().getOnlinePlayers()){
 
-            TabList tPlayerTabList = tPlayer.getTabList();
-            Optional<Faction> optTargetPlayerFaction = Utilities.getPlayerFaction(tPlayer);
-            tPlayerTabList.setHeader(Text.of(TextColors.AQUA , "  \u00A7kl" , TextColors.RESET , TextColors.AQUA , " Welcome to" , TextColors.LIGHT_PURPLE , " \u00A7lServer" , TextStyles.RESET , " ", TextColors.AQUA , tPlayer.getName() , "! \u00A7kl" , TextColors.RESET , "  "));
+            refresh(player);
 
-            if(optTargetPlayerFaction.isPresent()){
 
-                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " Your current faction is " , optTargetPlayerFaction.get().getDisplayName() , TextColors.RESET , TextColors.AQUA , " "));
+        }
+
+    }
+
+    private static void refresh(Player target){
+
+        for(Player tabPlayer : Sponge.getServer().getOnlinePlayers()){
+
+            if(!target.getTabList().getEntry(tabPlayer.getUniqueId()).isPresent()){
+
+                TabListEntry newEntry = TabListEntry.builder()
+                        .gameMode(target.get(Keys.GAME_MODE).get())
+                        .displayName(Text.of(target.getName()))
+                        .latency(target.getConnection().getLatency())
+                        .list(target.getTabList())
+                        .profile(target.getProfile())
+                        .build();
+
+                target.getTabList().addEntry(newEntry);
+
+            }
+
+        }
+
+        WorldInfo playerWorldInfo = Utilities.getOrCreateWorldInfo(target.getWorld());
+
+        TabList playerTabList = target.getTabList();
+
+        if(playerWorldInfo.isGameWorld() && Polarity.getGameManager().getPlayerSession(target).isPresent()){
+
+            GameSession<?> playerSession = Polarity.getGameManager().getPlayerSession(target).get();
+            playerTabList.setHeader(Text.of(TextColors.AQUA, "  ", TextStyles.OBFUSCATED, "l", TextStyles.RESET, TextColors.AQUA, " You are playing ", playerSession.getGame().getGameTintColor(), playerSession.getGame().getGameName(), " ", TextColors.AQUA, TextStyles.OBFUSCATED, "l", TextStyles.RESET, "  "));
+
+            if (playerSession.getSpectatingPlayers().contains(target.getUniqueId())) {
+
+                playerTabList.setFooter(Text.of(TextColors.GRAY, " You are currently spectating "));
+
+            }
+            else {
+
+                Team playerTeam = GameInstance.EMPTY_TEAM;
+
+                for(Team existingTeam : playerSession.getTeams()){
+
+                    if(existingTeam.getMembers().contains(Text.of(target.getName()))){
+
+                        playerTeam = existingTeam;
+                        break;
+
+                    }
+
+                }
+
+                if(playerTeam.equals(GameInstance.EMPTY_TEAM)){
+
+                    playerTabList.setFooter(Text.of(playerSession.getGame().getGameTintColor(), " Your current team is undefined"));
+
+                }
+                else{
+
+                    playerTabList.setFooter(Text.of(playerSession.getGame().getGameTintColor(), " Your current team is ", playerTeam.getColor(), playerTeam.getName(), " "));
+
+                }
+
+            }
+
+        }
+        else{
+
+            playerTabList.setHeader(Text.of(TextColors.AQUA , "  ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , TextColors.AQUA , " Welcome to the " , TextColors.LIGHT_PURPLE , TextStyles.BOLD, "Server" , TextStyles.RESET , " ", TextColors.AQUA , target.getName() , "! ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , "  "));
+
+            Optional<Faction> playerFaction = Utilities.getPlayerFaction(target);
+
+            if(playerFaction.isPresent()){
+
+                playerTabList.setFooter(Text.of(TextColors.AQUA , " Your current faction is " , playerFaction.get().getDisplayName() , TextColors.RESET , TextColors.AQUA , " "));
 
             }
             else{
 
-                tPlayerTabList.setFooter(Text.of(TextColors.AQUA , " You currently do not have any faction "));
+                playerTabList.setFooter(Text.of(TextColors.AQUA , " You currently do not have any faction "));
 
             }
 
-            for(Player iPlayer : Sponge.getServer().getOnlinePlayers()){
+        }
 
-                Optional<TabListEntry> opIPlayerEntry = tPlayerTabList.getEntry(iPlayer.getUniqueId());
+        for(Player onlinePlayer : Sponge.getServer().getOnlinePlayers()){
 
-                if(opIPlayerEntry.isPresent()){
+            Optional<TabListEntry> optionalOnlinePlayerEntry = playerTabList.getEntry(onlinePlayer.getUniqueId());
 
-                    TabListEntry iPlayerEntry = opIPlayerEntry.get();
-                    Optional<Faction> optIPlayerFaction = Utilities.getPlayerFaction(iPlayer);
+            if(optionalOnlinePlayerEntry.isPresent()){
 
-                    if(optIPlayerFaction.isPresent()){
+                TabListEntry onlinePlayerEntry = optionalOnlinePlayerEntry.get();
+                Optional<Faction> onlinePlayerFaction = Utilities.getPlayerFaction(onlinePlayer);
 
-                        if(!optIPlayerFaction.get().getPrefix().equals("")){
+                if(onlinePlayerFaction.isPresent()){
 
-                            iPlayerEntry.setDisplayName(Text.of(optIPlayerFaction.get().getPrefix() , TextColors.RESET, " " , iPlayer.getName()));
+                    if(!onlinePlayerFaction.get().getPrefix().equals("")){
 
-                        }
-                        else{
-
-                            iPlayerEntry.setDisplayName(Text.of(TextColors.WHITE, "[Faction] ", iPlayer.getName()));
-
-                        }
+                        onlinePlayerEntry.setDisplayName(Text.of(onlinePlayerFaction.get().getPrefix() , TextColors.RESET, " " , onlinePlayer.getName()));
 
                     }
                     else{
 
-                        iPlayerEntry.setDisplayName(Text.of(TextColors.GREEN, "[Adventurer] ", TextColors.RESET, iPlayer.getName()));
+                        onlinePlayerEntry.setDisplayName(Text.of(TextColors.WHITE, "[Faction] ", onlinePlayer.getName()));
 
                     }
+
+                }
+                else{
+
+                    onlinePlayerEntry.setDisplayName(Text.of(TextColors.GREEN, "[Adventurer] ", TextColors.RESET, onlinePlayer.getName()));
 
                 }
 

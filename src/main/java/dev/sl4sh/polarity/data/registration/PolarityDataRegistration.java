@@ -3,6 +3,9 @@ package dev.sl4sh.polarity.data.registration;
 import com.google.common.reflect.TypeToken;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.SharedUI;
+import dev.sl4sh.polarity.data.registration.beddata.BedData;
+import dev.sl4sh.polarity.data.registration.beddata.BedDataManipulatorBuilder;
+import dev.sl4sh.polarity.data.registration.beddata.ImmutableBedData;
 import dev.sl4sh.polarity.data.registration.npcdata.ImmutableNPCData;
 import dev.sl4sh.polarity.data.registration.npcdata.NPCData;
 import dev.sl4sh.polarity.data.registration.npcdata.NPCDataManipulatorBuilder;
@@ -15,7 +18,7 @@ import dev.sl4sh.polarity.data.registration.player.TransientPlayerDataManipulato
 import dev.sl4sh.polarity.economy.ShopProfile;
 import dev.sl4sh.polarity.enums.NPCTypes;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
-import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.enums.ChannelTypes;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.DataRegistration;
@@ -25,6 +28,8 @@ import org.spongepowered.api.data.value.mutable.OptionalValue;
 import org.spongepowered.api.data.value.mutable.Value;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.plugin.PluginContainer;
+
+import java.util.UUID;
 
 public class PolarityDataRegistration {
 
@@ -101,6 +106,14 @@ public class PolarityDataRegistration {
                 .id("npcstorage")
                 .build();
 
+        Polarity.Keys.BedData.PLAYER = Key.builder()
+                .type(new TypeToken<Value<UUID>>() {})
+                .query(DataQuery.of("BedPlayers"))
+                .name("BedPlayers")
+                .id("bedplayers")
+                .build();
+
+
     }
 
     public static void register(){
@@ -133,6 +146,13 @@ public class PolarityDataRegistration {
                 .dataName("Transient Player Data")
                 .buildAndRegister(plugin);
 
+        DataRegistration.builder()
+                .dataClass(BedData.class)
+                .immutableClass(ImmutableBedData.class)
+                .builder(new BedDataManipulatorBuilder())
+                .manipulatorId("beddata")
+                .dataName("Bed Data")
+                .buildAndRegister(plugin);
     }
 
 }

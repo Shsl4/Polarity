@@ -1,11 +1,10 @@
 package dev.sl4sh.polarity.data.containers;
 
+import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
-import dev.sl4sh.polarity.commands.PolarityWarp;
 import dev.sl4sh.polarity.data.WorldInfo;
 import dev.sl4sh.polarity.events.PlayerChangeDimensionEvent;
 import dev.sl4sh.polarity.events.PlayerWarpEvent;
-import dev.sl4sh.polarity.Polarity;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -14,11 +13,11 @@ import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.hanging.Hanging;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.scheduler.Task;
@@ -31,6 +30,7 @@ import org.spongepowered.api.world.World;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @ConfigSerializable
@@ -118,6 +118,22 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
+    public boolean removeWorldInfo(UUID worldID){
+
+        for(WorldInfo info : getList()){
+
+            if (info.getWorldUniqueID().equals(worldID)){
+
+                return list.remove(info);
+
+            }
+
+        }
+
+        return false;
+
+    }
+
     @Listener
     public void onDimensionChanged(PlayerChangeDimensionEvent.Post event){
 
@@ -145,7 +161,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onDamageEvent(DamageEntityEvent event){
 
         if(event.getSource() instanceof Player && ((Player)event.getSource()).hasPermission("*")){
@@ -181,7 +197,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onEntityInteract(InteractEntityEvent event){
 
         WorldInfo worldInfo = getOrCreate(event.getTargetEntity().getWorld());
@@ -210,7 +226,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onBlockInteract(InteractBlockEvent event){
 
         if(event.getTargetBlock().getLocation().isPresent()){
@@ -242,7 +258,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onBlockBroken(ChangeBlockEvent.Break event){
 
         // Cancel destruction if the dimension is protected or if the target (block) is in a protected chunk
@@ -272,7 +288,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onExplosion(ExplosionEvent.Pre event){
 
         WorldInfo worldInfo = getOrCreate(event.getExplosion().getLocation().getExtent());
@@ -286,7 +302,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order= Order.FIRST)
     public void onBlockPlaced(ChangeBlockEvent.Place event) {
 
         // Cancel placement if the dimension is protected or if the target (block) is in a protected chunk

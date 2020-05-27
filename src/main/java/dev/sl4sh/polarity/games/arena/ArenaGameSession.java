@@ -10,12 +10,17 @@ import java.util.Random;
 public class ArenaGameSession extends AbstractGameSession<ArenaGameInstance> {
 
     public ArenaGameSession(GameManager gameManager, int sessionID, @Nonnull SessionProperties properties) throws IllegalStateException {
-        super(gameManager, sessionID, properties);
+        super(sessionID, properties);
     }
 
     @Override
     public ArenaGameInstance createGame() throws IllegalStateException {
         return new ArenaGameInstance(this.getProperties().getGameMapNames().get(new Random().nextInt(this.getProperties().getGameMapNames().size())), this);
+    }
+
+    @Override
+    protected void setupScoreboard() {
+
     }
 
 }

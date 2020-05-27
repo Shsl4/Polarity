@@ -91,7 +91,7 @@ public class FactionsKick implements CommandExecutor {
         callerFaction.getFactionChannel().removeMember(caller);
         callerFaction.getMemberDataList().remove(Utilities.getMemberDataForPlayer(targetPlayer).get());
         Polarity.getPolarity().writeAllConfig();
-        TabListManager.refreshTabLists();
+        TabListManager.refreshAll();
 
         for(FactionMemberData mbData : callerFaction.getMemberDataList()){
 

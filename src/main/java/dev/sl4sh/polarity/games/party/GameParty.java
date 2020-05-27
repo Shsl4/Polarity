@@ -1,5 +1,7 @@
 package dev.sl4sh.polarity.games.party;
 
+import dev.sl4sh.polarity.Utilities;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -7,40 +9,55 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class GameParty {
 
     @Nonnull
-    private final List<Player> partyPlayers = new ArrayList<>();
+    private final List<UUID> partyPlayers = new ArrayList<>();
 
     @Nonnull
-    private final Player partyCreator;
+    private UUID partyOwner;
 
     @Nonnull
-    public List<Player> getPartyPlayers() {
+    public List<UUID> getPartyPlayers() {
         return partyPlayers;
     }
 
     @Nonnull
-    public Player getPartyCreator() {
-        return partyCreator;
+    public UUID getPartyOwner() {
+        return partyOwner;
     }
 
-    public GameParty(@Nonnull Player partyCreator) {
-        this.partyCreator = partyCreator;
-        partyPlayers.add(partyCreator);
+    public GameParty(@Nonnull UUID partyOwner) {
+        this.partyOwner = partyOwner;
+        partyPlayers.add(partyOwner);
     }
 
     public void add(@Nonnull Player player){
 
-        if(!partyPlayers.contains(player)){
+        if(!partyPlayers.contains(player.getUniqueId())){
 
-            partyPlayers.add(player);
-            player.sendMessage(Text.of(TextColors.AQUA, "You just joined ", TextColors.LIGHT_PURPLE, player.getName(), TextColors.AQUA, "'s party."));
+            for(UUID partyPlayerID : partyPlayers){
 
-            for(Player partyPlayer : partyPlayers){
+                Optional<Player> partyPlayer = Utilities.getPlayerByUniqueID(partyPlayerID);
 
-                partyPlayer.sendMessage(Text.of(TextColors.LIGHT_PURPLE, player.getName(), TextColors.AQUA, " just joined your party."));
+                if(partyPlayer.isPresent()){
+
+                    partyPlayer.get().sendMessage(Text.of(TextColors.LIGHT_PURPLE, player.getName(), TextColors.AQUA, " just joined your party."));
+                    partyPlayer.get().playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, partyPlayer.get().getPosition(), 0.25);
+
+                }
+
+            }
+
+            partyPlayers.add(player.getUniqueId());
+
+            if(Utilities.getPlayerByUniqueID(getPartyOwner()).isPresent()){
+
+                player.sendMessage(Text.of(TextColors.AQUA, "You just joined ", TextColors.LIGHT_PURPLE, Utilities.getPlayerByUniqueID(getPartyOwner()).get().getName(), TextColors.AQUA, "'s party."));
+                player.playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, player.getPosition(), 0.25);
 
             }
 
@@ -48,24 +65,40 @@ public class GameParty {
 
     }
 
-    public void remove(@Nonnull Player target, Object source){
+    public void remove(@Nonnull Player target){
 
-        if(partyPlayers.contains(target)){
+        if(partyPlayers.contains(target.getUniqueId())){
 
-            partyPlayers.remove(target);
+            partyPlayers.remove(target.getUniqueId());
 
-            if(source == partyCreator){
+            if(getPartyPlayers().size() <= 1){
 
-                target.sendMessage(Text.of(TextColors.RED, "You've been kicked out of ", partyCreator.getName(), "'s party."));
+                destroy();
+                return;
 
             }
-            else if(source == target){
 
-                target.sendMessage(Text.of(TextColors.AQUA, "Successfully left ", partyCreator.getName(), "'s party."));
+            if(target.getUniqueId().equals(partyOwner) && partyPlayers.size() >= 1){
+
+                Optional<Player> newOwner = Utilities.getPlayerByUniqueID(partyPlayers.get(0));
+
+                if(newOwner.isPresent()){
+
+                    newOwner.get().sendMessage(Text.of(TextColors.AQUA, "You are the new party owner."));
+                    partyOwner = newOwner.get().getUniqueId();
+
+                }
 
             }
 
         }
+
+    }
+
+    public void destroy(){
+
+        this.partyOwner = UUID.randomUUID();
+        this.partyPlayers.clear();
 
     }
 

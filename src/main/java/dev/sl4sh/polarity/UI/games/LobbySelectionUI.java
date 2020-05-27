@@ -28,12 +28,13 @@ import java.util.Optional;
 
 public class LobbySelectionUI extends SharedUI {
 
-    int gameID;
+    final int gameID;
+    final int pageID;
 
     @Nonnull
     @Override
     public Text getTitle() {
-        return Text.of("GameInstance selection");
+        return Text.of(TextColors.AQUA, "Lobby selection");
     }
 
     @Nonnull
@@ -42,8 +43,9 @@ public class LobbySelectionUI extends SharedUI {
         return new InventoryDimension(9, 5);
     }
 
-    public LobbySelectionUI(int gameID) {
+    public LobbySelectionUI(int gameID, int pageID) {
         this.gameID = gameID;
+        this.pageID = pageID;
     }
 
     @Override
@@ -74,9 +76,16 @@ public class LobbySelectionUI extends SharedUI {
             }
             else if(type.equals(StackTypes.LOBBY_CREATE_STACK)){
 
+                if(Polarity.getPartyManager().getPlayerParty(player).isPresent() && !Polarity.getPartyManager().getPlayerParty(player).get().getPartyOwner().equals(player.getUniqueId())){
+
+                    player.sendMessage(Text.of(TextColors.RED, "Only the party owner may join game lobbies."));
+                    return;
+
+                }
+
                 GameManager manager = Polarity.getGameManager();
 
-                Optional<GameSession<?>> session = manager.createNewGameSession(gameID, Utilities.getNextFreeWrapperID(), SessionProperties.getGameProperties(gameID, buttonID));
+                Optional<GameSession<?>> session = manager.createNewGameSession(gameID, Utilities.getNextFreeWrapperID(), SessionProperties.getGameProperties(gameID, pageID, buttonID));
 
                 if(session.isPresent()){
 
@@ -156,11 +165,11 @@ public class LobbySelectionUI extends SharedUI {
 
     private ItemStack makeLobbyButton(List<GameSession<?>> gameSessions, int buttonIndex){
 
-        SessionProperties properties = SessionProperties.getGameProperties(gameID, buttonIndex);
+        SessionProperties properties = SessionProperties.getGameProperties(gameID, pageID, buttonIndex);
 
         for(GameSession<?> session : gameSessions){
 
-            if(session.getProperties().getProfileID() == SessionProperties.getGameProperties(gameID, buttonIndex).getProfileID()){
+            if(session.getProperties().getProfileID() == SessionProperties.getGameProperties(gameID, pageID, buttonIndex).getProfileID()){
 
                 List<Text> loreList = new ArrayList<>();
                 DyeColor dyeColor;

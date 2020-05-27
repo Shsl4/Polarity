@@ -29,7 +29,7 @@ public abstract class UniqueUI extends AbstractUI {
 
     }
 
-    protected final Optional<Player> getTargetViewer() { return Sponge.getServer().getPlayer(targetViewer); }
+    protected final Optional<Player> getTargetViewer() { return Utilities.getPlayerByUniqueID(targetViewer); }
 
     public boolean open() {
 

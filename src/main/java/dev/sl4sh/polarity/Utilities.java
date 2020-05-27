@@ -1,20 +1,20 @@
 package dev.sl4sh.polarity;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import dev.sl4sh.polarity.data.WorldInfo;
 import dev.sl4sh.polarity.data.InventoryBackup;
+import dev.sl4sh.polarity.data.WorldInfo;
 import dev.sl4sh.polarity.data.containers.WorldsInfoContainer;
 import dev.sl4sh.polarity.data.factions.FactionMemberData;
 import dev.sl4sh.polarity.data.factions.FactionPermissionData;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
+import dev.sl4sh.polarity.data.registration.player.TransientPlayerData;
 import dev.sl4sh.polarity.economy.PolarityEconomyService;
 import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
-import dev.sl4sh.polarity.data.registration.player.TransientPlayerData;
-import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.enums.ChannelTypes;
 import dev.sl4sh.polarity.games.GameSession;
 import dev.sl4sh.polarity.games.PositionSnapshot;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.Loader;
 import noppes.npcs.api.IWorld;
 import noppes.npcs.api.NpcAPI;
 import org.spongepowered.api.Sponge;
@@ -27,12 +27,13 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.entity.living.player.tab.TabList;
+import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
-import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.enchantment.EnchantmentTypes;
@@ -71,13 +72,11 @@ public class Utilities {
      * Just a static accessor for {@link WorldsInfoContainer#removeWorldInfo(World)}
      * The saved objects are held in the {@link Polarity} plugin instance. See {@link Polarity#getWorldsInfo()}
      * @param world The world to get the custom info removed
-     * @return Whether the object was removed or not
      */
-    public static boolean removeWorldInfo(World world){
+    public static void removeWorldInfo(World world){
 
         boolean value = Polarity.getWorldsInfo().removeWorldInfo(world);
         Polarity.getPolarity().writeAllConfig();
-        return value;
 
     }
 
@@ -90,7 +89,7 @@ public class Utilities {
 
         WorldInfo worldInfo = Utilities.getOrCreateWorldInfo(target.getExtent());
 
-        return worldInfo.isWorldProtected() || worldInfo.getWorldProtectedChunks().contains(target.getChunkPosition());
+        return worldInfo.isWorldProtected() || worldInfo.getWorldProtectedChunks().contains(target.getChunkPosition()) || worldInfo.isGameWorld();
 
     }
 
@@ -140,7 +139,21 @@ public class Utilities {
 
     }
 
-    public static <E extends DataHolder> boolean hasTag(E object, String tag){
+    public static boolean spawnItem(Location<World> location, ItemStack stack){
+
+        Entity item = location.getExtent().createEntity(EntityTypes.ITEM, location.getPosition());
+        item.offer(Keys.REPRESENTED_ITEM, stack.createSnapshot());
+
+        try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+
+            frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.PLUGIN);
+            return location.getExtent().spawnEntity(item);
+
+        }
+
+    }
+
+    public static <E extends DataHolder> boolean hasNPCTag(E object, String tag){
 
         if(object.get(Polarity.Keys.NPC.TAGS).isPresent()){
 
@@ -211,6 +224,20 @@ public class Utilities {
     }
 
     /**
+     * Saves a player's inventory to an InventoryBackupsContainer {@link Polarity#getInventoryBackups()} WITHOUT clearing it
+     * @param playerID The UUID of the player who must get it's inventory saved
+     */
+    public static void savePlayerInventory(UUID playerID){
+
+        if(!Sponge.getServer().getPlayer(playerID).isPresent()) { return; }
+
+        Player player = Sponge.getServer().getPlayer(playerID).get();
+
+        Utilities.savePlayerInventory(player);
+
+    }
+
+    /**
      * Compares two ItemStacks by their data, type and variant but NOT quantity.
      * @param stack1 The first stack to test
      * @param stack2 The second stack to test
@@ -238,16 +265,7 @@ public class Utilities {
 
     public static Optional<NpcAPI> getNPCsAPI(){
 
-        if(Loader.isModLoaded("customnpcs")){
-
-            return Optional.ofNullable(NpcAPI.Instance());
-
-        }
-        else{
-
-            return Optional.empty();
-
-        }
+        return Optional.ofNullable(NpcAPI.Instance());
 
     }
 
@@ -365,6 +383,25 @@ public class Utilities {
     }
 
     /**
+     * Fully heals a player
+     * @param playerID The UUID of the player to heal
+     */
+    public static void restoreMaxHealth(UUID playerID){
+
+        if(!Utilities.getPlayerByUniqueID(playerID).isPresent()) { return; }
+
+        Player player = Utilities.getPlayerByUniqueID(playerID).get();
+
+        if (player.supports(Keys.HEALTH)) {
+
+            double maxHealth = player.get(Keys.MAX_HEALTH).get();
+            player.offer(Keys.HEALTH, maxHealth);
+
+        }
+
+    }
+
+    /**
      * Removes a player's active potion effects
      * @param player The player which should have its effects removed
      */
@@ -373,6 +410,21 @@ public class Utilities {
         Utilities.setPotionEffects(player, new ArrayList<>());
 
     }
+
+    /**
+     * Removes a player's active potion effects
+     * @param playerID The UUID of the player which should have its effects removed
+     */
+    public static void removePotionEffects(UUID playerID){
+
+        if(!Sponge.getServer().getPlayer(playerID).isPresent()) { return; }
+
+        Player player = Sponge.getServer().getPlayer(playerID).get();
+
+        Utilities.setPotionEffects(player, new ArrayList<>());
+
+    }
+
 
     public static void setPotionEffects(Player player, List<PotionEffect> potionEffects){
 
@@ -388,6 +440,113 @@ public class Utilities {
     public static void setGameMode(Player player, GameMode gameMode){
 
         player.offer(Keys.GAME_MODE, gameMode);
+
+    }
+
+    /**
+     * Sets a player's game mode
+     * @param playerID The UUID of the player which should have its GameMode changed
+     * @param gameMode The new GameMode
+     */
+    public static void setGameMode(UUID playerID, GameMode gameMode){
+
+        if(!Sponge.getServer().getPlayer(playerID).isPresent()) { return; }
+
+        Player player = Sponge.getServer().getPlayer(playerID).get();
+
+        player.offer(Keys.GAME_MODE, gameMode);
+
+    }
+
+    public static void clearPlayerInventory(Player player){
+
+        player.getInventory().clear();
+
+    }
+
+    public static void clearFireEffects(Player player){
+
+        player.offer(Keys.FIRE_TICKS, 0);
+
+    }
+
+    public static void resetAllVelocities(Player player){
+
+        player.offer(Keys.VELOCITY, Vector3d.ZERO);
+        player.offer(Keys.FALL_DISTANCE, 0.0f);
+        player.offer(Keys.FALL_TIME, 0);
+
+    }
+
+    public static void clearArrows(Player player){
+
+        player.offer(Keys.STUCK_ARROWS, 0);
+
+    }
+
+    public static void clearPlayerInventory(UUID playerID){
+
+        if(!Sponge.getServer().getPlayer(playerID).isPresent()) { return; }
+
+        Player player = Sponge.getServer().getPlayer(playerID).get();
+
+        player.getInventory().clear();
+
+    }
+
+    public static void clearPlayerTabList(Player player){
+
+        TabList playerTabList = player.getTabList();
+
+        List<UUID> list = new ArrayList<>();
+
+        for(TabListEntry entry : playerTabList.getEntries()){
+
+            list.add(entry.getProfile().getUniqueId());
+
+        }
+
+        for(UUID id : list){
+
+            playerTabList.removeEntry(id);
+
+        }
+
+    }
+
+    public static <T, X> List<T> getKeysByValue(Map<T, X> map, X value){
+
+        List<T> keys = new ArrayList<>();
+
+        for(T key : map.keySet()){
+
+            if (map.get(key).equals(value)){
+
+                keys.add(key);
+
+            }
+
+        }
+
+        return keys;
+
+    }
+
+    public static <T, X> List<X> getValuesNoDuplicate(Map<T, X> map){
+
+        List<X> values = new ArrayList<>();
+
+        for(X value : map.values()){
+
+            if(!values.contains(value)){
+
+                values.add(value);
+
+            }
+
+        }
+
+        return values;
 
     }
 
@@ -449,9 +608,9 @@ public class Utilities {
 
     }
 
-    public static WorldInfo createWorldInfoFrom(World world, World from){
+    public static void createWorldInfoFrom(World world, World from){
 
-        return Polarity.getWorldsInfo().createFrom(world, from);
+        Polarity.getWorldsInfo().createFrom(world, from);
 
     }
 
@@ -734,15 +893,15 @@ public class Utilities {
 
     }
 
-    public static Optional<Player> getPlayerByName(String PlayerName){
-
-        return Sponge.getServer().getPlayer(PlayerName);
-
-    }
-
     public static Optional<Player> getPlayerByUniqueID(UUID uuid){
 
         return Sponge.getServer().getPlayer(uuid);
+
+    }
+
+    public static Optional<Player> getPlayerByName(String name){
+
+        return Sponge.getServer().getPlayer(name);
 
     }
 
@@ -776,6 +935,12 @@ public class Utilities {
         }
 
         return strBld.toString();
+
+    }
+
+    public static void setCanFly(Player player, boolean value) {
+
+        player.offer(Keys.CAN_FLY, value);
 
     }
 

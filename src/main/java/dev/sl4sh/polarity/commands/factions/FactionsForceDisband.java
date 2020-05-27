@@ -50,7 +50,7 @@ public class FactionsForceDisband implements CommandExecutor {
             if(forceDisbandFaction(args.getOne("factionName").get().toString().toLowerCase())){
 
                 serv.sendMessage(Text.of(TextColors.GREEN, "The faction " , args.getOne("factionName").get().toString().toLowerCase() , " has been successfully disbanded."));
-                TabListManager.refreshTabLists();
+                TabListManager.refreshAll();
 
             }
             else{

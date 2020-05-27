@@ -4,6 +4,7 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.UniqueUI;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
+import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.entity.living.player.Player;
@@ -12,6 +13,7 @@ import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
@@ -50,41 +52,60 @@ public class SellDepositUI extends UniqueUI {
     @Override
     protected void onInteract(InteractInventoryEvent event) {
 
-        ItemStack eventStack = event.getCursorTransaction().getOriginal().createStack();
-        event.setCancelled(!Utilities.isUIStack(eventStack));
+        if(event instanceof ClickInventoryEvent.Primary){
 
-    }
+            ClickInventoryEvent.Primary primaryEvent = (ClickInventoryEvent.Primary)event;
 
-    @Override
-    protected void onPrimary(ClickInventoryEvent.Primary event){
+            if(primaryEvent.getTransactions().size() <= 0) { return; }
 
-        if(event.getTransactions().size() <= 0) { return; }
+            Polarity.getLogger().info("Inventory: " + event.getTargetInventory());
+            Polarity.getLogger().info("Event: " + event.toString());
 
-        ItemStack eventStack = event.getTransactions().get(0).getOriginal().createStack();
+            for(Transaction<ItemStackSnapshot> transaction : primaryEvent.getTransactions()){
 
-        if(Utilities.isUIStack(eventStack)) {
+                Polarity.getLogger().info("Original: " + transaction.getOriginal() + " Value: " + Utilities.isUIStack(transaction.getOriginal().createStack()));
+                Polarity.getLogger().info("Default: " + transaction.getDefault() + " Value: " + Utilities.isUIStack(transaction.getDefault().createStack()));
+                Polarity.getLogger().info("Final: " + transaction.getFinal() + " Value: " + Utilities.isUIStack(transaction.getFinal().createStack()));
 
-            if (eventStack.get(Polarity.Keys.UIStack.TYPE).isPresent() && eventStack.get(Polarity.Keys.UIStack.TYPE).get().equals(StackTypes.NAVIGATION_BUTTON)) {
+                if(Utilities.isUIStack(transaction.getOriginal().createStack()) || Utilities.isUIStack(transaction.getFinal().createStack())){
 
-                confirmed = true;
+                    event.setCancelled(true);
 
-                for (Inventory subInv : getUI().slots()) {
+                    if (transaction.getOriginal().get(Polarity.Keys.UIStack.TYPE).isPresent() && transaction.getOriginal().get(Polarity.Keys.UIStack.TYPE).get().equals(StackTypes.NAVIGATION_BUTTON)) {
 
-                    Optional<ItemStack> optStack = subInv.peek();
+                        confirmed = true;
 
-                    if (optStack.isPresent() && !Utilities.isUIStack(optStack.get())) {
+                        for (Inventory subInv : getUI().slots()) {
 
-                        stacks.add(optStack.get());
+                            Optional<ItemStack> optStack = subInv.peek();
+
+                            if (optStack.isPresent() && !Utilities.isUIStack(optStack.get())) {
+
+                                stacks.add(optStack.get());
+
+                            }
+
+                            Task.builder().delayTicks(1L).execute(() -> getTargetViewer().get().closeInventory()).submit(Polarity.getPolarity());
+
+                        }
 
                     }
 
-                    Task.builder().delayTicks(1L).execute(() -> getTargetViewer().get().closeInventory()).submit(Polarity.getPolarity());
+                }
+                else{
+
+                    event.setCancelled(false);
 
                 }
 
+                return;
+
             }
 
+
         }
+
+        event.setCancelled(true);
 
     }
 

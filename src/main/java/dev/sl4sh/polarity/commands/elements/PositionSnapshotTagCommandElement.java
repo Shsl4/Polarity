@@ -32,15 +32,14 @@ public class PositionSnapshotTagCommandElement extends CommandElement {
 
         List<String> returnList = new ArrayList<>();
         List<String> existingNames = Arrays.asList(PositionSnapshot.Tags.DEFAULT_SPAWN,
-                PositionSnapshot.Tags.SPAWN_ANY,
-                PositionSnapshot.Tags.TEAM1_SPAWN,
-                PositionSnapshot.Tags.TEAM2_SPAWN,
-                PositionSnapshot.Tags.TEAM3_SPAWN,
-                PositionSnapshot.Tags.TEAM4_SPAWN,
-                PositionSnapshot.Tags.BRICK_SPAWN,
-                PositionSnapshot.Tags.IRON_SPAWN,
+                PositionSnapshot.Tags.ANY_SPAWN,
+                PositionSnapshot.Tags.WHITE_SPAWN,
                 PositionSnapshot.Tags.GOLD_SPAWN,
-                PositionSnapshot.Tags.EMERALD_SPAWN);
+                PositionSnapshot.Tags.PURPLE_SPAWN,
+                PositionSnapshot.Tags.CYAN_SPAWN,
+                PositionSnapshot.Tags.ORE_SPAWN,
+                PositionSnapshot.Tags.DIAMOND_SPAWN,
+                PositionSnapshot.Tags.RUSH_SHOP);
 
         for(String existingName : existingNames){
 

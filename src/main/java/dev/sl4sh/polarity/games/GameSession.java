@@ -5,13 +5,15 @@ import dev.sl4sh.polarity.enums.games.GameSessionState;
 import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scoreboard.Scoreboard;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface GameSession<T extends GameInstance> {
 
@@ -20,6 +22,8 @@ public interface GameSession<T extends GameInstance> {
      * @return The actual object
      */
     GameLobby getLobby();
+
+    Scoreboard getScoreboard();
 
     /**
      * This method should return the session's assigned {@link GameInstance} object.
@@ -31,7 +35,7 @@ public interface GameSession<T extends GameInstance> {
      * This method should return the session's relevant world. (Example: The lobby world if waiting for players, the game world if playing...)
      * @return The relevant world
      */
-    World getRelevantWorld();
+    Optional<World> getRelevantWorld();
 
     /**
      * This method should return the session's active state (Example: Waiting for players, running...)
@@ -59,37 +63,36 @@ public interface GameSession<T extends GameInstance> {
     @Nonnull
     Optional<Task> getNotificationTask();
 
-
     /**
      * This method should return the {@link #getGame()}'s actively participating players. (Example: Alive players, Waiting for respawn players...)
      * @return The active players.
      */
-    List<Player> getActivePlayers();
+    List<UUID> getActivePlayers();
 
     /**
-     * This method should return the active players associated with their team ID
+     * This method should return the active players associated with their team
      * @return The players
      */
-    Map<Player, Integer> getPlayerTeams();
+    List<Team> getTeams();
 
-    /**
+     /**
      * This method should remove a player from the active players list.
      * @param player The player to remove
-     */
+      * */
     void removeActivePlayer(Player player);
 
     /**
      * This method should return the players who will / are spectating the game
      * @return The spectating players
      */
-    List<Player> getSpectatingPlayers();
+    List<UUID> getSpectatingPlayers();
 
     /**
      * This method should return a map containing all the players who are present in the session.
      * @return The player list
      */
     @Nonnull
-    List<Player> getSessionPlayers();
+    List<UUID> getSessionPlayers();
 
     /**
      * This method should return the session's properties (Should be final). See {@link SessionProperties}.
@@ -124,7 +127,9 @@ public interface GameSession<T extends GameInstance> {
      * @param runnable The action to execute at the end of the time
      * @param notificationType The type of notification that will be sent to {@link #notifyTime(int, GameNotifications)}
      */
-    void scheduleTask(int timeInSeconds, Runnable runnable, GameNotifications notificationType);
+    void scheduleSessionTask(int timeInSeconds, Runnable runnable, GameNotifications notificationType);
+
+    void registerTask(Task task);
 
     /**
      * This method should get called to make a player join the session.

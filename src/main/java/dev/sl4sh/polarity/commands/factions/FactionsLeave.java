@@ -95,7 +95,7 @@ public class FactionsLeave implements CommandExecutor {
 
                         }
 
-                        TabListManager.refreshTabLists();
+                        TabListManager.refreshAll();
 
                     }
                     else{

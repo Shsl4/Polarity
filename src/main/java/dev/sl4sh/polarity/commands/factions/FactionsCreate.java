@@ -86,7 +86,7 @@ public class FactionsCreate implements CommandExecutor {
                 caller.sendMessage(Text.of(TextColors.GREEN, "Successfully created your faction named " , factionName , "!"));
                 caller.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, caller.getPosition(), .25);
                 Polarity.getPolarity().writeAllConfig();
-                TabListManager.refreshTabLists();
+                TabListManager.refreshAll();
                 return true;
 
             }

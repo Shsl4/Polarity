@@ -4,12 +4,13 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.enums.games.GameNotifications;
 import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.scoreboard.Team;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  * This interface is the base object for {@link Polarity}'s games.
@@ -17,11 +18,13 @@ import java.util.Map;
  */
 public interface GameInstance {
 
+    Team EMPTY_TEAM = Team.builder().name("INVALID").build();
+
     /**
      * This method should return the world the game is occurring in
      * @return The game's world
      */
-    World getGameWorld();
+    Optional<World> getGameWorld();
 
     /**
      * This method should return the game's name. Used for displaying
@@ -49,17 +52,35 @@ public interface GameInstance {
      */
     int getGameTimeInSeconds();
 
+    void rewardPlayers();
+
+    /**
+     * This method should return a color that will be used to color displayed texts
+     * @return The game's color
+     */
+    TextColor getGameTintColor();
+
+    /**
+     * This method should return the GameMode players should play in
+     * @return The GameMode
+     */
+    GameMode getMode();
+
+    /**
+     * This method should return the GameMode spectators should spectate in
+     * @return The GameMode
+     */
+    GameMode getSpectatorMode();
+
     /**
      * This method should set the players spawn locations when the game starts
-     * @param players The players and their bound team ID
      */
-    void setPlayerSpawnLocations(Map<Player, Integer> players);
+    void setPlayersSpawnLocations();
 
     /**
      * This method should set the spectators spawn locations when the game starts
-     * @param players The game spectators list
      */
-    void setSpectatorsSpawnLocations(List<Player> players);
+    void setSpectatorsSpawnLocations();
 
     /**
      * This method should handle when a player joins the game.
@@ -69,15 +90,15 @@ public interface GameInstance {
 
     /**
      * This method should handle when a player leaves the game.
-     * @param player The player who joined.
+     * @param player The player who left.
      */
     void handlePlayerLeft(Player player);
 
     /**
      * This method should handle when a player dies in the game dimension.
-     * @param player The player who joined.
+     * @param player The player who died.
      */
-    void handlePlayerDeath(Player player);
+    void handlePlayerDeath(Player player, Object source);
 
     /**
      * This method should handle the game start
@@ -99,15 +120,14 @@ public interface GameInstance {
     /**
      * This method should handle a player's elimination
      * @param player The eliminated player
+     * @param hasLeft Whether the player has left the game
      */
-    void eliminatePlayer(Player player, Cause cause);
+    void eliminatePlayer(Player player, Object source, boolean hasLeft);
 
     /**
      * This method should handle the game's initialization
-     * @param players The participating players
-     * @param spectators The players who will spectate the game
      */
-    void setupPreGame(Map<Player, Integer> players, List<Player> spectators);
+    void setupPreGame();
 
     /**
      * This method should return true if the game can be used in any way

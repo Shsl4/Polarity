@@ -3,9 +3,10 @@ package dev.sl4sh.polarity;
 import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import dev.sl4sh.polarity.UI.SharedUI;
-import dev.sl4sh.polarity.UI.games.GameSelectionUI;
 import dev.sl4sh.polarity.chat.GeneralChannel;
 import dev.sl4sh.polarity.commands.*;
+import dev.sl4sh.polarity.commands.debug.TabAdd;
+import dev.sl4sh.polarity.commands.debug.TabRemove;
 import dev.sl4sh.polarity.commands.economy.PolarityShowBalance;
 import dev.sl4sh.polarity.commands.economy.PolarityTransfer;
 import dev.sl4sh.polarity.commands.factions.FactionsMainCommand;
@@ -18,20 +19,18 @@ import dev.sl4sh.polarity.economy.ShopProfile;
 import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
 import dev.sl4sh.polarity.economy.transactionidentifiers.PlayRewardIdentifier;
 import dev.sl4sh.polarity.enums.NPCTypes;
-import dev.sl4sh.polarity.enums.PolarityColors;
+import dev.sl4sh.polarity.enums.PolarityColor;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
-import dev.sl4sh.polarity.enums.games.ChannelTypes;
+import dev.sl4sh.polarity.enums.ChannelTypes;
 import dev.sl4sh.polarity.events.PlayerChangeDimensionEvent;
 import dev.sl4sh.polarity.games.*;
 import dev.sl4sh.polarity.games.party.GamePartyManager;
 import io.github.nucleuspowered.nucleus.api.NucleusAPI;
-import noppes.npcs.api.NpcAPI;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.DataManager;
 import org.spongepowered.api.data.key.Key;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.data.value.mutable.ListValue;
@@ -39,15 +38,12 @@ import org.spongepowered.api.data.value.mutable.OptionalValue;
 import org.spongepowered.api.data.value.mutable.Value;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
-import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.HandInteractEvent;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
@@ -58,11 +54,13 @@ import org.spongepowered.api.event.item.inventory.DropItemEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.ban.BanService;
+import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.ban.Ban;
@@ -74,16 +72,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "polarity", name = "Polarity", description = "Polarity", authors = { "Sl4sh!" })
+@Plugin(id = Polarity.MODID,
+        name = Polarity.MODNAME,
+        description = "Polarity",
+        authors = { "Sl4sh!" },
+        dependencies = { @Dependency(id = "customnpcs", optional = true),
+                         @Dependency(id = "nucleus", optional = true)
+})
 public class Polarity {
+
+    public static final String MODID = "polarity";
+    public static final String MODNAME = "Polarity";
 
     public static class Keys{
 
@@ -102,6 +104,12 @@ public class Polarity {
             public static Key<Value<StackTypes>> TYPE;
             public static Key<Value<Integer>> BUTTON_ID;
             public static Key<Value<Integer>> DATA_ID;
+
+        }
+
+        public static class BedData{
+
+            public static Key<Value<UUID>> PLAYER;
 
         }
 
@@ -219,8 +227,8 @@ public class Polarity {
         PluginContainer plugin = Sponge.getPluginManager().getPlugin("polarity").get();
 
         // Register the economy service
-        Sponge.getServiceManager().setProvider(plugin, PolarityEconomyService.class, new PolarityEconomyService());
-        economyService = Sponge.getServiceManager().provide(PolarityEconomyService.class).get();
+        Sponge.getServiceManager().setProvider(plugin, EconomyService.class, new PolarityEconomyService());
+        economyService = (PolarityEconomyService) Sponge.getServiceManager().provide(EconomyService.class).get();
 
     }
 
@@ -264,8 +272,7 @@ public class Polarity {
 
         // Register all of the plugin's commands
         Sponge.getCommandManager().register(this, PolarityMainCommand.getCommandSpec(), "polarity");
-        Sponge.getCommandManager().register(this, PolarityMainCommand.getCommandSpec(), "economy");
-        Sponge.getCommandManager().register(this, FactionsMainCommand.getCommandSpec(), "factions");
+        Sponge.getCommandManager().register(this, FactionsMainCommand.getCommandSpec(), "faction");
         Sponge.getCommandManager().register(this, PolarityHub.getCommandSpec(), "hub");
         Sponge.getCommandManager().register(this, PolarityWarp.getCommandSpec(), "warp");
         Sponge.getCommandManager().register(this, PolarityChannelMain.getCommandSpec(), "channel");
@@ -275,10 +282,11 @@ public class Polarity {
         Sponge.getCommandManager().register(this, PolarityRemoveEnchantment.getCommandSpec(), "disenchant");
         Sponge.getCommandManager().register(this, PolarityMakeUnbreakable.getCommandSpec(), "makeunbreakable");
         Sponge.getCommandManager().register(this, ShopBuilderMain.getCommandSpec(), "shopbuilder");
-        Sponge.getCommandManager().register(this, PolarityShowBalance.getCommandSpec(), "showbalance");
+        Sponge.getCommandManager().register(this, PolarityShowBalance.getCommandSpec(), "balance");
         Sponge.getCommandManager().register(this, PolarityTransfer.getCommandSpec(), "transfer");
-
-
+        Sponge.getCommandManager().register(this, PolarityPartyMain.getCommandSpec(), "party");
+        Sponge.getCommandManager().register(this, TabAdd.getCommandSpec(), "tabadd");
+        Sponge.getCommandManager().register(this, TabRemove.getCommandSpec(), "tabremove");
 
         // Prints a cool status message (such cool)
         logger.info("\u00a7aSuccessfully Initialized!");
@@ -353,7 +361,7 @@ public class Polarity {
             if(!preTpEvent.isCancelled()){
 
                 event.setCancelled(false);
-                PlayerChangeDimensionEvent.Post postTpEvent =  new PlayerChangeDimensionEvent.Post(teleportedPlayer, from, to, event.getSource());
+                PlayerChangeDimensionEvent.Post postTpEvent = new PlayerChangeDimensionEvent.Post(teleportedPlayer, from, to, event.getSource());
                 Utilities.setGameMode(teleportedPlayer, to.getProperties().getGameMode());
                 Sponge.getEventManager().post(postTpEvent);
 
@@ -381,8 +389,6 @@ public class Polarity {
     @Listener
     public void onDimensionChanged(PlayerChangeDimensionEvent.Post event){
 
-        TabListManager.refreshTabLists();
-
         // If the player teleports to the Hub dimension
         if(event.getToWorld().getName().equals("Hub")){
 
@@ -396,14 +402,20 @@ public class Polarity {
 
             Utilities.setPotionEffects(event.getTargetEntity(), effects);
 
+            Utilities.setGameMode(event.getTargetEntity(), GameModes.ADVENTURE);
+            Utilities.setCanFly(event.getTargetEntity(), true);
+
         }
         // Else if the player teleports from the Hub dimension
         else if(event.getFromWorld().getName().equals("Hub")){
 
             // Clear the player's potion effects
             Utilities.removePotionEffects(event.getTargetEntity());
+            Utilities.setCanFly(event.getTargetEntity(), false);
 
         }
+
+        TabListManager.refreshAll();
 
     }
 
@@ -451,7 +463,7 @@ public class Polarity {
 
         } catch (ObjectMappingException | IOException | NullPointerException e) {
 
-            getLogger().info(PolarityColors.RED.getStringColor() + "Load error for class " + objectClass.getName());
+            getLogger().info(PolarityColor.RED.getStringColor() + "Load error for class " + objectClass.getName());
             return Optional.empty();
 
         }

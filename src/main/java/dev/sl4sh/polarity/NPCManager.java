@@ -1,14 +1,13 @@
 package dev.sl4sh.polarity;
 
+import dev.sl4sh.polarity.UI.SharedUI;
 import dev.sl4sh.polarity.UI.games.LobbySelectionUI;
+import dev.sl4sh.polarity.UI.shops.SellDepositUI;
+import dev.sl4sh.polarity.UI.shops.ShopUI;
 import dev.sl4sh.polarity.UI.shops.user.MasterUserShopUI;
 import dev.sl4sh.polarity.data.registration.npcdata.NPCData;
 import dev.sl4sh.polarity.economy.ShopProfile;
-import dev.sl4sh.polarity.UI.shops.SellDepositUI;
-import dev.sl4sh.polarity.UI.shops.ShopUI;
-import dev.sl4sh.polarity.UI.games.GameSelectionUI;
 import dev.sl4sh.polarity.enums.NPCTypes;
-import dev.sl4sh.polarity.enums.PolarityColors;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import noppes.npcs.api.entity.ICustomNpc;
 import noppes.npcs.api.event.NpcEvent;
@@ -34,17 +33,13 @@ import java.util.*;
 
 public class NPCManager {
 
-    public List<GameSelectionUI> gameSelectionUIs = new ArrayList<>();
+    public List<LobbySelectionUI> lobbySelectionUIs = new ArrayList<>();
 
     public void refreshGameSelectionUIs(){
 
-        for(GameSelectionUI ui : gameSelectionUIs){
+        for(LobbySelectionUI lobbyUI : lobbySelectionUIs){
 
-            for(LobbySelectionUI lobbyUI : ui.getLobbySelectionUIs()){
-
-                lobbyUI.refreshUI();
-
-            }
+            lobbyUI.refreshUI();
 
         }
 
@@ -60,15 +55,15 @@ public class NPCManager {
 
     }
 
-    public void makeGameSelectionNPC(Location<World> location){
+    public void makeGameSelectionNPC(Location<World> location, int gameID, int pageID){
 
         Optional<Entity> entity = makeEntity(location, EntityTypes.HUMAN);
 
-        GameSelectionUI selectionUI = new GameSelectionUI();
+        LobbySelectionUI selectionUI = new LobbySelectionUI(gameID, pageID);
 
-        NPCData data = new NPCData(Collections.singletonList("GameSelection"), NPCTypes.GAME_SELECTION_NPC, selectionUI, new ShopProfile(), new ArrayList<>());
+        NPCData data = new NPCData(Arrays.asList("GameSelection", String.valueOf(gameID), String.valueOf(pageID)), NPCTypes.GAME_SELECTION_NPC, selectionUI, new ShopProfile(), new ArrayList<>());
 
-        Polarity.getNPCManager().gameSelectionUIs.add(selectionUI);
+        Polarity.getNPCManager().lobbySelectionUIs.add(selectionUI);
 
         entity.ifPresent(value -> value.offer(data));
 
@@ -85,6 +80,18 @@ public class NPCManager {
         NPCData data = new NPCData(Collections.singletonList(dataName), NPCTypes.ADMINSHOP_NPC, null, new ShopProfile(), new ArrayList<>());
 
         entity.ifPresent(value -> value.offer(data));
+
+    }
+
+    public Optional<Entity> makeGameShopNPC(Location<World> location, SharedUI ui){
+
+        Optional<Entity> entity = makeEntity(location, EntityTypes.HUMAN);
+
+        NPCData data = new NPCData(new ArrayList<>(), NPCTypes.ADMINSHOP_NPC, ui, new ShopProfile(), new ArrayList<>());
+
+        entity.ifPresent(value -> value.offer(data));
+
+        return entity;
 
     }
 
@@ -151,16 +158,10 @@ public class NPCManager {
         Player clicker = (Player)event.player.getMCEntity();
         Entity entity = (Entity)event.npc.getMCEntity();
 
-        if(clicker.hasPermission("*") && clicker.getItemInHand(HandTypes.MAIN_HAND).isPresent() &&  clicker.getItemInHand(HandTypes.MAIN_HAND).get().getType().equals(ItemTypes.STICK)){
+        if(clicker.hasPermission("*") && clicker.getItemInHand(HandTypes.MAIN_HAND).isPresent() && clicker.getItemInHand(HandTypes.MAIN_HAND).get().getType().equals(ItemTypes.STICK)){
 
-            if(clicker.getItemInHand(HandTypes.MAIN_HAND).get().get(Keys.DISPLAY_NAME).isPresent()){
-
-                String color = PolarityColors.stringColorFrom(clicker.getItemInHand(HandTypes.MAIN_HAND).get().get(Keys.DISPLAY_NAME).get().getColor());
-
-                event.npc.getDisplay().setName(color + event.npc.getDisplay().getName());
-                return;
-
-            }
+            event.npc.getDisplay().setName("\u00a7" + event.npc.getDisplay().getName());
+            return;
 
         }
 
@@ -201,8 +202,8 @@ public class NPCManager {
                 }
                 else{
 
-                    GameSelectionUI ui = new GameSelectionUI();
-                    Polarity.getNPCManager().gameSelectionUIs.add(ui);
+                    LobbySelectionUI ui = new LobbySelectionUI(Integer.parseInt(entity.get(Polarity.Keys.NPC.TAGS).get().get(1)), Integer.parseInt(entity.get(Polarity.Keys.NPC.TAGS).get().get(2)));
+                    Polarity.getNPCManager().lobbySelectionUIs.add(ui);
                     entity.offer(Polarity.Keys.NPC.SHARED_UI, Optional.of(ui));
                     ui.openFor(clicker);
 

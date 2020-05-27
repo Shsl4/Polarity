@@ -1,15 +1,16 @@
 package dev.sl4sh.polarity.economy;
 
-import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
-import dev.sl4sh.polarity.economy.transactionidentifiers.AdminIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.PlayRewardIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.SellIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.GameIdentifier;
 import dev.sl4sh.polarity.Faction;
 import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
+import dev.sl4sh.polarity.economy.transactionidentifiers.AdminIdentifier;
+import dev.sl4sh.polarity.economy.transactionidentifiers.GameIdentifier;
+import dev.sl4sh.polarity.economy.transactionidentifiers.PlayRewardIdentifier;
+import dev.sl4sh.polarity.economy.transactionidentifiers.SellIdentifier;
+import dev.sl4sh.polarity.games.GameInstance;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
@@ -26,7 +27,10 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @ConfigSerializable
 public class PolarityAccount implements UniqueAccount, Serializable {
@@ -208,37 +212,36 @@ public class PolarityAccount implements UniqueAccount, Serializable {
     private void printIncomeMessage(Currency currency, BigDecimal amount, Cause cause){
 
         // Send income notifications to the owner if it is a player.
-        if(Sponge.getServer().getPlayer(ownerUUID).isPresent() && currency instanceof PolarityCurrency){
+        if(Utilities.getPlayerByUniqueID(ownerUUID).isPresent() && currency instanceof PolarityCurrency){
 
-            PolarityCurrency dollarCurrency = (PolarityCurrency)currency;
-            Player targetPlayer = Sponge.getServer().getPlayer(ownerUUID).get();
+            Player targetPlayer = Utilities.getPlayerByUniqueID(ownerUUID).get();
 
             targetPlayer.playSound(SoundTypes.ENTITY_PLAYER_LEVELUP, targetPlayer.getPosition(), .25);
 
             if(cause.allOf(AdminIdentifier.class).size() > 0){
 
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account by an administrator!"));
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account by an administrator!"));
                 return;
 
             }
 
             if(cause.allOf(PlayRewardIdentifier.class).size() > 0){
 
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account for being online!"));
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for being online!"));
                 return;
 
             }
 
             if(cause.allOf(SellIdentifier.class).size() > 0){
 
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account for selling items!"));
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for selling items!"));
                 return;
 
             }
 
             if(cause.allOf(GameIdentifier.class).size() > 0){
 
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", dollarCurrency.format(amount, 2), TextColors.AQUA, " have been added to your account for winning a game! Well done!"));
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for winning a game! Well done!"));
                 return;
 
             }
@@ -251,7 +254,7 @@ public class PolarityAccount implements UniqueAccount, Serializable {
 
                     if(senderPlayer.equals(targetPlayer)) { return; }
 
-                    targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", dollarCurrency.format(amount, 2), TextColors.AQUA, " from ", senderPlayer.getName(), "!"));
+                    targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", currency.format(amount, 2), TextColors.AQUA, " from ", senderPlayer.getName(), "!"));
                     return;
 
                 }
@@ -264,14 +267,22 @@ public class PolarityAccount implements UniqueAccount, Serializable {
 
                     Faction senderFaction = cause.first(Faction.class).get();
 
-                    targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", dollarCurrency.format(amount, 2), TextColors.AQUA, " from ", senderFaction.getDisplayName(), TextColors.AQUA, " faction!"));
+                    targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", currency.format(amount, 2), TextColors.AQUA, " from ", senderFaction.getDisplayName(), TextColors.AQUA, " faction!"));
                     return;
 
                 }
 
             }
 
-            targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", dollarCurrency.format(amount, 2), TextColors.AQUA, "!"));
+            if(cause.containsType(GameInstance.class)){
+
+                GameInstance instance = cause.first(GameInstance.class).get();
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You have been rewarded ", currency.format(amount, 2), TextColors.AQUA, " for your performance in ", instance.getGameTintColor(), instance.getGameName(), TextColors.AQUA, "."));
+                return;
+
+            }
+
+            targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", currency.format(amount, 2), TextColors.AQUA, "!"));
 
         }
 
