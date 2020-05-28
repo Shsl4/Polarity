@@ -211,7 +211,7 @@ public class RushGameInstance extends AbstractGameInstance {
 
         }
 
-        Optional<Team> killedPlayerTeam = getPlayerTeam(player);
+        Team killedPlayerTeam = getSession().getPlayerTeam(player);
 
         if(respawnLocations.containsKey(player.getUniqueId())){
 
@@ -223,11 +223,11 @@ public class RushGameInstance extends AbstractGameInstance {
 
                 if(player != source){
 
-                    Optional<Team> killerTeam = getPlayerTeam(causer);
+                    Team killerTeam = getSession().getPlayerTeam(causer);
 
                     for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                        Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.orElse(EMPTY_TEAM).getColor(), player.getName(), getGameTintColor(), " was slain by ", killerTeam.orElse(EMPTY_TEAM).getColor(), causer.getName(), getGameTintColor(), ".")));
+                        Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.getColor(), player.getName(), getGameTintColor(), " was slain by ", killerTeam.getColor(), causer.getName(), getGameTintColor(), ".")));
 
                     }
 
@@ -236,7 +236,7 @@ public class RushGameInstance extends AbstractGameInstance {
 
                     for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                        Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.orElse(EMPTY_TEAM).getColor(), player.getName(), getGameTintColor(), " killed himself.")));
+                        Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.getColor(), player.getName(), getGameTintColor(), " killed himself.")));
 
                     }
 
@@ -247,7 +247,7 @@ public class RushGameInstance extends AbstractGameInstance {
 
                 for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                    Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.orElse(EMPTY_TEAM).getColor(), player.getName(), getGameTintColor(), " died.")));
+                    Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendMessage(Text.of(killedPlayerTeam.getColor(), player.getName(), getGameTintColor(), " died.")));
 
                 }
 
@@ -255,7 +255,7 @@ public class RushGameInstance extends AbstractGameInstance {
 
             Vector3i respawnLocation = respawnLocations.get(player.getUniqueId());
             player.offer(Keys.POTION_EFFECTS, Collections.singletonList(PotionEffect.builder().potionType(PotionEffectTypes.BLINDNESS).duration(120).amplifier(2).build()));
-            player.sendTitle(Title.builder().title(Text.of(getPlayerTeam(player).orElse(EMPTY_TEAM).getColor(), getGameName())).subtitle(Text.of(getPlayerTeam(player).orElse(EMPTY_TEAM).getColor(), "Respawning in 5 seconds")).actionBar(Text.EMPTY).build());
+            player.sendTitle(Title.builder().title(Text.of(getSession().getPlayerTeam(player).getColor(), getGameName())).subtitle(Text.of(getSession().getPlayerTeam(player).getColor(), "Respawning in 5 seconds")).actionBar(Text.EMPTY).build());
             player.playSound(SoundTypes.BLOCK_NOTE_BASS, player.getPosition(), 0.25f);
 
             getSession().registerTask(Task.builder().delay(5, TimeUnit.SECONDS).execute(() -> {
@@ -298,11 +298,9 @@ public class RushGameInstance extends AbstractGameInstance {
         List<Enchantment> armorEnchantments = new ArrayList<>();
         armorEnchantments.add(Enchantment.builder().type(EnchantmentTypes.UNBREAKING).level(1).build());
 
-        Optional<Team> team = getPlayerTeam(player);
-
-        if(!team.isPresent()) { return; }
-
-        Color color = PolarityColor.rawColorFrom(team.get().getColor());
+        Team team = getSession().getPlayerTeam(player);
+        
+        Color color = PolarityColor.rawColorFrom(team.getColor());
 
         ItemStack helmStack = ItemStack.builder().itemType(ItemTypes.LEATHER_HELMET).build();
         helmStack.offer(Keys.ITEM_ENCHANTMENTS, armorEnchantments);
@@ -391,9 +389,9 @@ public class RushGameInstance extends AbstractGameInstance {
 
         if(!getSession().getState().equals(GameSessionState.RUNNING)) { return; }
 
-        if(getActiveTeams().size() == 1){
+        if(getSession().getActiveTeams().size() == 1){
 
-            Team winningTeam = getActiveTeams().get(0);
+            Team winningTeam = getSession().getActiveTeams().get(0);
             TextColor color = winningTeam.getColor();
             String teamName = winningTeam.getName();
 
@@ -413,7 +411,7 @@ public class RushGameInstance extends AbstractGameInstance {
             super.handleGameEnd();
 
         }
-        else if(getActiveTeams().size() <= 0){
+        else if(getSession().getActiveTeams().size() <= 0){
 
             for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
@@ -449,7 +447,7 @@ public class RushGameInstance extends AbstractGameInstance {
             Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> {
 
                 sessionPlayer.playSound(SoundTypes.ENTITY_WITHER_DEATH, sessionPlayer.getPosition(), 0.25);
-                sessionPlayer.sendMessage(Text.of(getGameTintColor(), "[", getGameName(), "] | ", getPlayerTeam(player).orElse(EMPTY_TEAM).getColor(), player.getName(), getGameTintColor(), " is eliminated! (", getSession().getActivePlayers().size() - 1, "/", getSession().getProperties().getMaxPlayers(), ")"));
+                sessionPlayer.sendMessage(Text.of(getGameTintColor(), "[", getGameName(), "] | ", getSession().getPlayerTeam(player).getColor(), player.getName(), getGameTintColor(), " is eliminated! (", getSession().getActivePlayers().size() - 1, "/", getSession().getProperties().getMaxPlayers(), ")"));
 
             });
 
@@ -457,7 +455,7 @@ public class RushGameInstance extends AbstractGameInstance {
 
         super.eliminatePlayer(player, source, hasLeft);
 
-        if(getActiveTeams().size() <= 1){
+        if(getSession().getActiveTeams().size() <= 1){
 
             this.handleGameEnd();
 
@@ -479,13 +477,11 @@ public class RushGameInstance extends AbstractGameInstance {
 
                 this.setupDefaultInventory(player);
 
-                Optional<Team> team = getPlayerTeam(player);
-
-                if(!team.isPresent()) { return; }
-
+                Team team = getSession().getPlayerTeam(player);
+                
                 ItemStack bedStack = ItemStack.builder().itemType(ItemTypes.BED).build();
-                bedStack.offer(Keys.DYE_COLOR, PolarityColor.dyeColorFrom(team.get().getColor()));
-                bedStack.offer(Keys.DISPLAY_NAME, Text.of(team.get().getColor(), player.getName(), "'s Bed"));
+                bedStack.offer(Keys.DYE_COLOR, PolarityColor.dyeColorFrom(team.getColor()));
+                bedStack.offer(Keys.DISPLAY_NAME, Text.of(team.getColor(), player.getName(), "'s Bed"));
                 Utilities.givePlayer(player, bedStack, true);
 
             });
@@ -593,11 +589,11 @@ public class RushGameInstance extends AbstractGameInstance {
 
                 player.sendMessage(Text.EMPTY);
 
-                Utilities.getPlayerByUniqueID(finalMostKills).ifPresent((killer) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most Kills:", TextStyles.RESET, " ", getPlayerTeam(killer).orElse(EMPTY_TEAM).getColor(), highestKills, " (", killer.getName(), ")")));
+                Utilities.getPlayerByUniqueID(finalMostKills).ifPresent((killer) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most Kills:", TextStyles.RESET, " ", getSession().getPlayerTeam(killer).getColor(), highestKills, " (", killer.getName(), ")")));
 
-                Utilities.getPlayerByUniqueID(finalMostDamage).ifPresent((damager) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most damage:", TextStyles.RESET, " ", getPlayerTeam(damager).orElse(EMPTY_TEAM).getColor(), highestDamage.intValue(), " (", damager.getName(), ")")));
+                Utilities.getPlayerByUniqueID(finalMostDamage).ifPresent((damager) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most damage:", TextStyles.RESET, " ", getSession().getPlayerTeam(damager).getColor(), highestDamage.intValue(), " (", damager.getName(), ")")));
 
-                Utilities.getPlayerByUniqueID(finalMostBuilds).ifPresent((builder) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most blocks placed:", TextStyles.RESET, " ", getPlayerTeam(builder).orElse(EMPTY_TEAM).getColor(), highestBlocks, " (", builder.getName(), ")")));
+                Utilities.getPlayerByUniqueID(finalMostBuilds).ifPresent((builder) -> player.sendMessage(Text.of(TextStyles.UNDERLINE, getGameTintColor(), "Most blocks placed:", TextStyles.RESET, " ", getSession().getPlayerTeam(builder).getColor(), highestBlocks, " (", builder.getName(), ")")));
 
             });
 
@@ -690,7 +686,7 @@ public class RushGameInstance extends AbstractGameInstance {
                 if(snap.getFinal().getExtendedState().getType().equals(BlockTypes.BED)){
 
                     respawnLocations.put(player.getUniqueId(), snap.getFinal().getPosition());
-                    player.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(getPlayerTeam(player).orElse(EMPTY_TEAM).getColor(), "Saved your respawn location")).build());
+                    player.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(getSession().getPlayerTeam(player).getColor(), "Saved your respawn location")).build());
                     player.playSound(SoundTypes.BLOCK_NOTE_XYLOPHONE, player.getPosition(), 0.25);
 
                 }

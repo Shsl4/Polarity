@@ -34,7 +34,7 @@ public class ShopBuilderEdit implements CommandExecutor {
 
             if(!Polarity.getShopProfiles().getExistingShopProfilesNames().contains((String)args.getOne("profileName").get())) { throw new CommandException(Text.of("This shop profile does not exist")); }
 
-            new ManageAdminShopUI(caller, (String)args.getOne("profileName").get()).open();
+            new ManageAdminShopUI(caller.getUniqueId(), (String)args.getOne("profileName").get()).open();
 
         }
 

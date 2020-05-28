@@ -4,7 +4,6 @@ import dev.sl4sh.polarity.economy.ItemShopRecipe;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
@@ -14,11 +13,12 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class RushMiscShopUI extends RushPurchaseUI{
 
-    public RushMiscShopUI(@Nonnull Player viewer, RushShopSelectionUI selectionUI) {
-        super(viewer, selectionUI);
+    public RushMiscShopUI(@Nonnull UUID viewerID, RushShopSelectionUI selectionUI) {
+        super(viewerID, selectionUI);
 
         List<PotionEffect> healEffect = Collections.singletonList(PotionEffect.builder().particles(true).duration(1).potionType(PotionEffectTypes.INSTANT_HEALTH).amplifier(1).build());
 

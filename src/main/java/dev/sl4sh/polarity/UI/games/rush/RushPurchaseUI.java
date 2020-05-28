@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public abstract class RushPurchaseUI extends UniqueUI {
 
@@ -34,8 +35,8 @@ public abstract class RushPurchaseUI extends UniqueUI {
 
     protected final List<ItemShopRecipe> recipes = new ArrayList<>();
 
-    public RushPurchaseUI(@Nonnull Player viewer, RushShopSelectionUI selectionUI) {
-        super(viewer);
+    public RushPurchaseUI(@Nonnull UUID viewerID, RushShopSelectionUI selectionUI) {
+        super(viewerID);
         this.selectionUI = selectionUI;
     }
 

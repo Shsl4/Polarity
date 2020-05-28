@@ -23,6 +23,7 @@ import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.enchantment.EnchantmentTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
@@ -30,7 +31,10 @@ import org.spongepowered.api.text.title.Title;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 public class ArenaGameInstance extends AbstractGameInstance {
 
@@ -89,24 +93,20 @@ public class ArenaGameInstance extends AbstractGameInstance {
         getSession().getSessionTask().ifPresent(Task::cancel);
         getSession().getNotificationTask().ifPresent(Task::cancel);
 
-        if(getSession().getActivePlayers().size() == 1){
+        if(getSession().getActiveTeams().size() == 1){
 
-            UUID winnerID = getSession().getActivePlayers().get(0);
+            Team winningTeam = getSession().getActiveTeams().get(0);
 
-            if(Utilities.getPlayerByUniqueID(winnerID).isPresent()){
+            for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
-                for(UUID sessionPlayerID : getSession().getSessionPlayers()){
-
-                    Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendTitle(Title.builder().title(Text.of(TextColors.GREEN, Utilities.getPlayerByUniqueID(winnerID).get().getName(), " wins!")).subtitle(Text.of(TextColors.GREEN, "Well played!")).actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(40).build()));
-
-                }
+                Utilities.getPlayerByUniqueID(sessionPlayerID).ifPresent((sessionPlayer) -> sessionPlayer.sendTitle(Title.builder().title(Text.of(winningTeam.getColor(), winningTeam.getName(), " wins!")).subtitle(Text.of(winningTeam.getColor(), "Well played!")).actionBar(Text.EMPTY).fadeIn(5).fadeOut(5).stay(40).build()));
 
             }
 
             super.handleGameEnd();
 
         }
-        else if(getSession().getActivePlayers().size() == 0){
+        else if(getSession().getActiveTeams().size() == 0){
 
             for(UUID sessionPlayerID : getSession().getSessionPlayers()){
 
@@ -198,7 +198,7 @@ public class ArenaGameInstance extends AbstractGameInstance {
 
                 if(sessionPlayer != player){
 
-                    if(getSession().getActivePlayers().size() > 1){
+                    if(getSession().getActiveTeams().size() > 1){
 
                         sessionPlayer.sendMessage(Text.of(TextColors.RED, "[", getGameName(), "] | ", player.getName(), " died! ", getSession().getActivePlayers().size(), " players remaining!"));
 

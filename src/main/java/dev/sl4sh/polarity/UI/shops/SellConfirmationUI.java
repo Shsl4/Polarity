@@ -1,16 +1,15 @@
 package dev.sl4sh.polarity.UI.shops;
 
-import dev.sl4sh.polarity.UI.UniqueUI;
-import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
-import dev.sl4sh.polarity.economy.transactionidentifiers.SellIdentifier;
 import dev.sl4sh.polarity.Polarity;
+import dev.sl4sh.polarity.UI.UniqueUI;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.economy.PolarityEconomyService;
+import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
+import dev.sl4sh.polarity.economy.transactionidentifiers.SellIdentifier;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.data.type.SkullTypes;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
@@ -30,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class SellConfirmationUI extends UniqueUI {
 
@@ -39,9 +39,9 @@ public class SellConfirmationUI extends UniqueUI {
     private float totalSellPrice = 0.0f;
     private boolean confirmed = false;
 
-    public SellConfirmationUI(Player player, List<ItemStack> stacks){
+    public SellConfirmationUI(UUID viewerID, List<ItemStack> stacks){
 
-        super(player);
+        super(viewerID);
         this.stacks = stacks;
 
     }

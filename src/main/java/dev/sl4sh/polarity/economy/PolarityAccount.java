@@ -5,9 +5,7 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
 import dev.sl4sh.polarity.economy.transactionidentifiers.AdminIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.GameIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.PlayRewardIdentifier;
-import dev.sl4sh.polarity.economy.transactionidentifiers.SellIdentifier;
+import dev.sl4sh.polarity.economy.transactionidentifiers.OnlineRewardIdentifier;
 import dev.sl4sh.polarity.games.GameInstance;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
@@ -225,23 +223,9 @@ public class PolarityAccount implements UniqueAccount, Serializable {
 
             }
 
-            if(cause.allOf(PlayRewardIdentifier.class).size() > 0){
+            if(cause.allOf(OnlineRewardIdentifier.class).size() > 0){
 
                 targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for being online!"));
-                return;
-
-            }
-
-            if(cause.allOf(SellIdentifier.class).size() > 0){
-
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for selling items!"));
-                return;
-
-            }
-
-            if(cause.allOf(GameIdentifier.class).size() > 0){
-
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "", currency.format(amount, 2), TextColors.AQUA, " have been added to your account for winning a game! Well done!"));
                 return;
 
             }
@@ -277,12 +261,10 @@ public class PolarityAccount implements UniqueAccount, Serializable {
             if(cause.containsType(GameInstance.class)){
 
                 GameInstance instance = cause.first(GameInstance.class).get();
-                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You have been rewarded ", currency.format(amount, 2), TextColors.AQUA, " for your performance in ", instance.getGameTintColor(), instance.getGameName(), TextColors.AQUA, "."));
+                targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", currency.format(amount, 2), TextColors.AQUA, " for your performance in ", instance.getGameTintColor(), instance.getGameName(), TextColors.AQUA, "."));
                 return;
 
             }
-
-            targetPlayer.sendMessage(Text.of(TextColors.AQUA, "You just received ", currency.format(amount, 2), TextColors.AQUA, "!"));
 
         }
 

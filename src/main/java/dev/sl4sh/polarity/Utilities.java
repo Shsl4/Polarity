@@ -43,6 +43,7 @@ import org.spongepowered.api.item.inventory.ItemStackComparators;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.transaction.InventoryTransactionResult;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scoreboard.Scoreboard;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
@@ -75,7 +76,7 @@ public class Utilities {
      */
     public static void removeWorldInfo(World world){
 
-        boolean value = Polarity.getWorldsInfo().removeWorldInfo(world);
+        Polarity.getWorldsInfo().removeWorldInfo(world);
         Polarity.getPolarity().writeAllConfig();
 
     }
@@ -944,4 +945,17 @@ public class Utilities {
 
     }
 
+    public static void resetPlayer(Player player) {
+
+        Utilities.clearPlayerInventory(player);
+        Utilities.setGameMode(player, player.getWorld().getProperties().getGameMode());
+        Utilities.removePotionEffects(player);
+        Utilities.restoreMaxHealth(player);
+        Utilities.clearFireEffects(player);
+        Utilities.resetAllVelocities(player);
+        Utilities.clearArrows(player);
+        Utilities.setCanFly(player, false);
+        player.setScoreboard(Scoreboard.builder().teams(new ArrayList<>()).build());
+
+    }
 }

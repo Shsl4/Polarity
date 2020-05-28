@@ -8,7 +8,6 @@ import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.data.type.SkullTypes;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
@@ -24,15 +23,16 @@ import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class SellUserShopUI extends UniqueUI {
 
     @Nonnull
     private final MasterUserShopUI masterShop;
 
-    public SellUserShopUI(@Nonnull Player viewer, @Nonnull MasterUserShopUI masterShop) {
+    public SellUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
 
-        super(viewer);
+        super(viewerID);
         this.masterShop = masterShop;
 
     }

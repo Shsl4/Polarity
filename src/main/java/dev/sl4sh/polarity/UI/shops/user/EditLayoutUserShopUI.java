@@ -8,7 +8,6 @@ import dev.sl4sh.polarity.economy.ShopRecipe;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
@@ -24,6 +23,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class EditLayoutUserShopUI extends UniqueUI {
 
@@ -32,8 +32,8 @@ public class EditLayoutUserShopUI extends UniqueUI {
 
     private boolean canEdit = false;
 
-    public EditLayoutUserShopUI(@Nonnull Player viewer, @Nonnull MasterUserShopUI masterShop) {
-        super(viewer);
+    public EditLayoutUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
+        super(viewerID);
         this.masterShop = masterShop;
     }
 

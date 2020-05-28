@@ -8,8 +8,6 @@ import dev.sl4sh.polarity.games.PositionSnapshot;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -43,9 +41,6 @@ public class WorldInfo implements Serializable {
 
     @Setting(value = "isGameWorld")
     private boolean isGameWorld;
-
-    @Nonnull
-    private final Map<Player, Task> recentDamageMap = new LinkedHashMap<>();
 
     @Nonnull
     @Setting(value = "positionSnapshots")
@@ -223,15 +218,11 @@ public class WorldInfo implements Serializable {
         return worldFactionHomes;
     }
 
-    @Nonnull
-    public Map<Player, Task> getRecentDamageMap() {
-        return recentDamageMap;
-    }
-
     public void setIsGameWorld(boolean gameWorld) {
         isGameWorld = gameWorld;
     }
 
     public boolean isGameWorld() { return isGameWorld; }
+
 
 }

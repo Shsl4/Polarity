@@ -70,10 +70,22 @@ public interface GameSession<T extends GameInstance> {
     List<UUID> getActivePlayers();
 
     /**
+     * This method should return the {@link #getGame()}'s actively participating Teams. (Team containing at least one active player)
+     * @return The active players.
+     */
+    List<Team> getActiveTeams();
+
+    /**
      * This method should return the active players associated with their team
      * @return The players
      */
     List<Team> getTeams();
+
+    /**
+     * This method should return the team of a player if it exists, otherwise the method should return {@link GameInstance#EMPTY_TEAM}
+     * @return The player's Team
+     */
+    Team getPlayerTeam(Player player);
 
      /**
      * This method should remove a player from the active players list.

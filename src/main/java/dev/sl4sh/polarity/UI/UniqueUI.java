@@ -2,12 +2,8 @@ package dev.sl4sh.polarity.UI;
 
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
-import org.spongepowered.api.event.item.inventory.DropItemEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -23,9 +19,9 @@ public abstract class UniqueUI extends AbstractUI {
     @Nonnull
     final UUID targetViewer;
 
-    public UniqueUI(@Nonnull Player viewer){
+    public UniqueUI(@Nonnull UUID viewerID){
 
-        this.targetViewer = viewer.getUniqueId();
+        this.targetViewer = viewerID;
 
     }
 
@@ -33,7 +29,7 @@ public abstract class UniqueUI extends AbstractUI {
 
     public boolean open() {
 
-        if(!getTargetViewer().isPresent()) { return false;}
+        if(!getTargetViewer().isPresent()) { return false; }
 
         this.make();
 

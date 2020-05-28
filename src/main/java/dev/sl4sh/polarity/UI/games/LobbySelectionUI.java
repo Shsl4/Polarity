@@ -34,7 +34,7 @@ public class LobbySelectionUI extends SharedUI {
     @Nonnull
     @Override
     public Text getTitle() {
-        return Text.of(TextColors.AQUA, "Lobby selection");
+        return Text.of(TextColors.WHITE, "Lobby selection");
     }
 
     @Nonnull
@@ -85,18 +85,23 @@ public class LobbySelectionUI extends SharedUI {
 
                 GameManager manager = Polarity.getGameManager();
 
-                Optional<GameSession<?>> session = manager.createNewGameSession(gameID, Utilities.getNextFreeWrapperID(), SessionProperties.getGameProperties(gameID, pageID, buttonID));
+                // Delaying one tick so the world creation occurs on a new thread (doesn't cause lag on the main one)
+                Utilities.delayOneTick(() ->{
 
-                if(session.isPresent()){
+                    Optional<GameSession<?>> session = manager.createNewGameSession(gameID, Utilities.getNextFreeWrapperID(), SessionProperties.getGameProperties(gameID, pageID, buttonID));
 
-                    session.get().joinSession(player, PlayerSessionRole.PLAYER);
+                    if(session.isPresent()){
 
-                }
-                else{
+                        session.get().joinSession(player, PlayerSessionRole.PLAYER);
 
-                    player.sendMessage(Text.of(TextColors.RED, "Unable to join game session."));
+                    }
+                    else{
 
-                }
+                        player.sendMessage(Text.of(TextColors.RED, "Unable to join game session."));
+
+                    }
+
+                });
 
             }
 

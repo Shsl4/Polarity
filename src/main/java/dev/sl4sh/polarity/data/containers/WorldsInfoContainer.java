@@ -10,6 +10,7 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.hanging.Hanging;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
@@ -145,7 +146,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order = Order.FIRST)
     public void onPlayerLogin(ClientConnectionEvent.Join event){
 
         WorldInfo info = Utilities.getOrCreateWorldInfo(event.getTargetEntity().getWorld());
@@ -153,11 +154,27 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
     }
 
-    @Listener
+    @Listener(beforeModifications = true, order = Order.FIRST)
     public void onDisconnect(ClientConnectionEvent.Disconnect event){
 
         WorldInfo info = Utilities.getOrCreateWorldInfo(event.getTargetEntity().getWorld());
         info.getMessageChannel().removeMember(event.getTargetEntity());
+
+        Player target = event.getTargetEntity();
+
+        if(info.isWorldProtected() || info.isGameWorld()){
+
+            return;
+
+        }
+
+        if(Polarity.getRecentPVPDamageMap().contains(target.getUniqueId())){
+
+            target.offer(Keys.HEALTH, 0D);
+            Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
+            Polarity.getRecentDamageMap().remove(target.getUniqueId());
+
+        }
 
     }
 
@@ -182,16 +199,56 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
             }
 
+            if(worldInfo.isGameWorld()) { return; }
+
             Player target = (Player)event.getTargetEntity();
 
-            if(worldInfo.getRecentDamageMap().containsKey(target)){
+            if(Polarity.getRecentDamageMap().containsKey(target.getUniqueId())){
 
-                worldInfo.getRecentDamageMap().get(target).cancel();
+                if (!Polarity.getRecentPVPDamageMap().contains(target.getUniqueId())){
+
+                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.RED, "PVP ENGAGED! YOU WILL DIE IF YOU DISCONNECT!")).build());
+
+                }
+
+                Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
+
+            }
+            else{
+
+                if(event.getCause().containsType(Player.class) && !event.getCause().first(Player.class).get().getUniqueId().equals(target.getUniqueId())){
+
+                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.RED, "PVP ENGAGED! YOU WILL DIE IF YOU DISCONNECT!")).build());
+
+                }
 
             }
 
-            Task task = Task.builder().delay(10L, TimeUnit.SECONDS).execute(() -> worldInfo.getRecentDamageMap().remove(target)).submit(Polarity.getPolarity());
-            worldInfo.getRecentDamageMap().put(target, task);
+            Task task;
+
+            if(event.getCause().containsType(Player.class)
+                    && !event.getCause().first(Player.class).get().getUniqueId().equals(target.getUniqueId())
+                    || Polarity.getRecentDamageMap().get(target.getUniqueId()) != null
+                    && Polarity.getRecentDamageMap().get(target.getUniqueId()).getDelay() > 10000){
+
+                task = Task.builder().delay(30L, TimeUnit.SECONDS).execute(() -> {
+
+                    Polarity.getRecentDamageMap().remove(target.getUniqueId());
+                    Polarity.getRecentPVPDamageMap().remove(target.getUniqueId());
+                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.AQUA, "You can now safely disconnect.")).build());
+
+                }).submit(Polarity.getPolarity());
+
+                Polarity.getRecentPVPDamageMap().add(target.getUniqueId());
+
+            }
+            else{
+
+                task = Task.builder().delay(10L, TimeUnit.SECONDS).execute(() -> Polarity.getRecentDamageMap().remove(target.getUniqueId())).submit(Polarity.getPolarity());
+
+            }
+
+            Polarity.getRecentDamageMap().put(target.getUniqueId(), task);
 
         }
 
@@ -340,7 +397,7 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
             WorldInfo worldInfo = getOrCreate(event.getWorld());
 
-            if((!worldInfo.isGameWorld() && !worldInfo.isWorldProtected()) && worldInfo.getRecentDamageMap().containsKey(event.getTargetEntity())){
+            if((!worldInfo.isGameWorld() && !worldInfo.isWorldProtected()) && Polarity.getRecentDamageMap().containsKey(event.getTargetEntity().getUniqueId())){
 
                 event.setCancelled(true);
                 event.getTargetEntity().sendTitle(Title.builder().actionBar(Text.of(TextColors.DARK_RED, "You must be safe in order to warp")).build());

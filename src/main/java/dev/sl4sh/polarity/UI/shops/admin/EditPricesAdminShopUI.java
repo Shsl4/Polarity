@@ -11,11 +11,8 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.effect.sound.SoundTypes;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -28,6 +25,7 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class EditPricesAdminShopUI extends UniqueUI {
 
@@ -41,8 +39,8 @@ public class EditPricesAdminShopUI extends UniqueUI {
     float priceStep = 0.5f;
     int quantityStep = 1;
 
-    public EditPricesAdminShopUI(@Nonnull Player viewer, @Nonnull String profileName, ManageAdminShopUI manageUI) {
-        super(viewer);
+    public EditPricesAdminShopUI(@Nonnull UUID viewerID, @Nonnull String profileName, ManageAdminShopUI manageUI) {
+        super(viewerID);
 
         this.profileName = profileName;
         this.manageUI = manageUI;
@@ -265,7 +263,7 @@ public class EditPricesAdminShopUI extends UniqueUI {
 
                         loreList.add(Text.of(TextColors.YELLOW, "Modify the price and amount of sold items in your shop."));
                         loreList.add(Text.EMPTY);
-                        loreList.add(Text.of(TextColors.YELLOW, "Active mode : Price edition"));
+                        loreList.add(Text.of(TextColors.YELLOW, "Active mode : Price editing"));
                         loreList.add(Text.EMPTY);
                         loreList.add(Text.of(colored, TextColors.YELLOW, " Panes: Changes the price modification amount per click."));
                         loreList.add(Text.of(TextColors.YELLOW, "Active Price : Increase / Decrease ", priceStep));
@@ -280,7 +278,7 @@ public class EditPricesAdminShopUI extends UniqueUI {
 
                         loreList.add(Text.of(TextColors.YELLOW, "Modify the price and amount of sold items in your shop."));
                         loreList.add(Text.EMPTY);
-                        loreList.add(Text.of(TextColors.YELLOW, "Active mode : Quantity edition"));
+                        loreList.add(Text.of(TextColors.YELLOW, "Active mode : Quantity editing"));
                         loreList.add(Text.EMPTY);
                         loreList.add(Text.of(colored, TextColors.YELLOW, " Panes: Changes quantity the modification amount per click."));
                         loreList.add(Text.of(TextColors.YELLOW, "Active Quantity : Increase / Decrease ", quantityStep));

@@ -2,6 +2,9 @@ package dev.sl4sh.polarity.games;
 
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.util.*;
 
@@ -13,6 +16,7 @@ public class SessionProperties {
     private final String lobbyMapName;
     private final List<String> gameMapNames;
     private final String sessionDisplayName;
+    private final TextColor sessionTextColor;
     private final int maxTeamPlayers;
     private final boolean pvp;
     private final GameMode spectatorMode;
@@ -33,15 +37,15 @@ public class SessionProperties {
         return gameMapNames;
     }
 
-    public String getSessionDisplayName() {
-        return sessionDisplayName;
+    public Text getSessionDisplayName() {
+        return Text.of(getSessionTextColor(), sessionDisplayName);
     }
 
     public boolean getPVP() {
         return pvp;
     }
 
-    public SessionProperties(int minPlayers, int maxPlayers, int profileID, String lobbyMapName, List<String> gameMapNames, String sessionDisplayName, int maxTeamPlayers, boolean pvp, GameMode spectatorMode) {
+    public SessionProperties(int minPlayers, int maxPlayers, int profileID, String lobbyMapName, List<String> gameMapNames, String sessionDisplayName, TextColor sessionTextColor, int maxTeamPlayers, boolean pvp, GameMode spectatorMode) {
 
         this.minPlayers = minPlayers;
         this.maxPlayers = maxPlayers;
@@ -49,6 +53,7 @@ public class SessionProperties {
         this.lobbyMapName = lobbyMapName;
         this.gameMapNames = gameMapNames;
         this.sessionDisplayName = sessionDisplayName;
+        this.sessionTextColor = sessionTextColor;
         this.maxTeamPlayers = maxTeamPlayers;
         this.pvp = pvp;
         this.spectatorMode = spectatorMode;
@@ -86,43 +91,46 @@ public class SessionProperties {
         return this.spectatorMode;
     }
 
+    public TextColor getSessionTextColor() {
+        return sessionTextColor;
+    }
+
     private static class Configurations{
 
-        public SessionProperties SPLEEF_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Player", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_1 = new SessionProperties(2, 4, 1, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_2 = new SessionProperties(4, 6, 2, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_4 = new SessionProperties(2, 4, 4, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_5 = new SessionProperties(4, 6, 5, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_1 = new SessionProperties(2, 4, 1, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_2 = new SessionProperties(4, 6, 2, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_4 = new SessionProperties(2, 4, 4, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_5 = new SessionProperties(4, 6, 5, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", TextColors.AQUA, 0, false, GameModes.SPECTATOR);
 
-        public SessionProperties ARENA_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Player)", 0, true, GameModes.ADVENTURE);
-        public SessionProperties ARENA_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), Collections.singletonList("Arena3P"), "Free For All (3 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_2 = new SessionProperties(4, 4, 2, getRandomLobbyName(), Collections.singletonList("Arena4P"), "Free For All (4 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_4 = new SessionProperties(5, 5, 4, getRandomLobbyName(), Collections.singletonList("Arena5P"), "Free For All (5 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_5 = new SessionProperties(6, 6, 5, getRandomLobbyName(), Collections.singletonList("Arena6P"), "Free For All (6 Players)", 0, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Players)", TextColors.RED, 0, true, GameModes.ADVENTURE);
+        public SessionProperties ARENA_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), Collections.singletonList("Arena3P"), "Free For All (3 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_2 = new SessionProperties(4, 4, 2, getRandomLobbyName(), Collections.singletonList("Arena4P"), "Free For All (4 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_4 = new SessionProperties(5, 5, 4, getRandomLobbyName(), Collections.singletonList("Arena5P"), "Free For All (5 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_5 = new SessionProperties(6, 6, 5, getRandomLobbyName(), Collections.singletonList("Arena6P"), "Free For All (6 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
 
-        public SessionProperties RUSH_0 = new SessionProperties(3, 3, 0, getRandomLobbyName(), getValidRushMapNames(), "1v1 (4 Players)", 1, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_1 = new SessionProperties(4, 4, 1, getRandomLobbyName(), getValidRushMapNames(), "2v2 (4 Players)", 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_2 = new SessionProperties(6, 6, 2, getRandomLobbyName(), getValidRushMapNames(), "2v2 (6 Players)", 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_3 = new SessionProperties(8, 8, 3, getRandomLobbyName(), getValidRushMapNames(), "2v2 (8 Players)", 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_4 = new SessionProperties(8, 8, 4, getRandomLobbyName(), getValidRushMapNames(), "4v4 (8 Players)", 4, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_5 = new SessionProperties(16, 16, 5, getRandomLobbyName(), getValidRushMapNames(), "4v4 (16 Players)", 4, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_0 = new SessionProperties(4, 4, 0, getRandomLobbyName(), getValidRushMapNames(), "1v1 (4 Teams)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), getValidRushMapNames(), "2v2 (2 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_2 = new SessionProperties(6, 6, 2, getRandomLobbyName(), getValidRushMapNames(), "2v2 (3 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_3 = new SessionProperties(8, 8, 3, getRandomLobbyName(), getValidRushMapNames(), "2v2 (4 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_4 = new SessionProperties(8, 8, 4, getRandomLobbyName(), getValidRushMapNames(), "4v4 (2 Teams)", TextColors.DARK_PURPLE, 4, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_5 = new SessionProperties(16, 16, 5, getRandomLobbyName(), getValidRushMapNames(), "4v4 (4 Teams)", TextColors.DARK_PURPLE, 4, true, GameModes.SPECTATOR);
 
-        public SessionProperties SPLEEF_TEAM_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Player", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_TEAM_1 = new SessionProperties(2, 4, 1, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_TEAM_2 = new SessionProperties(4, 6, 2, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_TEAM_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_TEAM_4 = new SessionProperties(2, 4, 4, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "2-4 Players", 0, false, GameModes.SPECTATOR);
-        public SessionProperties SPLEEF_TEAM_5 = new SessionProperties(4, 6, 5, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4-6 Players", 0, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_0 = new SessionProperties(4, 4, 6, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2v2 (2 Teams)", TextColors.AQUA, 2, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_1 = new SessionProperties(6, 6, 7, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "3v3 (2 Teams)", TextColors.AQUA, 3, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_2 = new SessionProperties(8, 8, 8, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4v4 (2 Teams)", TextColors.AQUA, 4, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_3 = new SessionProperties(8, 8, 9, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2v2 (4 Teams)", TextColors.AQUA, 2, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_4 = new SessionProperties(12, 12, 10, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "3v3 (4 Teams)", TextColors.AQUA, 3, false, GameModes.SPECTATOR);
+        public SessionProperties SPLEEF_TEAM_5 = new SessionProperties(16, 16, 11, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4v4 (4 Teams)", TextColors.AQUA, 4, false, GameModes.SPECTATOR);
 
-        public SessionProperties ARENA_TEAM_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Player)", 0, true, GameModes.ADVENTURE);
-        public SessionProperties ARENA_TEAM_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), Collections.singletonList("Arena3P"), "Free For All (3 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_TEAM_2 = new SessionProperties(4, 4, 2, getRandomLobbyName(), Collections.singletonList("Arena4P"), "Free For All (4 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_TEAM_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), Collections.singletonList("Arena2P"), "Free For All (2 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_TEAM_4 = new SessionProperties(5, 5, 4, getRandomLobbyName(), Collections.singletonList("Arena5P"), "Free For All (5 Players)", 0, true, GameModes.SPECTATOR);
-        public SessionProperties ARENA_TEAM_5 = new SessionProperties(6, 6, 5, getRandomLobbyName(), Collections.singletonList("Arena6P"), "Free For All (6 Players)", 0, true, GameModes.SPECTATOR);
-
+        public SessionProperties ARENA_TEAM_0 = new SessionProperties(3, 3, 6, getRandomLobbyName(), Collections.singletonList("Arena2P"), "2v2 (2 Teams)", TextColors.RED, 2, true, GameModes.ADVENTURE);
+        public SessionProperties ARENA_TEAM_1 = new SessionProperties(6, 6, 7, getRandomLobbyName(), Collections.singletonList("Arena3P"), "3v3 (2 Teams)", TextColors.RED, 3, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_TEAM_2 = new SessionProperties(8, 8, 8, getRandomLobbyName(), Collections.singletonList("Arena4P"), "4v4 (2 Teams)", TextColors.RED, 4, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_TEAM_3 = new SessionProperties(8, 8, 9, getRandomLobbyName(), Collections.singletonList("Arena2P"), "2v2 (4 Teams)", TextColors.RED, 2, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_TEAM_4 = new SessionProperties(12, 12, 10, getRandomLobbyName(), Collections.singletonList("Arena5P"), "3v3 (4 Teams)", TextColors.RED, 3, true, GameModes.SPECTATOR);
+        public SessionProperties ARENA_TEAM_5 = new SessionProperties(16, 16, 11, getRandomLobbyName(), Collections.singletonList("Arena6P"), "4v4 (4 Teams)", TextColors.RED, 4, true, GameModes.SPECTATOR);
 
     }
 
@@ -193,7 +201,7 @@ public class SessionProperties {
 
         }
 
-        return new SessionProperties(0, 0, profileID, "", new ArrayList<>(), "INVALID", 0, false, GameModes.SPECTATOR);
+        return new SessionProperties(0, 0, -1, "", new ArrayList<>(), "INVALID", TextColors.RED, 0, false, GameModes.SPECTATOR);
 
     }
 

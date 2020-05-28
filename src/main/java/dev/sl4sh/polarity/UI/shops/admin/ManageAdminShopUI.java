@@ -10,22 +10,18 @@ import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.data.type.SkullTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
-import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
-import org.spongepowered.api.item.inventory.property.InventoryTitle;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
-import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 public class ManageAdminShopUI extends UniqueUI {
 
@@ -37,13 +33,13 @@ public class ManageAdminShopUI extends UniqueUI {
 
     private final String profileName;
 
-    public ManageAdminShopUI(@Nonnull Player viewer, @Nonnull String profileName) {
+    public ManageAdminShopUI(@Nonnull UUID viewerID, @Nonnull String profileName) {
 
-        super(viewer);
+        super(viewerID);
 
         this.profileName = profileName;
-        this.editLayoutUI = new EditLayoutAdminShopUI(viewer, profileName, this);
-        this.editPricesUI = new EditPricesAdminShopUI(viewer, profileName, this);
+        this.editLayoutUI = new EditLayoutAdminShopUI(viewerID, profileName, this);
+        this.editPricesUI = new EditPricesAdminShopUI(viewerID, profileName, this);
 
     }
 

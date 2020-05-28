@@ -50,6 +50,8 @@ public class GameLobbyBase implements GameLobby {
 
             for(Player player : getLobbyWorld().get().getPlayers()){
 
+                Utilities.resetPlayer(player);
+
                 if(!PolarityWarp.warp(player, "Hub", Polarity.getPolarity())){
 
                     World defaultWorld = Sponge.getServer().getWorld(Sponge.getServer().getDefaultWorldName()).get();

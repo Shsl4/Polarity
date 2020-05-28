@@ -4,9 +4,9 @@ import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.UniqueUI;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
-import dev.sl4sh.polarity.economy.transactionidentifiers.ShopIdentifier;
 import dev.sl4sh.polarity.economy.PolarityEconomyService;
 import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
+import dev.sl4sh.polarity.economy.transactionidentifiers.ShopIdentifier;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
@@ -33,14 +33,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 
 public class BuyUserShopUI extends UniqueUI {
 
     @Nonnull
     private final MasterUserShopUI masterShop;
 
-    public BuyUserShopUI(@Nonnull Player viewer, @Nonnull MasterUserShopUI masterShop) {
-        super(viewer);
+    public BuyUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
+        super(viewerID);
         this.masterShop = masterShop;
     }
 
@@ -123,6 +124,14 @@ public class BuyUserShopUI extends UniqueUI {
 
                 if (buttonID == 0) {
 
+                    if(masterShop.getOwner().isPresent()) {
+
+                        player.sendMessage(Text.of(TextColors.RED, "This shop is already owned by ", masterShop.getOwner().get().getName()));
+                        player.closeInventory();
+                        return;
+
+                    }
+
                     makeTransaction(player);
 
                 } else if (buttonID == 1) {
@@ -170,7 +179,7 @@ public class BuyUserShopUI extends UniqueUI {
                     player.playSound(SoundTypes.ENTITY_EXPERIENCE_ORB_PICKUP, player.getPosition(), 0.25);
                     player.sendMessage(Text.of(TextColors.AQUA, "You just bought a shop."));
 
-                    masterShop.onPurchased(player);
+                    Utilities.delayOneTick(() -> masterShop.onPurchased(player));
 
                     player.closeInventory();
                     break;

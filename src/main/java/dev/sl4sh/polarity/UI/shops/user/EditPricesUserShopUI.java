@@ -10,7 +10,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.effect.sound.SoundTypes;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
@@ -25,7 +24,9 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class EditPricesUserShopUI extends UniqueUI {
 
@@ -38,8 +39,8 @@ public class EditPricesUserShopUI extends UniqueUI {
     float priceStep = 0.5f;
     int quantityStep = 1;
 
-    public EditPricesUserShopUI(@Nonnull Player viewer, @Nonnull MasterUserShopUI masterShop) {
-        super(viewer);
+    public EditPricesUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
+        super(viewerID);
         this.masterShop = masterShop;
         Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
     }

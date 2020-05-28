@@ -43,25 +43,25 @@ public class RushShopSelectionUI extends SharedUI {
                 if (buttonID == 0) {
 
                     player.playSound(SoundTypes.UI_BUTTON_CLICK, player.getPosition(), 0.25);
-                    new RushBlockShopUI(player, this).open();
+                    new RushBlockShopUI(player.getUniqueId(), this).open();
 
                 }
                 else if (buttonID == 1) {
 
                     player.playSound(SoundTypes.UI_BUTTON_CLICK, player.getPosition(), 0.25);
-                    new RushWeaponShopUI(player, this).open();
+                    new RushWeaponShopUI(player.getUniqueId(), this).open();
 
                 }
                 else if(buttonID == 2){
 
                     player.playSound(SoundTypes.UI_BUTTON_CLICK, player.getPosition(), 0.25);
-                    new RushArmorShopUI(player, this).open();
+                    new RushArmorShopUI(player.getUniqueId(), this).open();
 
                 }
                 else if(buttonID == 3){
 
                     player.playSound(SoundTypes.UI_BUTTON_CLICK, player.getPosition(), 0.25);
-                    new RushMiscShopUI(player, this).open();
+                    new RushMiscShopUI(player.getUniqueId(), this).open();
 
                 }
 

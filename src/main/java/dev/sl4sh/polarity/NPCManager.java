@@ -187,7 +187,7 @@ public class NPCManager {
 
             if (entity.get(Polarity.Keys.NPC.TYPE).get().equals(NPCTypes.BUYER_NPC)) {
 
-                new SellDepositUI(clicker).open();
+                new SellDepositUI(clicker.getUniqueId()).open();
                 return;
 
             }

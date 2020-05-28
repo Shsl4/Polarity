@@ -7,7 +7,6 @@ import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
@@ -25,6 +24,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class SellDepositUI extends UniqueUI {
 
@@ -43,9 +43,9 @@ public class SellDepositUI extends UniqueUI {
         return new InventoryDimension(9, 6);
     }
 
-    public SellDepositUI(Player player){
+    public SellDepositUI(@Nonnull UUID viewerID){
 
-        super(player);
+        super(viewerID);
 
     }
 
@@ -165,7 +165,7 @@ public class SellDepositUI extends UniqueUI {
         }
         else{
 
-            Utilities.delayOneTick(new SellConfirmationUI(getTargetViewer().get(), stacks)::open);
+            Utilities.delayOneTick(new SellConfirmationUI(getTargetViewer().get().getUniqueId(), stacks)::open);
 
         }
 

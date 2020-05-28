@@ -2,7 +2,6 @@ package dev.sl4sh.polarity.UI.games.rush;
 
 import dev.sl4sh.polarity.economy.ItemShopRecipe;
 import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.enchantment.EnchantmentTypes;
@@ -14,12 +13,13 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class RushArmorShopUI extends RushPurchaseUI{
 
-    public RushArmorShopUI(@Nonnull Player viewer, RushShopSelectionUI selectionUI) {
+    public RushArmorShopUI(@Nonnull UUID viewerID, RushShopSelectionUI selectionUI) {
 
-        super(viewer, selectionUI);
+        super(viewerID, selectionUI);
 
         ItemStack chainHelmetStack = ItemStack.builder().itemType(ItemTypes.CHAINMAIL_HELMET).build();
         ItemStack chainChestStack = ItemStack.builder().itemType(ItemTypes.CHAINMAIL_CHESTPLATE).build();

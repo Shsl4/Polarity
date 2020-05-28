@@ -26,6 +26,7 @@ import org.spongepowered.api.text.format.TextColors;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ManageUserShopUI extends UniqueUI {
 
@@ -43,11 +44,12 @@ public class ManageUserShopUI extends UniqueUI {
 
     @Nonnull
     private final Inventory shopStorage = Inventory.builder()
-            .property(InventoryTitle.PROPERTY_NAME, new InventoryTitle(Text.of(getTargetViewer().get().getName(), "'s Storage")))
+            .property(InventoryTitle.PROPERTY_NAME, new InventoryTitle(Text.of(getTargetViewer().isPresent() ? getTargetViewer().get().getName() + "'s Storage" : "Storage")))
             .property(InventoryDimension.PROPERTY_NAME, new InventoryDimension(9, 6))
             .listener(InteractInventoryEvent.Close.class, this::onStorageClosed)
             .build(Polarity.getPolarity());
 
+    @Nonnull
     public Inventory getStorage(){
 
         return shopStorage;
@@ -61,9 +63,9 @@ public class ManageUserShopUI extends UniqueUI {
 
     }
 
-    public ManageUserShopUI(@Nonnull Player viewer, @Nonnull MasterUserShopUI masterShop, @Nonnull List<ItemStackSnapshot> stock) {
+    public ManageUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop, @Nonnull List<ItemStackSnapshot> stock) {
 
-        super(viewer);
+        super(viewerID);
         this.masterShop = masterShop;
 
         for(ItemStackSnapshot snap : stock){
@@ -72,9 +74,9 @@ public class ManageUserShopUI extends UniqueUI {
 
         }
 
-        this.editLayoutUI = new EditLayoutUserShopUI(viewer, masterShop);
-        this.editPricesUI = new EditPricesUserShopUI(viewer, masterShop);
-        this.sellShopUI = new SellUserShopUI(viewer, masterShop);
+        this.editLayoutUI = new EditLayoutUserShopUI(viewerID, masterShop);
+        this.editPricesUI = new EditPricesUserShopUI(viewerID, masterShop);
+        this.sellShopUI = new SellUserShopUI(viewerID, masterShop);
 
     }
 

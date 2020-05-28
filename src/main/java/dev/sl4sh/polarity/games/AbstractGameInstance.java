@@ -390,30 +390,6 @@ public abstract class AbstractGameInstance implements GameInstance {
 
     }
 
-    protected final Optional<Team> getPlayerTeam(Player target){
-
-        return getSession().getScoreboard().getMemberTeam(Text.of(target.getName()));
-
-    }
-
-    protected final List<Team> getActiveTeams(){
-
-        List<Team> teams = new ArrayList<>();
-
-        for(UUID playerID : getSession().getActivePlayers()){
-
-            if(!Utilities.getPlayerByUniqueID(playerID).isPresent()) { continue; }
-
-            if(!getSession().getScoreboard().getMemberTeam(Text.of(Utilities.getPlayerByUniqueID(playerID).get().getName())).isPresent()) { continue; }
-
-            teams.add(getSession().getScoreboard().getMemberTeam(Text.of(Utilities.getPlayerByUniqueID(playerID).get().getName())).get());
-
-        }
-
-        return teams;
-
-    }
-
     /**
      * This method will get fired from the game session {@link GameSession#notifyTime(int, GameNotifications)}. Anything could be done here.
      *
@@ -469,7 +445,7 @@ public abstract class AbstractGameInstance implements GameInstance {
         }
 
         // By default, trigger the game end if there is only one player alive left.
-        if(getSession().getActivePlayers().size() <= 1){
+        if(getSession().getActiveTeams().size() <= 1){
 
             handleGameEnd();
 
@@ -547,6 +523,8 @@ public abstract class AbstractGameInstance implements GameInstance {
 
             // If we want to destroy the game world we'll need to get rid of all the players in it, so we'll just warp all the player to the hub.
             for(Player player : getGameWorld().get().getPlayers()){
+
+                Utilities.resetPlayer(player);
 
                 if(!PolarityWarp.warp(player, "Hub", Polarity.getPolarity())){
 

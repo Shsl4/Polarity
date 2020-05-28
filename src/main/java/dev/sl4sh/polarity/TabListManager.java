@@ -1,7 +1,6 @@
 package dev.sl4sh.polarity;
 
 import dev.sl4sh.polarity.data.WorldInfo;
-import dev.sl4sh.polarity.events.PlayerChangeDimensionEvent;
 import dev.sl4sh.polarity.games.GameInstance;
 import dev.sl4sh.polarity.games.GameSession;
 import org.spongepowered.api.Sponge;
@@ -9,10 +8,6 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.tab.TabList;
 import org.spongepowered.api.entity.living.player.tab.TabListEntry;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.entity.DestructEntityEvent;
-import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -25,51 +20,9 @@ public class TabListManager {
 
     public TabListManager() {}
 
-    @Listener
-    public void onPlayerJoined(ClientConnectionEvent.Join event){
-
-        event.setMessageCancelled(true);
-
-        if (!event.getTargetEntity().hasPlayedBefore()) {
-
-            for (Player ply : Sponge.getGame().getServer().getOnlinePlayers()) {
-
-                ply.sendMessage(Text.of(TextColors.LIGHT_PURPLE, "Please welcome ", TextColors.YELLOW, event.getTargetEntity().getName(), TextColors.LIGHT_PURPLE, " to the server!"));
-
-            }
-
-        }
-
-        refreshAll();
-
-        Sponge.getEventManager().post(new PlayerChangeDimensionEvent.Post(event.getTargetEntity(), event.getTargetEntity().getWorld(), event.getTargetEntity().getWorld(), Polarity.getPolarity()));
-
-    }
-
-    @Listener
-    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event){
-
-        event.setMessageCancelled(true);
-
-    }
-
-    @Listener
-    public void onEntityDeath(DestructEntityEvent.Death event){
-
-        event.setMessageCancelled(true);
-
-    }
-
-    @Listener
-    public void onPlayerRespawn(RespawnPlayerEvent event){
-
-        refreshForPlayer(event.getTargetEntity());
-
-    }
-
     public static void refreshForPlayer(Player player){
 
-        refresh(player);
+        Utilities.delayOneTick(() -> refresh(player));
 
     }
 
@@ -77,8 +30,7 @@ public class TabListManager {
 
         for(Player player : players){
 
-            refresh(player);
-
+            Utilities.delayOneTick(() -> refresh(player));
 
         }
 
@@ -88,8 +40,7 @@ public class TabListManager {
 
         for(Player player : Sponge.getServer().getOnlinePlayers()){
 
-            refresh(player);
-
+            Utilities.delayOneTick(() -> refresh(player));
 
         }
 
@@ -102,11 +53,11 @@ public class TabListManager {
             if(!target.getTabList().getEntry(tabPlayer.getUniqueId()).isPresent()){
 
                 TabListEntry newEntry = TabListEntry.builder()
-                        .gameMode(target.get(Keys.GAME_MODE).get())
-                        .displayName(Text.of(target.getName()))
-                        .latency(target.getConnection().getLatency())
+                        .gameMode(tabPlayer.get(Keys.GAME_MODE).get())
+                        .displayName(Text.of(tabPlayer.getName()))
+                        .latency(tabPlayer.getConnection().getLatency())
                         .list(target.getTabList())
-                        .profile(target.getProfile())
+                        .profile(tabPlayer.getProfile())
                         .build();
 
                 target.getTabList().addEntry(newEntry);
@@ -131,18 +82,7 @@ public class TabListManager {
             }
             else {
 
-                Team playerTeam = GameInstance.EMPTY_TEAM;
-
-                for(Team existingTeam : playerSession.getTeams()){
-
-                    if(existingTeam.getMembers().contains(Text.of(target.getName()))){
-
-                        playerTeam = existingTeam;
-                        break;
-
-                    }
-
-                }
+                Team playerTeam = playerSession.getPlayerTeam(target);
 
                 if(playerTeam.equals(GameInstance.EMPTY_TEAM)){
 

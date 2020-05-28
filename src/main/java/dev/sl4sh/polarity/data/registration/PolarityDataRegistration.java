@@ -3,9 +3,6 @@ package dev.sl4sh.polarity.data.registration;
 import com.google.common.reflect.TypeToken;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.SharedUI;
-import dev.sl4sh.polarity.data.registration.beddata.BedData;
-import dev.sl4sh.polarity.data.registration.beddata.BedDataManipulatorBuilder;
-import dev.sl4sh.polarity.data.registration.beddata.ImmutableBedData;
 import dev.sl4sh.polarity.data.registration.npcdata.ImmutableNPCData;
 import dev.sl4sh.polarity.data.registration.npcdata.NPCData;
 import dev.sl4sh.polarity.data.registration.npcdata.NPCDataManipulatorBuilder;
@@ -146,13 +143,6 @@ public class PolarityDataRegistration {
                 .dataName("Transient Player Data")
                 .buildAndRegister(plugin);
 
-        DataRegistration.builder()
-                .dataClass(BedData.class)
-                .immutableClass(ImmutableBedData.class)
-                .builder(new BedDataManipulatorBuilder())
-                .manipulatorId("beddata")
-                .dataName("Bed Data")
-                .buildAndRegister(plugin);
     }
 
 }

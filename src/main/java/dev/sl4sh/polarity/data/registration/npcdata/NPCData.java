@@ -3,6 +3,7 @@ package dev.sl4sh.polarity.data.registration.npcdata;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.SharedUI;
 import dev.sl4sh.polarity.economy.ShopProfile;
+import dev.sl4sh.polarity.economy.ShopRecipe;
 import dev.sl4sh.polarity.enums.NPCTypes;
 import dev.sl4sh.polarity.enums.PolarityColor;
 import org.spongepowered.api.Sponge;
@@ -214,7 +215,17 @@ public class NPCData extends AbstractData<NPCData, ImmutableNPCData> {
     }
 
     public void setShopProfile(ShopProfile shopProfile) {
+
+        Polarity.getLogger().info("Setting Shop Profile");
+
+        for(ShopRecipe recipe : shopProfile.getShopRecipes()){
+
+            Polarity.getLogger().info("Price: " + recipe.getPrice() + ", Index: " + recipe.getIndex() + ", Item: " + recipe.getTargetItem());
+
+        }
+
         this.shopProfile = shopProfile;
+
     }
 
     public List<ItemStackSnapshot> getStorage() {

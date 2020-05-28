@@ -3,19 +3,19 @@ package dev.sl4sh.polarity.UI.games.rush;
 import dev.sl4sh.polarity.economy.ItemShopRecipe;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.text.Text;
 
 import javax.annotation.Nonnull;
+import java.util.UUID;
 
 public class RushBlockShopUI extends RushPurchaseUI{
 
 
-    public RushBlockShopUI(@Nonnull Player viewer, RushShopSelectionUI selectionUI) {
-        super(viewer, selectionUI);
+    public RushBlockShopUI(@Nonnull UUID viewerID, RushShopSelectionUI selectionUI) {
+        super(viewerID, selectionUI);
 
         recipes.add(new ItemShopRecipe(ItemStack.builder().itemType(ItemTypes.BRICK).quantity(16).build().createSnapshot(), ItemStack.builder().itemType(ItemTypes.SANDSTONE).quantity(16).build().createSnapshot(), 10));
         recipes.add(new ItemShopRecipe(ItemStack.builder().itemType(ItemTypes.BRICK).quantity(16).build().createSnapshot(), ItemStack.builder().itemType(ItemTypes.STAINED_HARDENED_CLAY).add(Keys.DYE_COLOR, DyeColors.WHITE).quantity(16).build().createSnapshot(), 11));
