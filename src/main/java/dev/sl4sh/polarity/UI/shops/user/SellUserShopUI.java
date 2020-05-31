@@ -48,7 +48,7 @@ public class SellUserShopUI extends UniqueUI {
 
             if(slotIndex == 13){
 
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.SKULL, 1, Text.of(TextColors.RED, "You will earn ", new PolarityCurrency().format(BigDecimal.valueOf(7500)), TextColors.RED, " by selling your shop."), new ArrayList<>(), true);
+                ItemStack stack = Utilities.makeUIStack(ItemTypes.SKULL, 1, Text.of(TextColors.RED, "You will earn ", new PolarityCurrency().format(BigDecimal.valueOf(masterShop.getPrice() / 2)), TextColors.RED, " by selling your shop."), new ArrayList<>(), true);
                 List<Text> loreList = new ArrayList<>();
                 loreList.add(Text.EMPTY);
                 loreList.add(Text.of(TextStyles.BOLD, TextColors.RED, "WARNING!"));

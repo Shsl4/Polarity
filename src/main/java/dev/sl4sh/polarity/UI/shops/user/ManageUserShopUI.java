@@ -107,12 +107,20 @@ public class ManageUserShopUI extends UniqueUI {
                 }
                 else if (buttonID == 1) {
 
-                    editLayoutUI.open();
+                    if(masterShop.getManageShopUI().getStorage().size() > 0){
+
+                        editLayoutUI.open();
+
+                    }
 
                 }
                 else if(buttonID == 2){
 
-                    editPricesUI.open();
+                    if(masterShop.getManageShopUI().getStorage().size() > 0){
+
+                        editPricesUI.open();
+
+                    }
 
                 }
                 else if(buttonID == 3){
@@ -153,23 +161,50 @@ public class ManageUserShopUI extends UniqueUI {
 
             }
 
-            if (slotIndex == 12) {
+            if(masterShop.getManageShopUI().getStorage().size() <= 0){
 
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.IRON_AXE, 1, Text.of(TextColors.WHITE, "Edit Layout"), new ArrayList<>(), false);
-                stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
-                stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 1);
-                slot.set(stack);
-                continue;
+                if (slotIndex == 12) {
+
+                    ItemStack stack = Utilities.makeUIStack(ItemTypes.IRON_AXE, 1, Text.of(TextColors.RED, "You need to fill your shop's storage with items in order to be able to edit"), new ArrayList<>(), true);
+                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
+                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 1);
+                    slot.set(stack);
+                    continue;
+
+                }
+
+                if (slotIndex == 14) {
+
+                    ItemStack stack = Utilities.makeUIStack(ItemTypes.DIAMOND, 1, Text.of(TextColors.RED, "You need to fill your shop's storage with items in order to be able to edit"), new ArrayList<>(), true);
+                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
+                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 2);
+                    slot.set(stack);
+                    continue;
+
+                }
 
             }
+            else{
 
-            if (slotIndex == 14) {
+                if (slotIndex == 12) {
 
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.DIAMOND, 1, Text.of(TextColors.AQUA, "Set Prices / Quantities"), new ArrayList<>(), false);
-                stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
-                stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 2);
-                slot.set(stack);
-                continue;
+                    ItemStack stack = Utilities.makeUIStack(ItemTypes.IRON_AXE, 1, Text.of(TextColors.WHITE, "Edit Layout"), new ArrayList<>(), false);
+                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
+                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 1);
+                    slot.set(stack);
+                    continue;
+
+                }
+
+                if (slotIndex == 14) {
+
+                    ItemStack stack = Utilities.makeUIStack(ItemTypes.DIAMOND, 1, Text.of(TextColors.AQUA, "Set Prices / Quantities"), new ArrayList<>(), false);
+                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
+                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 2);
+                    slot.set(stack);
+                    continue;
+
+                }
 
             }
 

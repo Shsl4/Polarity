@@ -9,6 +9,7 @@ import dev.sl4sh.polarity.commands.economy.PolarityShowBalance;
 import dev.sl4sh.polarity.commands.economy.PolarityTransfer;
 import dev.sl4sh.polarity.commands.factions.FactionsMainCommand;
 import dev.sl4sh.polarity.commands.shopbuilder.ShopBuilderMain;
+import dev.sl4sh.polarity.data.InventoryBackup;
 import dev.sl4sh.polarity.data.containers.*;
 import dev.sl4sh.polarity.data.registration.PolarityDataRegistration;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
@@ -53,6 +54,7 @@ import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.item.inventory.DropItemEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
@@ -60,7 +62,9 @@ import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
@@ -309,6 +313,20 @@ public class Polarity {
 
         TabListManager.refreshAll();
 
+        Optional<InventoryBackup> optBackup = Polarity.getInventoryBackups().getBackupForPlayer(event.getTargetEntity().getUniqueId());
+
+        if(optBackup.isPresent()){
+
+            if(optBackup.get().getSnapshots().size() > 0){
+
+                Text retrieve = Text.builder().append(Text.of(TextColors.GOLD, TextStyles.UNDERLINE, "/retrieve")).onClick(TextActions.runCommand("/retrieve")).build();
+
+                event.getTargetEntity().sendMessage(Text.of(TextColors.AQUA, "You still have backed up items. Use ", retrieve, TextStyles.RESET, TextColors.AQUA, " to retrieve them."));
+
+            }
+
+        }
+
         Sponge.getEventManager().post(new PlayerChangeDimensionEvent.Post(event.getTargetEntity(), event.getTargetEntity().getWorld(), event.getTargetEntity().getWorld(), Polarity.getPolarity()));
 
     }
@@ -318,6 +336,20 @@ public class Polarity {
     public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event){
 
         event.setMessageCancelled(true);
+
+        for(Inventory inv : event.getTargetEntity().getInventory()){
+
+            for(Inventory slot : inv.slots()){
+
+                if(slot.peek().isPresent() && slot.peek().get().get(UIStackData.class).isPresent()){
+
+                    slot.poll();
+
+                }
+
+            }
+
+        }
 
     }
 
@@ -348,10 +380,28 @@ public class Polarity {
      * This methods listens to the server stop event. Just saves the plugin's configuration / data
      * @param event The {@link GameStoppingServerEvent} event
      */
-    @Listener
+    @Listener(beforeModifications = true, order = Order.FIRST)
     public void onServerStopping(GameStoppingServerEvent event){
 
         writeAllConfig();
+
+        for(Player player : Sponge.getServer().getOnlinePlayers()){
+
+            for(Inventory inv : player.getInventory()){
+
+                for(Inventory slot : inv.slots()){
+
+                    if(slot.peek().isPresent() && slot.peek().get().supports(UIStackData.class)){
+
+                        slot.poll();
+
+                    }
+
+                }
+
+            }
+
+        }
 
         List<GameSession<?>> sessions = new ArrayList<>(gameManager.getGameSessions());
 
@@ -424,18 +474,25 @@ public class Polarity {
 
             effects.add(PotionEffect.builder().potionType(PotionEffectTypes.SPEED).amplifier(1).duration(1000000000).particles(false).build());
 
-            Utilities.setPotionEffects(event.getTargetEntity(), effects);
+            Utilities.delayOneTick(() -> {
 
-            Utilities.setGameMode(event.getTargetEntity(), GameModes.ADVENTURE);
-            Utilities.setCanFly(event.getTargetEntity(), true);
+                Utilities.setPotionEffects(event.getTargetEntity(), effects);
+                Utilities.setGameMode(event.getTargetEntity(), GameModes.ADVENTURE);
+                Utilities.setCanFly(event.getTargetEntity(), true);
+
+            });
 
         }
         // Else if the player teleports from the Hub dimension
         else if(event.getFromWorld().getName().equals("Hub")){
 
-            // Clear the player's potion effects
-            Utilities.removePotionEffects(event.getTargetEntity());
-            Utilities.setCanFly(event.getTargetEntity(), false);
+            Utilities.delayOneTick(() -> {
+
+                // Clear the player's potion effects
+                Utilities.removePotionEffects(event.getTargetEntity());
+                Utilities.setCanFly(event.getTargetEntity(), false);
+
+            });
 
         }
 

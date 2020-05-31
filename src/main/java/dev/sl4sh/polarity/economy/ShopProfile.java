@@ -1,5 +1,6 @@
 package dev.sl4sh.polarity.economy;
 
+import dev.sl4sh.polarity.Utilities;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.data.DataContainer;
@@ -10,12 +11,13 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackComparators;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @ConfigSerializable
 public class ShopProfile extends AbstractDataBuilder<ShopProfile> implements DataSerializable, Serializable {
@@ -93,15 +95,7 @@ public class ShopProfile extends AbstractDataBuilder<ShopProfile> implements Dat
 
         for(ShopRecipe recipe : shopRecipes){
 
-            DataContainer snapDamage = snap.toContainer();
-            DataContainer testDamage = recipe.getTargetItem().toContainer();
-
-            int snapVal = (int)snapDamage.get(DataQuery.of("UnsafeDamage")).get();
-            int testVal = (int)testDamage.get(DataQuery.of("UnsafeDamage")).get();
-
-            if(ItemStackComparators.TYPE.compare(recipe.getTargetItem().createStack(), editedSnap) == 0 &&
-                    ItemStackComparators.PROPERTIES.compare(recipe.getTargetItem().createStack(), editedSnap) == 0 &&
-                    snapVal == testVal){
+            if(Utilities.compareStacksNoSize(editedSnap, recipe.getTargetItem().createStack())){
 
                 return Optional.of(recipe);
 

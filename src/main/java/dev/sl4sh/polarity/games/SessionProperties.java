@@ -111,12 +111,12 @@ public class SessionProperties {
         public SessionProperties ARENA_4 = new SessionProperties(5, 5, 4, getRandomLobbyName(), Collections.singletonList("Arena5P"), "Free For All (5 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_5 = new SessionProperties(6, 6, 5, getRandomLobbyName(), Collections.singletonList("Arena6P"), "Free For All (6 Players)", TextColors.RED, 0, true, GameModes.SPECTATOR);
 
-        public SessionProperties RUSH_0 = new SessionProperties(4, 4, 0, getRandomLobbyName(), getValidRushMapNames(), "1v1 (4 Teams)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), getValidRushMapNames(), "2v2 (2 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_2 = new SessionProperties(6, 6, 2, getRandomLobbyName(), getValidRushMapNames(), "2v2 (3 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_3 = new SessionProperties(8, 8, 3, getRandomLobbyName(), getValidRushMapNames(), "2v2 (4 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_4 = new SessionProperties(8, 8, 4, getRandomLobbyName(), getValidRushMapNames(), "4v4 (2 Teams)", TextColors.DARK_PURPLE, 4, true, GameModes.SPECTATOR);
-        public SessionProperties RUSH_5 = new SessionProperties(16, 16, 5, getRandomLobbyName(), getValidRushMapNames(), "4v4 (4 Teams)", TextColors.DARK_PURPLE, 4, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_0 = new SessionProperties(2, 2, 0, getRandomLobbyName(), getValidRushMapNames(), "1v1 (2 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_1 = new SessionProperties(3, 3, 1, getRandomLobbyName(), getValidRushMapNames(), "1v1 (3 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_2 = new SessionProperties(4, 4, 2, getRandomLobbyName(), getValidRushMapNames(), "1v1 (4 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_3 = new SessionProperties(2, 2, 3, getRandomLobbyName(), getValidRushMapNames(), "1v1 (2 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_4 = new SessionProperties(3, 3, 4, getRandomLobbyName(), getValidRushMapNames(), "1v1 (3 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_5 = new SessionProperties(4, 4, 5, getRandomLobbyName(), getValidRushMapNames(), "1v1 (4 Players)", TextColors.DARK_PURPLE, 1, true, GameModes.SPECTATOR);
 
         public SessionProperties SPLEEF_TEAM_0 = new SessionProperties(4, 4, 6, getRandomLobbyName(), Arrays.asList("Spleef2P", "Spleef4P"), "2v2 (2 Teams)", TextColors.AQUA, 2, false, GameModes.SPECTATOR);
         public SessionProperties SPLEEF_TEAM_1 = new SessionProperties(6, 6, 7, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "3v3 (2 Teams)", TextColors.AQUA, 3, false, GameModes.SPECTATOR);
@@ -125,12 +125,20 @@ public class SessionProperties {
         public SessionProperties SPLEEF_TEAM_4 = new SessionProperties(12, 12, 10, getRandomLobbyName(), Arrays.asList("Spleef4P", "Spleef6P"), "3v3 (4 Teams)", TextColors.AQUA, 3, false, GameModes.SPECTATOR);
         public SessionProperties SPLEEF_TEAM_5 = new SessionProperties(16, 16, 11, getRandomLobbyName(), Collections.singletonList("Spleef6P"), "4v4 (4 Teams)", TextColors.AQUA, 4, false, GameModes.SPECTATOR);
 
-        public SessionProperties ARENA_TEAM_0 = new SessionProperties(3, 3, 6, getRandomLobbyName(), Collections.singletonList("Arena2P"), "2v2 (2 Teams)", TextColors.RED, 2, true, GameModes.ADVENTURE);
+        public SessionProperties ARENA_TEAM_0 = new SessionProperties(4, 4, 6, getRandomLobbyName(), Collections.singletonList("Arena2P"), "2v2 (2 Teams)", TextColors.RED, 2, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_TEAM_1 = new SessionProperties(6, 6, 7, getRandomLobbyName(), Collections.singletonList("Arena3P"), "3v3 (2 Teams)", TextColors.RED, 3, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_TEAM_2 = new SessionProperties(8, 8, 8, getRandomLobbyName(), Collections.singletonList("Arena4P"), "4v4 (2 Teams)", TextColors.RED, 4, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_TEAM_3 = new SessionProperties(8, 8, 9, getRandomLobbyName(), Collections.singletonList("Arena2P"), "2v2 (4 Teams)", TextColors.RED, 2, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_TEAM_4 = new SessionProperties(12, 12, 10, getRandomLobbyName(), Collections.singletonList("Arena5P"), "3v3 (4 Teams)", TextColors.RED, 3, true, GameModes.SPECTATOR);
         public SessionProperties ARENA_TEAM_5 = new SessionProperties(16, 16, 11, getRandomLobbyName(), Collections.singletonList("Arena6P"), "4v4 (4 Teams)", TextColors.RED, 4, true, GameModes.SPECTATOR);
+
+        public SessionProperties RUSH_TEAM_0 = new SessionProperties(4, 4, 6, getRandomLobbyName(), getValidRushMapNames(), "2v2 (2 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_TEAM_1 = new SessionProperties(6, 6, 7, getRandomLobbyName(), getValidRushMapNames(), "2v2 (3 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_TEAM_2 = new SessionProperties(8, 8, 8, getRandomLobbyName(), getValidRushMapNames(), "2v2 (4 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_TEAM_3 = new SessionProperties(4, 4, 9, getRandomLobbyName(), getValidRushMapNames(), "2v2 (2 Teams)", TextColors.DARK_PURPLE, 2, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_TEAM_4 = new SessionProperties(8, 8, 10, getRandomLobbyName(), getValidRushMapNames(), "2v2 (4 Teams)", TextColors.DARK_PURPLE, 3, true, GameModes.SPECTATOR);
+        public SessionProperties RUSH_TEAM_5 = new SessionProperties(12, 12,11, getRandomLobbyName(), getValidRushMapNames(), "3v3 (4 Teams)", TextColors.DARK_PURPLE, 3, true, GameModes.SPECTATOR);
+
 
     }
 
@@ -192,12 +200,27 @@ public class SessionProperties {
 
         if(gameID == 2){
 
-            if(profileID == 0) { return confs.RUSH_0; }
-            if(profileID == 1) { return confs.RUSH_1; }
-            if(profileID == 2) { return confs.RUSH_2; }
-            if(profileID == 3) { return confs.RUSH_3; }
-            if(profileID == 4) { return confs.RUSH_4; }
-            if(profileID == 5) { return confs.RUSH_5; }
+            if(pageID == 0){
+
+                if(profileID == 0) { return confs.RUSH_0; }
+                if(profileID == 1) { return confs.RUSH_1; }
+                if(profileID == 2) { return confs.RUSH_2; }
+                if(profileID == 3) { return confs.RUSH_3; }
+                if(profileID == 4) { return confs.RUSH_4; }
+                if(profileID == 5) { return confs.RUSH_5; }
+
+            }
+
+            if(pageID == 1){
+
+                if(profileID == 0) { return confs.RUSH_TEAM_0; }
+                if(profileID == 1) { return confs.RUSH_TEAM_1; }
+                if(profileID == 2) { return confs.RUSH_TEAM_2; }
+                if(profileID == 3) { return confs.RUSH_TEAM_3; }
+                if(profileID == 4) { return confs.RUSH_TEAM_4; }
+                if(profileID == 5) { return confs.RUSH_TEAM_5; }
+
+            }
 
         }
 

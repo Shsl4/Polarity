@@ -239,7 +239,7 @@ public class Utilities {
     }
 
     /**
-     * Compares two ItemStacks by their data, type and variant but NOT quantity.
+     * Compares two ItemStacks by their display name, enchantments, durability, type, variant but NOT quantity.
      * @param stack1 The first stack to test
      * @param stack2 The second stack to test
      * @return Whether the stacks are equal or not
@@ -252,8 +252,16 @@ public class Utilities {
         int snapVal = (int)snapDamage.get(DataQuery.of("UnsafeDamage")).get();
         int testVal = (int)testDamage.get(DataQuery.of("UnsafeDamage")).get();
 
+        Optional<Text> snapName = stack1.get(Keys.DISPLAY_NAME);
+        Optional<Text> testName = stack2.get(Keys.DISPLAY_NAME);
+
+        Optional<List<Enchantment>> snapEnchs = stack1.get(Keys.ITEM_ENCHANTMENTS);
+        Optional<List<Enchantment>> testEnchs = stack2.get(Keys.ITEM_ENCHANTMENTS);
+
         if(ItemStackComparators.TYPE.compare(stack1, stack2) == 0 &&
                 ItemStackComparators.PROPERTIES.compare(stack1, stack2) == 0 &&
+                snapName.equals(testName) &&
+                snapEnchs.equals(testEnchs) &&
                 snapVal == testVal){
 
             return true;

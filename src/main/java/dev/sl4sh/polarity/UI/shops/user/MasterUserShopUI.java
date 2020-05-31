@@ -57,6 +57,8 @@ public class MasterUserShopUI extends ShopUI {
     @Nullable
     private ManageUserShopUI manageShopUI;
 
+    public float getPrice() { return Float.parseFloat(merchant.get(NPCData.class).get().getTags().get(0)); }
+
     public void onPurchased(Player buyer){
 
         if (Utilities.getNPCsAPI().isPresent()) {
@@ -73,7 +75,7 @@ public class MasterUserShopUI extends ShopUI {
 
             Entity newEntity = (Entity)npcWorld.createEntityFromNBT(customNPC.getEntityNbt()).getMCEntity();
             newEntity.offer(merchant.get(NPCData.class).orElse(new NPCData()).copy());
-            newEntity.offer(Polarity.Keys.NPC.TAGS, Collections.singletonList(buyer.getName()));
+            newEntity.offer(Polarity.Keys.NPC.TAGS, Arrays.asList(merchant.get(NPCData.class).get().getTags().get(0), buyer.getUniqueId().toString()));
 
             try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
 
@@ -90,7 +92,7 @@ public class MasterUserShopUI extends ShopUI {
 
             merchant.offer(Keys.SKIN_UNIQUE_ID, buyer.getUniqueId());
             merchant.offer(Keys.DISPLAY_NAME, Text.of(buyer.getName(), "'s Shop"));
-            merchant.offer(Polarity.Keys.NPC.TAGS, Collections.singletonList(buyer.getUniqueId().toString()));
+            merchant.offer(Polarity.Keys.NPC.TAGS, Arrays.asList(merchant.get(NPCData.class).get().getTags().get(0), buyer.getUniqueId().toString()));
 
         }
 
@@ -104,7 +106,35 @@ public class MasterUserShopUI extends ShopUI {
 
         if(ownerID == null || !caller.getUniqueId().equals(ownerID)) { return; }
 
+        Optional<PolarityEconomyService> optEconomyService = Polarity.getEconomyService();
+
+        if (optEconomyService.isPresent()) {
+
+            PolarityEconomyService economyService = optEconomyService.get();
+
+            Optional<UniqueAccount> optPlayerAccount = economyService.getOrCreateAccount(caller.getUniqueId());
+
+            if (!optPlayerAccount.isPresent()) {
+                caller.sendMessage(Text.of(TextColors.RED, "Unable to access your account. Please try again."));
+                return;
+            }
+
+            UniqueAccount playerAccount = optPlayerAccount.get();
+            PolarityCurrency dollarCurrency = new PolarityCurrency();
+
+            playerAccount.deposit(dollarCurrency, BigDecimal.valueOf(getPrice() / 2), Cause.of(EventContext.empty(), new ShopIdentifier()), new HashSet<>());
+
+        }
+        else{
+
+            caller.sendMessage(Text.of(TextColors.RED, "Unable to access your account. Please try again."));
+            return;
+
+        }
+
         this.profile = new ShopProfile();
+
+        float price = getPrice();
 
         if(this.manageShopUI != null){
 
@@ -126,7 +156,7 @@ public class MasterUserShopUI extends ShopUI {
         merchant.remove();
         this.merchant = null;
 
-        Utilities.delayOneTick(() -> Polarity.getNPCManager().makeUserShopNPC(location));
+        Utilities.delayOneTick(() -> Polarity.getNPCManager().makeUserShopNPC(location, price));
 
         caller.closeInventory();
 
@@ -134,11 +164,9 @@ public class MasterUserShopUI extends ShopUI {
 
     public void saveData(){
 
-        Polarity.getLogger().info("Saving");
+        if(getOwnerID() != null){
 
-        if(ownerID != null){
-
-            merchant.offer(Polarity.Keys.NPC.TAGS, Collections.singletonList(ownerID.toString()));
+            merchant.offer(Polarity.Keys.NPC.TAGS, Arrays.asList(merchant.get(NPCData.class).get().getTags().get(0), getOwnerID().toString()));
 
         }
 
@@ -188,7 +216,7 @@ public class MasterUserShopUI extends ShopUI {
 
         try{
 
-            ownerID = UUID.fromString(merchant.get(Polarity.Keys.NPC.TAGS).get().get(0));
+            ownerID = UUID.fromString(merchant.get(Polarity.Keys.NPC.TAGS).get().get(1));
 
         }
         catch(IndexOutOfBoundsException e){
@@ -417,5 +445,10 @@ public class MasterUserShopUI extends ShopUI {
     @Nullable
     public ManageUserShopUI getManageShopUI() {
         return manageShopUI;
+    }
+
+    @Nullable
+    public UUID getOwnerID() {
+        return ownerID;
     }
 }

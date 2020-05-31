@@ -79,7 +79,7 @@ public class BuyUserShopUI extends UniqueUI {
 
             if (val == 30) {
 
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.of(TextColors.GREEN, "Purchase (Costs ", TextColors.GOLD, "$15000", TextColors.GREEN, ")"), new ArrayList<>(), false);
+                ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.of(TextColors.GREEN, "Purchase (Costs ", TextColors.GOLD, masterShop.getPrice(), TextColors.GREEN, ")"), new ArrayList<>(), false);
                 stack.offer(Keys.DYE_COLOR, DyeColors.LIME);
                 stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
                 stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 0);
@@ -124,7 +124,7 @@ public class BuyUserShopUI extends UniqueUI {
 
                 if (buttonID == 0) {
 
-                    if(masterShop.getOwner().isPresent()) {
+                    if(masterShop.getOwnerID() != null) {
 
                         player.sendMessage(Text.of(TextColors.RED, "This shop is already owned by ", masterShop.getOwner().get().getName()));
                         player.closeInventory();
@@ -165,7 +165,7 @@ public class BuyUserShopUI extends UniqueUI {
 
             PolarityCurrency dollarCurrency = new PolarityCurrency();
 
-            TransactionResult result = playerAccount.withdraw(dollarCurrency, BigDecimal.valueOf(15000), Cause.of(EventContext.empty(), new ShopIdentifier()), new HashSet<>());
+            TransactionResult result = playerAccount.withdraw(dollarCurrency, BigDecimal.valueOf(masterShop.getPrice()), Cause.of(EventContext.empty(), new ShopIdentifier()), new HashSet<>());
 
             switch (result.getResult()) {
 

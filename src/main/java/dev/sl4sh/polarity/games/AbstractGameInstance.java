@@ -65,6 +65,8 @@ public abstract class AbstractGameInstance implements GameInstance {
             WorldProperties worldProps = props.get().get();
 
             worldProps.setPVPEnabled(getSession().getProperties().getPVP());
+            worldProps.setKeepSpawnLoaded(false);
+            worldProps.setGenerateSpawnOnLoad(false);
             worldProps.setGameMode(getMode());
             worldProps.setDifficulty(Difficulties.HARD);
             worldProps.setWorldTime(18000);
@@ -75,8 +77,10 @@ public abstract class AbstractGameInstance implements GameInstance {
             worldProps.setGameRule("commandBlocksEnabled", "true");
             worldProps.setGameRule("commandBlockOutput", "false");
             worldProps.setGameRule("keepInventory", "false");
+            worldProps.setGameRule("doMobSpawning", "false");
             worldProps.setGameRule("doTileDrops", String.valueOf(enableBlockDrops()));
 
+            Sponge.getServer().saveWorldProperties(worldProps);
             Optional<World> loadResult = Sponge.getServer().loadWorld(worldProps);
 
             if(!loadResult.isPresent()) {
@@ -154,11 +158,28 @@ public abstract class AbstractGameInstance implements GameInstance {
 
         if(!this.isValidGame()) { return; }
 
+        if(getSession().getProperties().getMaxTeamPlayers() <= 0){
+
+            Set<Text> players = new HashSet<>();
+
+            for(Team team : getSession().getTeams()){
+
+                players.addAll(team.getMembers());
+
+            }
+
+            spawnPlayersFromNameWithTag(players, PositionSnapshot.Tags.ANY_SPAWN);
+            return;
+
+        }
+
         for(Team team : getSession().getTeams()){
 
             String snapTag = "";
 
             TextColor color = team.getColor();
+
+            Polarity.getLogger().info("Color: " + color.toString());
 
             if (TextColors.WHITE.equals(color)) {
 
@@ -176,7 +197,7 @@ public abstract class AbstractGameInstance implements GameInstance {
 
                 snapTag = PositionSnapshot.Tags.PURPLE_SPAWN;
 
-            } else if (TextColors.NONE.equals(color)) {
+            } else if (TextColors.NONE.equals(color) || TextColors.RESET.equals(color)) {
 
                 snapTag = PositionSnapshot.Tags.ANY_SPAWN;
 
@@ -247,11 +268,9 @@ public abstract class AbstractGameInstance implements GameInstance {
 
     }
 
-    private void spawnPlayersFromNameWithTag(Set<Text> players, String tag){
+    private void spawnPlayersNoTeam(Set<Text> players, List<PositionSnapshot> locations){
 
         if(!getGameWorld().isPresent()) { return; }
-
-        List<PositionSnapshot> locations = new ArrayList<>(Utilities.getPositionSnapshotsByTag(getGameWorld().get(), tag));
 
         for(Text playerName : players){
 
@@ -263,6 +282,42 @@ public abstract class AbstractGameInstance implements GameInstance {
 
                 List<PositionSnapshot> used = new ArrayList<>();
                 List<PositionSnapshot> newList = new ArrayList<>(locations);
+                newList.removeAll(used);
+
+                PositionSnapshot snap = newList.get(new Random().nextInt(newList.size()));
+
+                if (used.size() + 1 < locations.size()) { used.add(snap); } else used.clear();
+
+                player.get().setLocationAndRotation(new Location<>(getGameWorld().get(), snap.getLocation()), snap.getRotation().toDouble());
+
+            }
+            else{
+
+                player.get().setLocation(new Location<>(getGameWorld().get(), getGameWorld().get().getProperties().getSpawnPosition()));
+
+            }
+
+        }
+
+    }
+
+    private void spawnPlayersFromNameWithTag(Set<Text> players, String tag){
+
+        if(!getGameWorld().isPresent()) { return; }
+
+        List<PositionSnapshot> locations = new ArrayList<>(Utilities.getPositionSnapshotsByTag(getGameWorld().get(), tag));
+
+        List<PositionSnapshot> used = new ArrayList<>();
+        List<PositionSnapshot> newList = new ArrayList<>(locations);
+
+        for(Text playerName : players){
+
+            Optional<Player> player = Utilities.getPlayerByName(playerName.toPlain());
+
+            if(!player.isPresent()) { continue; }
+
+            if(locations.size() > 0){
+
                 newList.removeAll(used);
 
                 PositionSnapshot snap = newList.get(new Random().nextInt(newList.size()));

@@ -1,6 +1,5 @@
 package dev.sl4sh.polarity.economy;
 
-import dev.sl4sh.polarity.Polarity;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.data.DataContainer;
@@ -87,13 +86,9 @@ public class ShopRecipe extends AbstractDataBuilder<ShopRecipe> implements DataS
     @Override
     protected Optional<ShopRecipe> buildContent(DataView container) throws InvalidDataException {
 
-        Polarity.getLogger().info("Got Price: " + container.getFloat(DataQuery.of("RecipePrice")).get());
         this.price = container.getFloat(DataQuery.of("RecipePrice")).get();
-        Polarity.getLogger().info("Got Index: " + container.getInt(DataQuery.of("RecipeIndex")).get());
         this.index = container.getInt(DataQuery.of("RecipeIndex")).get();
-        Polarity.getLogger().info("Got Snap: " + container.getSerializable(DataQuery.of("RecipeItem"), ItemStackSnapshot.class).get());
         this.targetItem = container.getSerializable(DataQuery.of("RecipeItem"), ItemStackSnapshot.class).get();
-        Polarity.getLogger().info("");
 
         return Optional.of(this);
 

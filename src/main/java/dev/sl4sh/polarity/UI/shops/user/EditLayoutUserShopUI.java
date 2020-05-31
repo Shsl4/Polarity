@@ -6,18 +6,14 @@ import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
 import dev.sl4sh.polarity.economy.ShopRecipe;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
-import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -30,11 +26,16 @@ public class EditLayoutUserShopUI extends UniqueUI {
     @Nonnull
     private final MasterUserShopUI masterShop;
 
-    private boolean canEdit = false;
-
     public EditLayoutUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
         super(viewerID);
         this.masterShop = masterShop;
+    }
+
+    @Override
+    protected void onInteract(InteractInventoryEvent event) {
+
+        event.setCancelled(false);
+
     }
 
     @Override
@@ -80,10 +81,10 @@ public class EditLayoutUserShopUI extends UniqueUI {
 
         }
 
-        if (canEdit){
+        if(getTargetViewer().isPresent()){
 
             getTargetViewer().get().getInventory().clear();
-            Utilities.restorePlayerInventory(getTargetViewer().get());
+            Utilities.delayOneTick(() -> Utilities.restorePlayerInventory(getTargetViewer().get()));
 
         }
 
@@ -94,7 +95,11 @@ public class EditLayoutUserShopUI extends UniqueUI {
 
         masterShop.getManageShopUI().open();
 
+        getUI().clear();
+
     }
+
+
 
     @Override
     protected void onPrimary(ClickInventoryEvent.Primary event) {
@@ -115,55 +120,9 @@ public class EditLayoutUserShopUI extends UniqueUI {
 
     }
 
-    @Override
-    protected void onInteract(InteractInventoryEvent event) {
-
-        if(!canEdit) { event.setCancelled(true); return; }
-
-        event.setCancelled(false);
-
-    }
 
     @Override
     protected void setupLayout(Inventory newUI) {
-
-        if(masterShop.getManageShopUI().getStorage().size() <= 0){
-
-            for(Inventory subInv : getUI().slots()){
-
-                Slot slot = (Slot)subInv;
-                SlotIndex property = slot.getInventoryProperty(SlotIndex.class).get();
-                int slotIndex = property.getValue();
-
-                if(slotIndex == 13){
-
-                    ItemStack stack = Utilities.makeUIStack(ItemTypes.NETHER_STAR, 1, Text.of(TextColors.RED, "You need to fill your shop's storage with items in order to be able to sell."), new ArrayList<>(), true);
-                    slot.set(stack);
-                    continue;
-
-                }
-
-                if(slotIndex == 31){
-
-                    ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.of(TextColors.GREEN, "Dismiss"), new ArrayList<>(), false);
-                    stack.offer(Keys.DYE_COLOR, DyeColors.WHITE);
-                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
-                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 0);
-                    slot.set(stack);
-                    continue;
-
-                }
-
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.EMPTY, new ArrayList<>(), false);
-                stack.offer(Keys.DYE_COLOR, DyeColors.BLACK);
-                slot.set(stack);
-
-            }
-
-            canEdit = false;
-            return;
-
-        }
 
         Utilities.savePlayerInventory(getTargetViewer().get());
         getTargetViewer().get().getInventory().clear();
@@ -215,8 +174,6 @@ public class EditLayoutUserShopUI extends UniqueUI {
             }
 
         }
-
-        canEdit = true;
 
     }
 

@@ -6,6 +6,8 @@ import dev.sl4sh.polarity.games.arena.ArenaGameSession;
 import dev.sl4sh.polarity.games.rush.RushGameSession;
 import dev.sl4sh.polarity.games.spleef.SpleefGameSession;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.format.TextColor;
+import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -132,7 +134,7 @@ public class GameManager {
 
     }
 
-    <T extends GameSession<?>> Optional<Class<T>> getSessionClassByGameID(int id){
+    public static <T extends GameSession<?>> Optional<Class<T>> getSessionClassByGameID(int id){
 
         if(id == 0){
 
@@ -153,6 +155,30 @@ public class GameManager {
         }
 
         return Optional.empty();
+
+    }
+
+    public static TextColor getSessionTintColorByGameID(int id){
+
+        if(id == 0){
+
+            return TextColors.AQUA;
+
+        }
+
+        if(id == 1){
+
+            return TextColors.RED;
+
+        }
+
+        if(id == 2){
+
+            return TextColors.DARK_PURPLE;
+
+        }
+
+        return TextColors.WHITE;
 
     }
 

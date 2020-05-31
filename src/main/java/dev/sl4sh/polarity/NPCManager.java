@@ -95,11 +95,11 @@ public class NPCManager {
 
     }
 
-    public void makeUserShopNPC(Location<World> location){
+    public void makeUserShopNPC(Location<World> location, float price){
 
         Optional<Entity> entity = makeEntity(location, EntityTypes.HUMAN);
 
-        NPCData data = new NPCData(new ArrayList<>(), NPCTypes.USERSHOP_NPC, null, new ShopProfile(), new ArrayList<>());
+        NPCData data = new NPCData(Collections.singletonList(String.valueOf(price)), NPCTypes.USERSHOP_NPC, null, new ShopProfile(), new ArrayList<>());
 
         if(entity.isPresent()){
 

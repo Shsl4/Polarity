@@ -112,6 +112,8 @@ public class GameLobbyBase implements GameLobby {
 
             worldProps.setDifficulty(Difficulties.PEACEFUL);
             worldProps.setGameMode(GameModes.ADVENTURE);
+            worldProps.setKeepSpawnLoaded(false);
+            worldProps.setGenerateSpawnOnLoad(false);
             worldProps.setPVPEnabled(false);
             worldProps.setWorldTime(18000);
             worldProps.setRaining(false);
@@ -122,17 +124,19 @@ public class GameLobbyBase implements GameLobby {
             worldProps.setGameRule("commandBlocksEnabled", "true");
             worldProps.setGameRule("commandBlockOutput", "false");
             worldProps.setGameRule("keepInventory", "false");
+            worldProps.setGameRule("doTileDrops", "false");
+            
+            Sponge.getServer().saveWorldProperties(worldProps);
 
             Optional<World> loadResult = Sponge.getServer().loadWorld(worldProps);
 
             if(!loadResult.isPresent()) {
 
-                Sponge.getServer().deleteWorld(props.get().get());
-                throw new IllegalStateException("Could not load the newly created world.");
+                throw new IllegalStateException("Could not get the newly created world.");
 
             }
 
-            lobbyWorldID = loadResult.get().getUniqueId();
+            lobbyWorldID = worldProps.getUniqueId();
 
             Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
 

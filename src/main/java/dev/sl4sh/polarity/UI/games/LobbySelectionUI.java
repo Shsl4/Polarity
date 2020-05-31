@@ -7,8 +7,8 @@ import dev.sl4sh.polarity.enums.UI.StackTypes;
 import dev.sl4sh.polarity.enums.games.GameSessionState;
 import dev.sl4sh.polarity.enums.games.PlayerSessionRole;
 import dev.sl4sh.polarity.games.GameManager;
-import dev.sl4sh.polarity.games.SessionProperties;
 import dev.sl4sh.polarity.games.GameSession;
+import dev.sl4sh.polarity.games.SessionProperties;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColor;
 import org.spongepowered.api.data.type.DyeColors;
@@ -34,7 +34,7 @@ public class LobbySelectionUI extends SharedUI {
     @Nonnull
     @Override
     public Text getTitle() {
-        return Text.of(TextColors.WHITE, "Lobby selection");
+        return Text.of(GameManager.getSessionTintColorByGameID(gameID), "Lobby selection");
     }
 
     @Nonnull
@@ -85,8 +85,7 @@ public class LobbySelectionUI extends SharedUI {
 
                 GameManager manager = Polarity.getGameManager();
 
-                // Delaying one tick so the world creation occurs on a new thread (doesn't cause lag on the main one)
-                Utilities.delayOneTick(() ->{
+                Utilities.delayOneTick(() -> {
 
                     Optional<GameSession<?>> session = manager.createNewGameSession(gameID, Utilities.getNextFreeWrapperID(), SessionProperties.getGameProperties(gameID, pageID, buttonID));
 
@@ -102,7 +101,6 @@ public class LobbySelectionUI extends SharedUI {
                     }
 
                 });
-
             }
 
         }

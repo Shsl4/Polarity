@@ -6,14 +6,11 @@ import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
 import dev.sl4sh.polarity.economy.ShopRecipe;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
 import org.spongepowered.api.effect.sound.SoundTypes;
-import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
 import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -33,8 +30,6 @@ public class EditPricesUserShopUI extends UniqueUI {
     @Nonnull
     private final MasterUserShopUI masterShop;
 
-    boolean canEdit = false;
-
     int mode = 0;
     float priceStep = 0.5f;
     int quantityStep = 1;
@@ -42,20 +37,6 @@ public class EditPricesUserShopUI extends UniqueUI {
     public EditPricesUserShopUI(@Nonnull UUID viewerID, @Nonnull MasterUserShopUI masterShop) {
         super(viewerID);
         this.masterShop = masterShop;
-        Sponge.getEventManager().registerListeners(Polarity.getPolarity(), this);
-    }
-
-
-    @Listener
-    public void onDisconnect(ClientConnectionEvent.Disconnect event){
-
-        if(event.getTargetEntity().equals(getTargetViewer())){
-
-            event.getTargetEntity().getInventory().clear();
-            Utilities.restorePlayerInventory(event.getTargetEntity());
-
-        }
-
     }
 
     @Override
@@ -66,17 +47,6 @@ public class EditPricesUserShopUI extends UniqueUI {
         ItemStack eventStack = event.getTransactions().get(0).getOriginal().createStack();
 
         if(Utilities.isUIStack(eventStack)) {
-
-            if(!canEdit){
-
-                if(eventStack.get(Polarity.Keys.UIStack.TYPE).get().equals(StackTypes.NAVIGATION_BUTTON)){
-
-                    getTargetViewer().get().closeInventory();
-                    return;
-
-                }
-
-            }
 
             if(eventStack.get(Polarity.Keys.UIStack.TYPE).get().equals(StackTypes.SHOP_STACK)){
 
@@ -205,45 +175,7 @@ public class EditPricesUserShopUI extends UniqueUI {
     @Override
     protected void setupLayout(Inventory newUI) {
 
-        if(masterShop.getManageShopUI().getStorage().size() <= 0){
-
-            for(Inventory subInv : getUI().slots()){
-
-                Slot slot = (Slot)subInv;
-                SlotIndex property = slot.getInventoryProperty(SlotIndex.class).get();
-                int slotIndex = property.getValue();
-
-                if(slotIndex == 13){
-
-                    ItemStack stack = Utilities.makeUIStack(ItemTypes.NETHER_STAR, 1, Text.of(TextColors.RED, "You need to layout your shop with items in order to be able to sell."), new ArrayList<>(), true);
-                    slot.set(stack);
-                    continue;
-
-                }
-
-                if(slotIndex == 31){
-
-                    ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.of(TextColors.GREEN, "Dismiss"), new ArrayList<>(), false);
-                    stack.offer(Keys.DYE_COLOR, DyeColors.WHITE);
-                    stack.offer(Polarity.Keys.UIStack.TYPE, StackTypes.NAVIGATION_BUTTON);
-                    stack.offer(Polarity.Keys.UIStack.BUTTON_ID, 0);
-                    slot.set(stack);
-                    continue;
-
-                }
-
-                ItemStack stack = Utilities.makeUIStack(ItemTypes.STAINED_GLASS_PANE, 1, Text.EMPTY, new ArrayList<>(), false);
-                stack.offer(Keys.DYE_COLOR, DyeColors.BLACK);
-                slot.set(stack);
-
-            }
-
-            return;
-
-        }
-
         int idx = 0;
-        canEdit = true;
 
         Utilities.savePlayerInventory(getTargetViewer().get());
         getTargetViewer().get().getInventory().clear();
@@ -403,13 +335,12 @@ public class EditPricesUserShopUI extends UniqueUI {
     @Override
     protected void onClosed(InteractInventoryEvent.Close event) {
 
-        if(canEdit){
+        if(getTargetViewer().isPresent()){
 
             getTargetViewer().get().getInventory().clear();
             Utilities.delayOneTick(() -> Utilities.restorePlayerInventory(getTargetViewer().get()));
 
         }
-
         masterShop.saveData();
         masterShop.getManageShopUI().open();
 

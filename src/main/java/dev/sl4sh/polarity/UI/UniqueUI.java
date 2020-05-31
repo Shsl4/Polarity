@@ -27,6 +27,9 @@ public abstract class UniqueUI extends AbstractUI {
 
     protected final Optional<Player> getTargetViewer() { return Utilities.getPlayerByUniqueID(targetViewer); }
 
+    protected final UUID getViewerID() { return targetViewer; }
+
+
     public boolean open() {
 
         if(!getTargetViewer().isPresent()) { return false; }
@@ -77,7 +80,7 @@ public abstract class UniqueUI extends AbstractUI {
     protected void onPrimary(ClickInventoryEvent.Primary event) {}
     protected void onSecondary(ClickInventoryEvent.Secondary event) {}
 
-    protected void onOpened() {}
+    protected void onOpened() { }
     protected void onClosed(InteractInventoryEvent.Close event) {}
 
     @Override

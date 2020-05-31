@@ -100,7 +100,7 @@ public class TabListManager {
         }
         else{
 
-            playerTabList.setHeader(Text.of(TextColors.AQUA , "  ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , TextColors.AQUA , " Welcome to the " , TextColors.LIGHT_PURPLE , TextStyles.BOLD, "Server" , TextStyles.RESET , " ", TextColors.AQUA , target.getName() , "! ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , "  "));
+            playerTabList.setHeader(Text.of(TextColors.AQUA , "  ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , TextColors.AQUA , " Welcome to " , TextColors.LIGHT_PURPLE , TextStyles.BOLD, "VoidWorld" , TextStyles.RESET , " ", TextColors.AQUA , target.getName() , "! ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , "  "));
 
             Optional<Faction> playerFaction = Utilities.getPlayerFaction(target);
 
