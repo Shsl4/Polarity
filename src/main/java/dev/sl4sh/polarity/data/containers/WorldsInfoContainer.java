@@ -190,14 +190,15 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
         WorldInfo worldInfo = getOrCreate(event.getTargetEntity().getWorld());
 
+        if(worldInfo.isWorldProtected()){
+
+            event.setCancelled(true);
+            return;
+
+        }
+
+
         if(event.getTargetEntity() instanceof Player){
-
-            if(worldInfo.isWorldProtected()){
-
-                event.setCancelled(true);
-                return;
-
-            }
 
             if(worldInfo.isGameWorld()) { return; }
 

@@ -75,8 +75,8 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = Polarity.MODID,
-        name = Polarity.MODNAME,
+@Plugin(id = Polarity.MOD_ID,
+        name = Polarity.MOD_NAME,
         description = "Polarity",
         authors = { "Sl4sh!" },
         dependencies = { @Dependency(id = "customnpcs", optional = true),
@@ -84,8 +84,8 @@ import java.util.concurrent.TimeUnit;
 })
 public class Polarity {
 
-    public static final String MODID = "polarity";
-    public static final String MODNAME = "Polarity";
+    public static final String MOD_ID = "polarity";
+    public static final String MOD_NAME = "Polarity";
 
     public static class Keys{
 
@@ -237,7 +237,6 @@ public class Polarity {
 
         Sponge.getEventManager().registerListeners(this, factionsContainer);
         Sponge.getEventManager().registerListeners(this, worldsInfo);
-        Sponge.getEventManager().registerListeners(this, new TabListManager());
 
         // Register all of the plugin's commands
         Sponge.getCommandManager().register(this, PolarityMainCommand.getCommandSpec(), "polarity");

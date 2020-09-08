@@ -142,7 +142,7 @@ public class TabListManager {
                 }
                 else{
 
-                    onlinePlayerEntry.setDisplayName(Text.of(TextColors.GREEN, "[Adventurer] ", TextColors.RESET, onlinePlayer.getName()));
+                    onlinePlayerEntry.setDisplayName(Text.of(TextColors.GRAY, "[X] ", TextColors.RESET, onlinePlayer.getName()));
 
                 }
 

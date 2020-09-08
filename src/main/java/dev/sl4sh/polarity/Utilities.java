@@ -19,7 +19,6 @@ import noppes.npcs.api.IWorld;
 import noppes.npcs.api.NpcAPI;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
@@ -27,8 +26,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
-import org.spongepowered.api.entity.living.player.tab.TabList;
-import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
@@ -126,7 +123,7 @@ public class Utilities {
 
     }
 
-    public static boolean spawnItem(Location<World> location, ItemStackSnapshot snapshot){
+    public static void spawnItem(Location<World> location, ItemStackSnapshot snapshot){
 
         Entity item = location.getExtent().createEntity(EntityTypes.ITEM, location.getPosition());
         item.offer(Keys.REPRESENTED_ITEM, snapshot);
@@ -134,13 +131,13 @@ public class Utilities {
         try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
 
             frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.PLUGIN);
-            return location.getExtent().spawnEntity(item);
+            location.getExtent().spawnEntity(item);
 
         }
 
     }
 
-    public static boolean spawnItem(Location<World> location, ItemStack stack){
+    public static void spawnItem(Location<World> location, ItemStack stack){
 
         Entity item = location.getExtent().createEntity(EntityTypes.ITEM, location.getPosition());
         item.offer(Keys.REPRESENTED_ITEM, stack.createSnapshot());
@@ -148,21 +145,9 @@ public class Utilities {
         try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
 
             frame.addContext(EventContextKeys.SPAWN_TYPE, SpawnTypes.PLUGIN);
-            return location.getExtent().spawnEntity(item);
+            location.getExtent().spawnEntity(item);
 
         }
-
-    }
-
-    public static <E extends DataHolder> boolean hasNPCTag(E object, String tag){
-
-        if(object.get(Polarity.Keys.NPC.TAGS).isPresent()){
-
-            return object.get(Polarity.Keys.NPC.TAGS).get().contains(tag);
-
-        }
-
-        return false;
 
     }
 
@@ -255,13 +240,13 @@ public class Utilities {
         Optional<Text> snapName = stack1.get(Keys.DISPLAY_NAME);
         Optional<Text> testName = stack2.get(Keys.DISPLAY_NAME);
 
-        Optional<List<Enchantment>> snapEnchs = stack1.get(Keys.ITEM_ENCHANTMENTS);
-        Optional<List<Enchantment>> testEnchs = stack2.get(Keys.ITEM_ENCHANTMENTS);
+        Optional<List<Enchantment>> snapEnchantments = stack1.get(Keys.ITEM_ENCHANTMENTS);
+        Optional<List<Enchantment>> testEnchantments = stack2.get(Keys.ITEM_ENCHANTMENTS);
 
         if(ItemStackComparators.TYPE.compare(stack1, stack2) == 0 &&
                 ItemStackComparators.PROPERTIES.compare(stack1, stack2) == 0 &&
                 snapName.equals(testName) &&
-                snapEnchs.equals(testEnchs) &&
+                snapEnchantments.equals(testEnchantments) &&
                 snapVal == testVal){
 
             return true;
@@ -298,7 +283,7 @@ public class Utilities {
      * Restores a player's inventory saved with {@link #savePlayerInventory(Player)}
      * @param player The player who must get it's inventory restored
      */
-    public static boolean restorePlayerInventory(Player player){
+    public static void restorePlayerInventory(Player player){
 
         Optional<InventoryBackup> optBackup = Polarity.getInventoryBackups().getBackupForPlayer(player.getUniqueId());
 
@@ -307,11 +292,7 @@ public class Utilities {
             optBackup.get().getSnapshots().removeIf(snap -> Utilities.givePlayer(player, snap.createStack(), false));
             Polarity.getPolarity().writeAllConfig();
 
-            return true;
-
         }
-
-        return false;
 
     }
 
@@ -503,26 +484,6 @@ public class Utilities {
 
     }
 
-    public static void clearPlayerTabList(Player player){
-
-        TabList playerTabList = player.getTabList();
-
-        List<UUID> list = new ArrayList<>();
-
-        for(TabListEntry entry : playerTabList.getEntries()){
-
-            list.add(entry.getProfile().getUniqueId());
-
-        }
-
-        for(UUID id : list){
-
-            playerTabList.removeEntry(id);
-
-        }
-
-    }
-
     public static <T, X> List<T> getKeysByValue(Map<T, X> map, X value){
 
         List<T> keys = new ArrayList<>();
@@ -538,24 +499,6 @@ public class Utilities {
         }
 
         return keys;
-
-    }
-
-    public static <T, X> List<X> getValuesNoDuplicate(Map<T, X> map){
-
-        List<X> values = new ArrayList<>();
-
-        for(X value : map.values()){
-
-            if(!values.contains(value)){
-
-                values.add(value);
-
-            }
-
-        }
-
-        return values;
 
     }
 

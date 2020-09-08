@@ -349,7 +349,7 @@ public class EditPricesAdminShopUI extends UniqueUI {
     @Override
     protected void onClosed(InteractInventoryEvent.Close event) {
 
-        getTargetViewer().get().getInventory().clear();
+        getTargetViewer().ifPresent(player -> player.getInventory().clear());
         Polarity.getPolarity().writeAllConfig();
         manageUI.open();
         Utilities.restorePlayerInventory(getTargetViewer().get());

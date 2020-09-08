@@ -39,7 +39,7 @@ public class FactionsMainCommand implements CommandExecutor {
                 .child(FactionsDeAlly.getCommandSpec(), "deally")
                 .child(FactionsWithdraw.getCommandSpec(), "withdraw")
                 .child(FactionsPay.getCommandSpec(), "pay")
-                .child(FactionsShowBalance.getCommandSpec(), "showbalance")
+                .child(FactionsShowBalance.getCommandSpec(), "balance")
                 .executor(new FactionsMainCommand())
                 .build();
 

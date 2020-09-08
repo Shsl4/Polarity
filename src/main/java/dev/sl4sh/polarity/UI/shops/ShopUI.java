@@ -1,14 +1,14 @@
 package dev.sl4sh.polarity.UI.shops;
 
+import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.UI.SharedUI;
 import dev.sl4sh.polarity.Utilities;
 import dev.sl4sh.polarity.data.registration.UIStack.UIStackData;
-import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
-import dev.sl4sh.polarity.economy.transactionidentifiers.ShopIdentifier;
-import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.economy.PolarityEconomyService;
 import dev.sl4sh.polarity.economy.ShopProfile;
 import dev.sl4sh.polarity.economy.ShopRecipe;
+import dev.sl4sh.polarity.economy.currencies.PolarityCurrency;
+import dev.sl4sh.polarity.economy.transactionidentifiers.ShopIdentifier;
 import dev.sl4sh.polarity.enums.UI.StackTypes;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.DyeColors;
@@ -18,13 +18,13 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
+import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.item.inventory.property.SlotIndex;
-import org.spongepowered.api.item.inventory.query.QueryOperationTypes;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
 import org.spongepowered.api.text.Text;
@@ -58,6 +58,28 @@ public class ShopUI extends SharedUI {
     public ShopUI(@Nonnull ShopProfile profile, @Nonnull Entity merchant) {
         this.profile = profile;
         this.merchant = merchant;
+    }
+
+    @Override
+    protected void onClosed(InteractInventoryEvent.Close event) {
+
+        Polarity.getLogger().info(event.getTargetInventory().toString());
+        Polarity.getLogger().info(((Player)event.getSource()).getInventory().toString());
+
+        for(Inventory subInv : ((Player)event.getSource()).getInventory().slots()){
+
+            Slot slot = (Slot)subInv;
+            SlotIndex property = slot.getInventoryProperty(SlotIndex.class).get();
+
+            if(slot.peek().isPresent() && Utilities.isUIStack(slot.peek().get())){
+
+                slot.poll();
+
+            }
+
+        }
+
+
     }
 
     @Override

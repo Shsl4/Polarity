@@ -21,9 +21,13 @@ import java.util.UUID;
 @ConfigSerializable
 public class Faction implements Identifiable, Serializable {
 
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+
     @Nonnull
     @Setting(value = "uniqueID")
-    private UUID uniqueID = UUID.randomUUID();
+    private final UUID uniqueID = UUID.randomUUID();
 
     @Nonnull
     @Setting(value = "name")
@@ -37,22 +41,18 @@ public class Faction implements Identifiable, Serializable {
     @Setting(value = "prefix")
     private String prefix = "";
 
-    //Faction's owner player name
     @Nonnull
     @Setting(value = "owner")
     private UUID owner = UUID.randomUUID();
 
-    //Contains faction's members data
     @Nonnull
     @Setting(value = "memberDataList")
     private List<FactionMemberData> memberDataList = new ArrayList<>();
 
-    //Contains allied factions names
     @Nonnull
     @Setting(value = "allies")
     private List<UUID> allies = new ArrayList<>();
 
-    //Contains enemy factions UUIDs
     @Nonnull
     @Setting(value = "enemies")
     private List<UUID> enemies = new ArrayList<>();
@@ -60,54 +60,11 @@ public class Faction implements Identifiable, Serializable {
     @Nonnull
     private final FactionChatChannel factionChannel = new FactionChatChannel(new ArrayList<>());
 
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+
     public Faction() {}
-
-    public void setName(@Nonnull String name){
-
-        this.name = name;
-
-    }
-
-    public void setOwner(@Nonnull UUID owner){
-
-        this.owner = owner;
-
-    }
-
-    @Nonnull
-    public String getName(){
-
-        return this.name;
-
-    }
-
-    @Nonnull
-    public UUID getOwner(){
-
-        return this.owner;
-
-    }
-
-    @Nonnull
-    public List<FactionMemberData> getMemberDataList(){
-
-        return this.memberDataList;
-
-    }
-
-    @Nonnull
-    public List<UUID> getAllies(){
-
-        return this.allies;
-
-    }
-
-    @Nonnull
-    public List<UUID> getEnemies(){
-
-        return this.enemies;
-
-    }
 
     public Faction(@Nonnull String name, @Nonnull Player owner){
 
@@ -123,17 +80,65 @@ public class Faction implements Identifiable, Serializable {
 
     }
 
-    public boolean isOwner(Player player){
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
 
-        return getOwner().equals(player.getUniqueId());
+    public void setName(@Nonnull String name){ this.name = name; }
 
+    public void setOwner(@Nonnull UUID owner){ this.owner = owner; }
+
+    public void setPrefix(@Nonnull String prefix) { this.prefix = prefix; }
+
+    public void setDisplayName(@Nonnull String displayName) { this.displayName = displayName; }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nonnull
+    public String getName(){ return this.name; }
+
+    @Nonnull
+    public UUID getOwner(){ return this.owner; }
+
+    @Nonnull
+    public List<FactionMemberData> getMemberDataList(){ return this.memberDataList; }
+
+    @Nonnull
+    public List<UUID> getAllies(){ return this.allies; }
+
+    @Nonnull
+    public List<UUID> getEnemies(){ return this.enemies; }
+
+    @Nonnull
+    public String getPrefix() {
+        return prefix;
     }
 
-    public boolean isFactionAllied(@Nonnull Faction targetFaction){
-
-        return allies.contains(targetFaction.getUniqueId());
-
+    @Nonnull
+    public String getDisplayName() {
+        return displayName.equals("") ? getName() : displayName;
     }
+
+    @Nonnull
+    @Override
+    public UUID getUniqueId() {
+        return this.uniqueID;
+    }
+
+    @Nonnull
+    public FactionChatChannel getFactionChannel() {
+        return factionChannel;
+    }
+
+    public boolean isOwner(Player player){ return getOwner().equals(player.getUniqueId()); }
+
+    public boolean isFactionAllied(@Nonnull Faction targetFaction){ return allies.contains(targetFaction.getUniqueId()); }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
 
     public void listMembers(CommandSource src){
 
@@ -209,36 +214,4 @@ public class Faction implements Identifiable, Serializable {
 
     }
 
-    @Nonnull
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(@Nonnull String prefix) {
-
-        this.prefix = prefix;
-
-    }
-
-    @Nonnull
-    public String getDisplayName() {
-        return displayName.equals("") ? getName() : displayName;
-    }
-
-    public void setDisplayName(@Nonnull String displayName) {
-
-        this.displayName = displayName;
-
-    }
-
-    @Nonnull
-    @Override
-    public UUID getUniqueId() {
-        return this.uniqueID;
-    }
-
-    @Nonnull
-    public FactionChatChannel getFactionChannel() {
-        return factionChannel;
-    }
 }

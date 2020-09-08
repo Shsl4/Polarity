@@ -107,7 +107,7 @@ public class NPCManager {
 
             if(Utilities.getNPCsAPI().isPresent()){
 
-                ICustomNpc npc = (ICustomNpc)Utilities.getNPCsAPI().get().getIEntity((net.minecraft.entity.Entity)entity.get());
+                ICustomNpc<?> npc = (ICustomNpc<?>)Utilities.getNPCsAPI().get().getIEntity((net.minecraft.entity.Entity)entity.get());
                 npc.getDisplay().setName("Buy Shop");
 
             }
@@ -183,7 +183,7 @@ public class NPCManager {
 
     private static void handleInteraction(Player clicker, Entity entity){
 
-        if(entity.get(NPCData.class).isPresent()) {
+        if(entity.get(Polarity.Keys.NPC.TYPE).isPresent()) {
 
             if (entity.get(Polarity.Keys.NPC.TYPE).get().equals(NPCTypes.BUYER_NPC)) {
 
@@ -218,7 +218,7 @@ public class NPCManager {
                     entity.get(Polarity.Keys.NPC.SHARED_UI).get().get().openFor(clicker);
 
                 }
-                else{
+                else if (entity.get(Polarity.Keys.NPC.TAGS).isPresent()){
 
                     Optional<ShopProfile> shopProfile = Polarity.getShopProfiles().getShopProfileByName(entity.get(Polarity.Keys.NPC.TAGS).get().get(0));
 
