@@ -168,11 +168,11 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
         }
 
-        if(Polarity.getRecentPVPDamageMap().contains(target.getUniqueId())){
+        if(Polarity.getRecentPVPDamageMap().containsKey(target.getUniqueId())){
 
             target.offer(Keys.HEALTH, 0D);
-            Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
-            Polarity.getRecentDamageMap().remove(target.getUniqueId());
+            Polarity.getRecentPVPDamageMap().get(target.getUniqueId()).cancel();
+            Polarity.getRecentPVPDamageMap().remove(target.getUniqueId());
 
         }
 
@@ -197,59 +197,66 @@ public class WorldsInfoContainer implements PolarityContainer<WorldInfo> {
 
         }
 
-
         if(event.getTargetEntity() instanceof Player){
 
             if(worldInfo.isGameWorld()) { return; }
 
             Player target = (Player)event.getTargetEntity();
 
-            if(Polarity.getRecentDamageMap().containsKey(target.getUniqueId())){
+            if(!event.getCause().first(Player.class).isPresent()) {
 
-                if (!Polarity.getRecentPVPDamageMap().contains(target.getUniqueId())){
+                if (Polarity.getRecentPVPDamageMap().containsKey(target.getUniqueId())){ return; }
 
-                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.RED, "PVP ENGAGED! YOU WILL DIE IF YOU DISCONNECT!")).build());
+                if(Polarity.getRecentDamageMap().containsKey(target.getUniqueId())){
 
-                }
-
-                Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
-
-            }
-            else{
-
-                if(event.getCause().containsType(Player.class) && !event.getCause().first(Player.class).get().getUniqueId().equals(target.getUniqueId())){
-
-                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.RED, "PVP ENGAGED! YOU WILL DIE IF YOU DISCONNECT!")).build());
+                    Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
+                    Polarity.getRecentDamageMap().remove(target.getUniqueId());
 
                 }
 
-            }
-
-            Task task;
-
-            if(event.getCause().containsType(Player.class)
-                    && !event.getCause().first(Player.class).get().getUniqueId().equals(target.getUniqueId())
-                    || Polarity.getRecentDamageMap().get(target.getUniqueId()) != null
-                    && Polarity.getRecentDamageMap().get(target.getUniqueId()).getDelay() > 10000){
-
-                task = Task.builder().delay(30L, TimeUnit.SECONDS).execute(() -> {
+                Task task = Task.builder().delay(10L, TimeUnit.SECONDS).execute(() -> {
 
                     Polarity.getRecentDamageMap().remove(target.getUniqueId());
-                    Polarity.getRecentPVPDamageMap().remove(target.getUniqueId());
-                    target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.AQUA, "You can now safely disconnect.")).build());
 
                 }).submit(Polarity.getPolarity());
 
-                Polarity.getRecentPVPDamageMap().add(target.getUniqueId());
+                Polarity.getRecentDamageMap().put(target.getUniqueId(), task);
+
+                return;
+
+            }
+
+            boolean selfDamage = event.getCause().first(Player.class).get().getUniqueId().equals(target.getUniqueId());
+
+            if(selfDamage) { return; }
+
+            if (Polarity.getRecentPVPDamageMap().containsKey(target.getUniqueId())){
+
+                Polarity.getRecentPVPDamageMap().get(target.getUniqueId()).cancel();
+                Polarity.getRecentPVPDamageMap().remove(target.getUniqueId());
 
             }
             else{
 
-                task = Task.builder().delay(10L, TimeUnit.SECONDS).execute(() -> Polarity.getRecentDamageMap().remove(target.getUniqueId())).submit(Polarity.getPolarity());
+                target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.RED, "PVP ENGAGED! YOU WILL DIE IF YOU DISCONNECT!")).build());
 
             }
 
-            Polarity.getRecentDamageMap().put(target.getUniqueId(), task);
+            if(Polarity.getRecentDamageMap().containsKey(target.getUniqueId())){
+
+                Polarity.getRecentDamageMap().get(target.getUniqueId()).cancel();
+                Polarity.getRecentDamageMap().remove(target.getUniqueId());
+
+            }
+
+            Task task = Task.builder().delay(30L, TimeUnit.SECONDS).execute(() -> {
+
+                Polarity.getRecentPVPDamageMap().remove(target.getUniqueId());
+                target.sendTitle(Title.builder().title(Text.EMPTY).subtitle(Text.EMPTY).actionBar(Text.of(TextColors.AQUA, "You can now safely disconnect.")).build());
+
+            }).submit(Polarity.getPolarity());
+
+            Polarity.getRecentPVPDamageMap().put(target.getUniqueId(), task);
 
         }
 

@@ -158,7 +158,7 @@ public class Polarity {
     @Nonnull
     private final Map<UUID, Task> recentDamageMap = new HashMap<>();
     @Nonnull
-    private final List<UUID> recentPVPDamageMap = new ArrayList<>();
+    private final Map<UUID, Task> recentPVPDamageMap = new HashMap<>();
 
     @Nonnull
     public static Optional<PolarityEconomyService> getEconomyService(){ return getPolarity().economyService == null ? Optional.empty() : Optional.of(getPolarity().economyService); }
@@ -189,7 +189,7 @@ public class Polarity {
     @Nonnull
     public static Map<UUID, Task> getRecentDamageMap() { return getPolarity().recentDamageMap; }
     @Nonnull
-    public static List<UUID> getRecentPVPDamageMap() { return getPolarity().recentPVPDamageMap; }
+    public static Map<UUID, Task> getRecentPVPDamageMap() { return getPolarity().recentPVPDamageMap; }
 
     Polarity(){
 
