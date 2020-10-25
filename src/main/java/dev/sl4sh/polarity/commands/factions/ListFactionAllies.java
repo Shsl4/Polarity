@@ -18,15 +18,15 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-public class FactionsListAllies implements CommandExecutor {
+public class ListFactionAllies implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
                 .description(Text.of("Lists the allies of a faction."))
                 .arguments(GenericArguments.optional(new FactionCommandElement(Text.of("factionName"))))
-                .permission("polarity.factions.list.allies")
-                .executor(new FactionsListAllies())
+                .permission("polarity.list.factions.allies")
+                .executor(new ListFactionAllies())
                 .build();
 
     }

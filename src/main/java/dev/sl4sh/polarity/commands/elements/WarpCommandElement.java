@@ -1,7 +1,6 @@
 package dev.sl4sh.polarity.commands.elements;
 
-import dev.sl4sh.polarity.Polarity;
-import dev.sl4sh.polarity.data.WorldInfo;
+import dev.sl4sh.polarity.Utilities;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;
@@ -31,22 +30,16 @@ public class WarpCommandElement extends CommandElement {
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
 
         List<String> returnList = new ArrayList<>();
-        List<String> existingNames = new ArrayList<>();
-
-        for(WorldInfo worldInfo : Polarity.getWorldsInfo().getList()){
-
-            existingNames.addAll(worldInfo.getWarpNames());
-
-        }
+        List<String> existingWarps = Utilities.getExistingWarpNames();
 
         if(args.hasNext()){
 
-            for(String existingName : existingNames){
+            for(String existingWarp : existingWarps){
 
                 try {
-                    if(existingName.startsWith(args.peek())){
+                    if(existingWarp.startsWith(args.peek())){
 
-                        returnList.add(existingName);
+                        returnList.add(existingWarp);
 
                     }
                 } catch (ArgumentParseException e) {
@@ -60,7 +53,7 @@ public class WarpCommandElement extends CommandElement {
         }
         else{
 
-            return existingNames;
+            return existingWarps;
 
         }
 

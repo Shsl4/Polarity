@@ -36,6 +36,14 @@ public class PolarityPartyInvite implements CommandExecutor {
         if(src instanceof Player){
 
             Player caller = (Player)src;
+
+            if(!args.getOne(Text.of("player")).isPresent()){
+
+                caller.sendMessage(Text.of(TextColors.AQUA, "The specified player does not exist."));
+                return CommandResult.success();
+
+            }
+
             Player target = (Player)args.getOne(Text.of("player")).get();
 
             if(caller.equals(target)) { caller.sendMessage(Text.of(TextColors.AQUA, "You can't invite yourself to your party.")); return CommandResult.success(); }

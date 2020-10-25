@@ -255,6 +255,8 @@ public class Polarity {
         Sponge.getCommandManager().register(this, PolarityPartyMain.getCommandSpec(), "party");
         Sponge.getCommandManager().register(this, PolarityRetrieve.getCommandSpec(), "retrieve");
         Sponge.getCommandManager().register(this, PolarityUUID.getCommandSpec(), "uuid");
+        Sponge.getCommandManager().register(this, PolarityList.getCommandSpec(), "list");
+
 
         // Prints a cool status message (such cool)
         logger.info("");

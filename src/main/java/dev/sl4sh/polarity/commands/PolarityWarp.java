@@ -1,9 +1,9 @@
 package dev.sl4sh.polarity.commands;
 
 import com.flowpowered.math.vector.Vector3d;
-import dev.sl4sh.polarity.commands.elements.WarpCommandElement;
 import dev.sl4sh.polarity.Polarity;
 import dev.sl4sh.polarity.Utilities;
+import dev.sl4sh.polarity.commands.elements.WarpCommandElement;
 import dev.sl4sh.polarity.data.WorldInfo;
 import dev.sl4sh.polarity.events.PlayerWarpEvent;
 import org.spongepowered.api.Sponge;
@@ -16,11 +16,13 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Map;
 
 public class PolarityWarp implements CommandExecutor {
@@ -54,6 +56,16 @@ public class PolarityWarp implements CommandExecutor {
                 .arguments(new WarpCommandElement(Text.of("warpName")))
                 .permission("polarity.warp.remove")
                 .executor(new PolarityRemoveWarp())
+                .build();
+
+    }
+
+    public static CommandSpec getListCommandSpec(){
+
+        return CommandSpec.builder()
+                .description(Text.of("Lists existing warps."))
+                .permission("polarity.warp.list")
+                .executor(new PolarityListWarp())
                 .build();
 
     }
@@ -174,6 +186,40 @@ class PolarityRemoveWarp implements CommandExecutor {
         }
 
         src.sendMessage(Text.of(TextColors.RED, "Failed to remove ", warpName, ". It may not exist"));
+        return CommandResult.success();
+    }
+}
+
+
+class PolarityListWarp implements CommandExecutor {
+
+    @Nonnull
+    @Override
+    public CommandResult execute(@Nonnull CommandSource src, CommandContext args) throws CommandException {
+
+        TextColor listTintColor = TextColors.GREEN;
+
+        src.sendMessage(Text.of(TextColors.DARK_GREEN, "============ Warp list ============"));
+
+        List<String> warpNames = Utilities.getExistingWarpNames();
+
+        if(warpNames.size() <= 0){
+
+            src.sendMessage(Text.of(TextColors.GREEN, "Nothing to see here... Yet!"));
+
+        }
+        else{
+
+            int it = 1;
+
+            for(String warp : warpNames){
+
+                src.sendMessage(Text.of(listTintColor , "#" , it , ". " , TextColors.WHITE , warp));
+                it++;
+
+            }
+
+        }
         return CommandResult.success();
     }
 }

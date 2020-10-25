@@ -14,15 +14,15 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 
-public class FactionsListMembers implements CommandExecutor {
+public class ListFactionMembers implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
        return CommandSpec.builder()
                 .description(Text.of("Lists the members of a faction."))
                 .arguments(GenericArguments.optional(new FactionCommandElement(Text.of("factionName"))))
-                .permission("polarity.factions.list.members")
-                .executor(new FactionsListMembers())
+                .permission("polarity.list.factions.members")
+                .executor(new ListFactionMembers())
                 .build();
 
     }

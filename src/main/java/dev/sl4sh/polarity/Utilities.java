@@ -747,6 +747,20 @@ public class Utilities {
 
     }
 
+    static public List<String> getExistingWarpNames(){
+
+        List<String> existingWarps = new ArrayList<>();
+
+        for(WorldInfo worldInfo : Polarity.getWorldsInfo().getList()){
+
+            existingWarps.addAll(worldInfo.getWarpNames());
+
+        }
+
+        return existingWarps;
+
+    }
+
     static public MessageChannel getChannelForPlayer(Player player){
 
         switch(Utilities.getPreferredChannel(player)){

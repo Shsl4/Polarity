@@ -16,17 +16,16 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.List;
 
-public class FactionsList implements CommandExecutor {
+public class ListFactions implements CommandExecutor {
 
     public static CommandSpec getCommandSpec(){
 
         return CommandSpec.builder()
                 .description(Text.of("Lists the existing factions."))
                 .permission("polarity.factions.list")
-                .child(FactionsListAllies.getCommandSpec(), "allies")
-                .child(FactionsListMembers.getCommandSpec(), "members")
-                .child(FactionsListHelp.getCommandSpec(), "help")
-                .executor(new FactionsList())
+                .child(ListFactionAllies.getCommandSpec(), "allies")
+                .child(ListFactionMembers.getCommandSpec(), "members")
+                .executor(new ListFactions())
                 .build();
 
     }

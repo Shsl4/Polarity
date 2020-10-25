@@ -25,7 +25,7 @@ public class FactionsMainCommand implements CommandExecutor {
                 .child(FactionsDisband.getCommandSpec(), "disband")
                 .child(FactionsLeave.getCommandSpec(), "leave")
                 .child(FactionsUnClaim.getCommandSpec(), "unclaim")
-                .child(FactionsList.getCommandSpec(), "list")
+                .child(ListFactions.getCommandSpec(), "list")
                 .child(FactionsSetDisplayName.getCommandSpec(), "setdisplayname")
                 .child(FactionsSetPrefix.getCommandSpec(), "setprefix")
                 .child(FactionsSetPerm.getCommandSpec(), "setperm")

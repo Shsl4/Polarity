@@ -100,7 +100,7 @@ public class TabListManager {
         }
         else{
 
-            playerTabList.setHeader(Text.of(TextColors.AQUA , "  ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , TextColors.AQUA , " Welcome to " , TextColors.LIGHT_PURPLE , TextStyles.BOLD, "VoidWorld" , TextStyles.RESET , " ", TextColors.AQUA , target.getName() , "! ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , "  "));
+            playerTabList.setHeader(Text.of(TextColors.AQUA , "  ", TextStyles.OBFUSCATED, "l" , TextStyles.RESET , TextColors.AQUA , " Welcome ", TextColors.LIGHT_PURPLE , TextStyles.BOLD, target.getName() , "!", TextStyles.RESET , " ", TextColors.AQUA, TextStyles.OBFUSCATED, "l" , TextStyles.RESET , "  "));
 
             Optional<Faction> playerFaction = Utilities.getPlayerFaction(target);
 
@@ -135,7 +135,9 @@ public class TabListManager {
                     }
                     else{
 
-                        onlinePlayerEntry.setDisplayName(Text.of(TextColors.WHITE, "[Faction] ", onlinePlayer.getName()));
+                        String factionName = onlinePlayerFaction.get().getName();
+                        String display = factionName.length() >= 5 ? factionName.substring(0, 5).toUpperCase() : factionName.toUpperCase();
+                        onlinePlayerEntry.setDisplayName(Text.of(TextColors.WHITE, "[", display, "] ", onlinePlayer.getName()));
 
                     }
 
